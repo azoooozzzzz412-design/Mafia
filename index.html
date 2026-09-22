@@ -36,6 +36,7 @@
     --mafia:   #a8503f; --mafia-bright:   #d97b64;
     --letters: #3f6fb0; --letters-bright: #74a3e6;
     --flags:   #7d55b0; --flags-bright:   #b08ae3;
+    --heads:   #2a86a3; --heads-bright:   #5ec4e0;
 
     --font-display: "Aref Ruqaa", "Times New Roman", serif;
     --font-body: "Cairo", "Tahoma", sans-serif;
@@ -91,11 +92,11 @@
     font-family:var(--font-mono); direction:ltr; unicode-bidi:isolate;
     font-size:.6rem; letter-spacing:2px; color:var(--text-faint); text-transform:uppercase;
   }
-  .nav-pills{ display:flex; gap:6px; flex-wrap:wrap; margin-inline-start:8px; }
+  .nav-pills{ display:flex; gap:5px; flex-wrap:wrap; margin-inline-start:8px; }
   .nav-pills button{
     background:var(--panel-2); border:1px solid var(--border);
     color:var(--text-dim); font-size:.8rem; font-weight:600;
-    padding:9px 14px; border-radius:999px; white-space:nowrap;
+    padding:9px 11px; border-radius:999px; white-space:nowrap;
   }
   .nav-pills button:hover{ color:var(--text); border-color:var(--border-strong); }
   .nav-pills button.active{ background:var(--gold); color:var(--ink-deep); border-color:var(--gold-bright); }
@@ -636,6 +637,30 @@
   }
   .team-award-btns button.buzz-first, .challenge-award > button.buzz-first{ outline:3px solid #fff; box-shadow:0 0 0 7px rgba(255,255,255,.28); transform:scale(1.06); }
   .team-award-btns button.buzz-first::before, .challenge-award > button.buzz-first::before{ content:"⚡ "; }
+
+  /* ================= حطها على راسك ================= */
+  a.btn-ghost{ display:inline-block; text-decoration:none; text-align:center; }
+  .hd-live{ margin:4px 0 18px; }
+  .hd-card{
+    background:var(--panel); border:1px solid var(--border); border-top:8px solid var(--c);
+    border-radius:var(--radius); padding:18px 18px 16px; text-align:center; box-shadow:var(--shadow);
+  }
+  .hd-who{ font-size:1.15rem; font-weight:900; }
+  .hd-who b{ color:var(--c); filter:brightness(1.3); }
+  .hd-who small{ color:var(--text-dim); font-weight:700; font-size:.85rem; }
+  .hd-timer{ font-family:var(--font-mono); direction:ltr; font-size:clamp(3rem, 12vw, 6rem); font-weight:600; line-height:1.1; margin:6px 0 8px; }
+  .hd-timer.warn{ color:#ff9b8a; }
+  .hd-count{ display:flex; gap:10px; justify-content:center; font-size:1.3rem; font-weight:900; margin-bottom:12px; }
+  .hd-count span{ border-radius:12px; padding:4px 14px; }
+  .hd-count .ok{ background:rgba(46,158,91,.2); color:#8fe0b0; }
+  .hd-count .pass{ background:rgba(255,255,255,.06); color:var(--text-dim); }
+  .hd-log{ display:flex; flex-wrap:wrap; gap:6px; justify-content:center; }
+  .hd-log span{ padding:4px 11px; border-radius:999px; font-weight:800; font-size:.85rem; }
+  .hd-log .ok{ background:rgba(46,158,91,.18); color:#8fe0b0; border:1px solid rgba(46,158,91,.45); }
+  .hd-log .pass{ background:rgba(255,255,255,.04); color:var(--text-faint); border:1px solid rgba(255,255,255,.1); }
+  .hd-done{ font-size:1.1rem; font-weight:900; margin-bottom:12px; }
+  .hd-done b{ color:var(--c); filter:brightness(1.3); }
+  .hd-last{ font-size:.78rem; color:var(--text-dim); margin-top:8px; font-weight:700; }
 </style>
 </head>
 <body>
@@ -659,6 +684,7 @@
     <button data-view="emoji">📸 تحدي الصور</button>
     <button data-view="letters">🔤 الحروف</button>
     <button data-view="flags">🚩 الأعلام</button>
+    <button data-view="heads">🤳 على راسك</button>
     <button data-view="charades">🎬 التمثيل</button>
     <button data-view="mafia">🕵️ المافيا</button>
   </nav>
@@ -697,6 +723,12 @@
         <span class="mc-icon">🚩</span>
         <h3>حزر العلم</h3>
         <p>يطلع علم وأول فريق يعرف الدولة ياخذ النقطة — فيه سهل ومتوسط وصعب.</p>
+        <span class="mc-cta">ابدأ اللعبة ←</span>
+      </button>
+      <button class="mode-card" data-view="heads" style="--accent:var(--heads);--accent-bright:var(--heads-bright)">
+        <span class="mc-icon">🤳</span>
+        <h3>حطها على راسك</h3>
+        <p>حط الجوال على جبهتك وتطلع كلمة ما تشوفها، وفريقك يعطيك تلميحات — اقلبه لتحت إذا عرفتها ولفوق إذا بتعدّيها.</p>
         <span class="mc-cta">ابدأ اللعبة ←</span>
       </button>
       <button class="mode-card" data-view="charades" style="--accent:var(--char);--accent-bright:var(--char-bright)">
@@ -791,6 +823,19 @@
       </div>
       <div class="challenge-award" id="flAward" hidden style="margin-top:16px"></div>
     </div>
+  </section>
+
+  <!-- HEADS UP -->
+  <section id="view-heads" class="view" hidden>
+    <div class="back-row"><button class="back-btn" data-view="home">→ الرئيسية</button></div>
+    <div class="mode-header" style="--accent:var(--heads);--accent-bright:var(--heads-bright)">
+      <div><h2>🤳 حطها على راسك</h2><p>اللاعب يحط الجوال على جبهته بالعرض والشاشة لفريقه، وتطلع كلمة ما يشوفها وفريقه يعطيه تلميحات. يقلب الجوال لتحت إذا عرفها، ولفوق إذا بيعدّيها — وكل كلمة صح بنقطة.</p></div>
+      <a class="btn-ghost" href="heads.html" id="hdLocalBtn">▶ العب على هذا الجهاز</a>
+    </div>
+    <div class="hd-live" id="hdLive" hidden></div>
+    <p class="bz-intro">كل فريق يمسح باركوده بجوال اللي بيلعب (بكاميرا الجوال العادية) — الوقت والكلمات تطلع هنا، والنقاط تنضاف للفريق لحالها.</p>
+    <div id="hdErr"></div>
+    <div class="bz-grid" id="hdGrid"></div>
   </section>
 
   <!-- CHARADES -->
@@ -1009,7 +1054,8 @@
     mafia: { caseId:null, round:0, players:[], counts:{mafia:0,detective:0,doctor:0} },
     letters: { board: [], owners: {}, history: [], wins: {}, pools: {}, lastWin: null },
     flags: { level: 0, orders: {} },
-    buzz: { room: "", enabled: false, auto: true }
+    buzz: { room: "", enabled: false, auto: true },
+    heads: { done: [], last: {} }
   };
 
   function persist(){
@@ -1096,6 +1142,12 @@
             orders: saved.flags.orders && typeof saved.flags.orders === "object" ? saved.flags.orders : {}
           };
         }
+        if(saved.heads && typeof saved.heads === "object"){
+          store.heads = {
+            done: Array.isArray(saved.heads.done) ? saved.heads.done.filter(function(x){ return typeof x === "string"; }).slice(-40) : [],
+            last: saved.heads.last && typeof saved.heads.last === "object" && !Array.isArray(saved.heads.last) ? saved.heads.last : {}
+          };
+        }
         if(saved.buzz && typeof saved.buzz === "object"){
           store.buzz = {
             room: typeof saved.buzz.room === "string" ? saved.buzz.room : "",
@@ -1115,7 +1167,7 @@
   }
 
   /* ============ view router ============ */
-  var views = ["home","trivia","emoji","letters","flags","charades","mafia"];
+  var views = ["home","trivia","emoji","letters","flags","heads","charades","mafia"];
   function showView(name){
     /* أي انتقال بين الألعاب يقفل أزرار «أسرع إصبع» — اللعبة الجديدة تفتحها مع سؤالها */
     if(typeof buzzIdle === "function") buzzIdle();
@@ -1142,6 +1194,7 @@
     }
     if(name === "letters") lettersOpen();
     if(name === "flags") flagsOpen();
+    if(name === "heads") headsOpen();
     window.scrollTo({top:0, behavior:"instant" in window ? "instant" : "auto"});
   }
   document.querySelectorAll("[data-view]").forEach(function(el){
@@ -2075,13 +2128,17 @@
       o.connect(g); g.connect(a.destination); o.start(t0); o.stop(t0 + 0.45);
     }catch(e){}
   }
-  function buzzConnect(){
+  function buzzConnect(){               /* تشغيل «أسرع إصبع» (يطلع شريط الأزرار) */
+    store.buzz.enabled = true; persist();
+    rtConnect(); renderBuzzUI();
+  }
+  /* الاتصال المباشر نفسه — يستخدمه «أسرع إصبع» و«حطها على راسك» (اللي ما يشغّل شريط الأزرار) */
+  function rtConnect(){
     if(buzz.channel) return;
     if(typeof window.supabase === "undefined" || !window.supabase.createClient || !window.SAHRA_SUPABASE_URL){
       buzz.status = "error"; renderBuzzUI(); return;
     }
-    if(!store.buzz.room) store.buzz.room = buzzRoomGen();
-    store.buzz.enabled = true; persist();
+    if(!store.buzz.room){ store.buzz.room = buzzRoomGen(); persist(); }
     if(!buzz.client){
       buzz.client = sharedSb || window.supabase.createClient(window.SAHRA_SUPABASE_URL, window.SAHRA_SUPABASE_ANON_KEY, {
         auth: { persistSession:false, autoRefreshToken:false, detectSessionInUrl:false }
@@ -2093,6 +2150,7 @@
     });
     ch.on("broadcast", { event:"buzz" }, function(m){ onBuzz((m && m.payload) || {}); });
     ch.on("broadcast", { event:"hello" }, function(){ buzzSend(); });
+    ch.on("broadcast", { event:"heads" }, function(m){ onHeads((m && m.payload) || {}); });
     ch.on("presence", { event:"sync" }, function(){
       var st = ch.presenceState(), per = {};
       Object.keys(st).forEach(function(k){
@@ -2167,9 +2225,9 @@
     });
   }
   function renderBuzzUI(){
-    var on = buzzActive() || buzz.status === "error";
-    buzzEls.openBtn.classList.toggle("on", buzzActive());
-    buzzEls.openBtn.textContent = buzzActive() ? "📱 الأزرار شغّالة" : "📱 أسرع إصبع";
+    var on = !!store.buzz.enabled && (buzzActive() || buzz.status === "error");
+    buzzEls.openBtn.classList.toggle("on", !!store.buzz.enabled && buzzActive());
+    buzzEls.openBtn.textContent = (store.buzz.enabled && buzzActive()) ? "📱 الأزرار شغّالة" : "📱 أسرع إصبع";
     /* الشريط السفلي */
     var bar = buzzEls.bar;
     document.body.classList.toggle("has-buzz-bar", on);
@@ -2205,6 +2263,7 @@
     }
     markBuzzButtons();
     if(!buzzEls.panel.hidden) renderBuzzPanel();
+    renderHeadsStatus();
   }
   buzzEls.bar.addEventListener("click", function(e){
     var b = e.target.closest("[data-bb]"); if(!b) return;
@@ -2256,7 +2315,7 @@
   }
   function openBuzzPanel(){
     buzzUnlockAudio();
-    if(!buzzActive()) buzzConnect();
+    if(!store.buzz.enabled || !buzzActive()) buzzConnect();
     buzzEls.panel.hidden = false;
     renderBuzzPanel();
   }
@@ -2279,6 +2338,7 @@
     buzz.sendT = setTimeout(function(){ buzzSend(); renderBuzzUI(); }, 300);
     if(LT.data && !document.getElementById("view-letters").hidden) lettersRender();
     if(FL.cur && !flEls.award.hidden) renderFlagAward();
+    if(headsVisible()){ renderHeadsGrid(); renderHeadsLive(); }
   }
 
   /* ======================================================================
@@ -2612,6 +2672,141 @@
     store.flags.level = parseInt(b.getAttribute("data-fl-level"), 10) || 0;
     persist(); renderFlagLevels(); renderFlag();
   });
+
+  /* ======================================================================
+     حطها على راسك — اللاعب يلعب من جواله (heads.html)، والشاشة تعرض الوقت
+     والكلمات وتضيف نقاط الكلمات الصح للفريق لحالها (نقطة لكل كلمة).
+     ====================================================================== */
+  var HD = { live:null, timer:null, gridRoom:null };
+  var hdEls = { live: document.getElementById("hdLive"), grid: document.getElementById("hdGrid"), err: document.getElementById("hdErr") };
+  function headsVisible(){ return !document.getElementById("view-heads").hidden; }
+  function headsUrl(t){
+    var base = location.origin + location.pathname.replace(/[^\/]*$/, "");
+    return base + "heads.html?r=" + encodeURIComponent(store.buzz.room) + "&t=" + encodeURIComponent(t.id);
+  }
+  function hdInt(v, lo, hi){ v = Math.round(+v); if(!isFinite(v)) v = lo; return Math.max(lo, Math.min(hi, v)); }
+  function hdPoints(n){
+    if(n === 1) return "نقطة وحدة";
+    if(n === 2) return "نقطتين";
+    return n + (n >= 3 && n <= 10 ? " نقاط" : " نقطة");
+  }
+  function rtSend(event, payload){
+    if(!buzz.channel || buzz.status !== "on") return;
+    try{ var p = buzz.channel.send({ type:"broadcast", event:event, payload:payload }); if(p && p.catch) p.catch(function(){}); }catch(e){}
+  }
+  function headsOpen(){ rtConnect(); renderHeadsGrid(); renderHeadsLive(); renderHeadsStatus(); }
+  function renderHeadsStatus(){
+    if(!headsVisible()) return;
+    if(buzz.status === "off"){ rtConnect(); return; }      /* انطفت الأزرار وحنا بهالصفحة — نرجع نتصل بهدوء */
+    hdEls.err.innerHTML = buzz.status === "error"
+      ? '<div class="bz-err">⚠️ ما قدرنا نتصل بالجوالات — تأكد من الإنترنت. <button type="button" class="bz-copy" data-hdretry>إعادة المحاولة</button></div>' : "";
+    if(HD.gridRoom !== store.buzz.room) renderHeadsGrid();
+  }
+  function renderHeadsGrid(){
+    if(!headsVisible()) return;
+    HD.gridRoom = store.buzz.room;
+    if(!store.teams.length){ hdEls.grid.innerHTML = '<p class="bz-intro">أضف الفرق من «الفرق والنقاط».</p>'; return; }
+    hdEls.grid.innerHTML = store.teams.map(function(t){
+      var last = store.heads.last[t.id];
+      return '<div class="bz-team" style="--c:' + t.color + '">'
+        + '<h4>' + escapeHtml(t.name) + '</h4>'
+        + '<div class="bz-qr" data-hdqr="' + t.id + '"></div>'
+        + '<div class="hd-last">' + (last ? "آخر جولة: ✅ " + (last.c | 0) + " · ⏭️ " + (last.p | 0) : "لسا ما لعبوا") + '</div>'
+        + '<button class="bz-copy" type="button" data-hdcopy="' + t.id + '">نسخ الرابط</button>'
+        + '</div>';
+    }).join("");
+    hdEls.grid.querySelectorAll("[data-hdqr]").forEach(function(box){
+      var t = store.teams.find(function(x){ return x.id === box.getAttribute("data-hdqr"); });
+      if(!t || !store.buzz.room || typeof qrcode === "undefined"){
+        box.innerHTML = '<p class="bz-intro">' + (store.buzz.room ? "تعذّر إنشاء الباركود" : "جاري التجهيز…") + '</p>'; return;
+      }
+      try{ var qr = qrcode(0, "M"); qr.addData(headsUrl(t)); qr.make(); box.innerHTML = qr.createSvgTag({ cellSize:4, margin:2 }); }
+      catch(e){ box.innerHTML = '<p class="bz-intro">تعذّر إنشاء الباركود</p>'; }
+    });
+  }
+  hdEls.grid.addEventListener("click", function(e){
+    var b = e.target.closest("[data-hdcopy]"); if(!b) return;
+    var t = store.teams.find(function(x){ return x.id === b.getAttribute("data-hdcopy"); });
+    if(!t) return;
+    var url = headsUrl(t);
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(url).then(function(){ toast("انسخ رابط " + t.name + " ✅"); }, function(){ prompt("انسخ الرابط:", url); });
+    } else { prompt("انسخ الرابط:", url); }
+  });
+  hdEls.err.addEventListener("click", function(e){
+    if(!e.target.closest("[data-hdretry]")) return;
+    buzzDisconnect(true); rtConnect();
+  });
+  function onHeads(p){
+    if(!p || typeof p !== "object") return;
+    var team = store.teams.find(function(t){ return t.id === p.team; });
+    var rid = typeof p.rid === "string" ? p.rid.slice(0, 40) : "";
+    var type = p.type;
+    if(!team || !rid || ["start","ans","pause","resume","end"].indexOf(type) === -1) return;
+    if(!HD.live || HD.live.rid !== rid){
+      HD.live = { rid:rid, team:team.id, name:"", deck:"", endAt:Date.now(), correct:0, passed:0, log:[], ended:false, paused:false };
+    }
+    var L = HD.live;
+    if(type === "start"){
+      L.name = buzzCleanName(p.name); L.deck = String(p.deck || "").slice(0, 30);
+      L.endAt = Date.now() + hdInt(p.left, 1, 600) * 1000; L.paused = false;
+      if(!headsVisible()) toast("🤳 بدأت جولة " + team.name + " في «حطها على راسك»");
+    } else if(type === "ans"){
+      L.correct = hdInt(p.correct, 0, 999); L.passed = hdInt(p.passed, 0, 999);
+      if(p.left != null) L.endAt = Date.now() + hdInt(p.left, 0, 600) * 1000;
+      if(L.log.length < 300) L.log.push({ w:String(p.w || "").slice(0, 40), ok:!!p.ok });
+    } else if(type === "pause"){
+      L.paused = true;
+    } else if(type === "resume"){
+      L.paused = false; L.endAt = Date.now() + hdInt(p.left, 0, 600) * 1000;
+    } else if(type === "end"){
+      var correct = hdInt(p.correct, 0, 999), passed = hdInt(p.passed, 0, 999);
+      var fresh = store.heads.done.indexOf(rid) === -1;     /* الجوال يعيد الإرسال لين يوصله تأكيد — نضيف النقاط مرة وحدة بس */
+      if(fresh){
+        store.heads.done.push(rid);
+        if(store.heads.done.length > 40) store.heads.done.shift();
+        team.score += correct;
+        store.heads.last[team.id] = { c:correct, p:passed, at:Date.now() };
+        persist(); renderTeams();
+        toast("🤳 " + team.name + ": " + (correct ? "انضافت " + hdPoints(correct) : "ما جاوبوا ولا كلمة"));
+      }
+      L.ended = true; L.paused = false; L.correct = correct; L.passed = passed;
+      if(Array.isArray(p.words)){
+        L.log = p.words.slice(0, 300).map(function(x){ return { w:String((x && x.w) || "").slice(0, 40), ok:!!(x && x.ok) }; });
+      }
+      rtSend("headsAck", { rid:rid, team:team.id, added:correct, teamName:team.name });
+      if(fresh) renderHeadsGrid();
+    }
+    renderHeadsLive();
+  }
+  function renderHeadsLive(){
+    var L = HD.live, el = hdEls.live;
+    clearInterval(HD.timer); HD.timer = null;
+    if(!L){ el.hidden = true; return; }
+    var team = store.teams.find(function(t){ return t.id === L.team; });
+    var color = team ? team.color : "#5ec4e0", tname = team ? team.name : "";
+    var counts = '<div class="hd-count"><span class="ok">✅ ' + L.correct + '</span><span class="pass">⏭️ ' + L.passed + '</span></div>';
+    var log = '<div class="hd-log">' + L.log.map(function(x){
+      return '<span class="' + (x.ok ? "ok" : "pass") + '">' + (x.ok ? "✅ " : "⏭️ ") + escapeHtml(x.w) + '</span>';
+    }).join("") + '</div>';
+    if(L.ended){
+      el.innerHTML = '<div class="hd-card" style="--c:' + color + '"><div class="hd-done">🏁 خلصت جولة <b>' + escapeHtml(tname) + '</b> — '
+        + (L.correct ? "انضافت " + hdPoints(L.correct) : "ما جاوبوا ولا كلمة 😅") + '</div>' + counts + log + '</div>';
+    } else {
+      el.innerHTML = '<div class="hd-card" style="--c:' + color + '"><div class="hd-who">🤳 دور <b>' + escapeHtml(tname) + '</b>'
+        + (L.name ? ' <small>· ' + escapeHtml(L.name) + '</small>' : '') + (L.deck ? ' <small>· ' + escapeHtml(L.deck) + '</small>' : '') + '</div>'
+        + '<div class="hd-timer" id="hdTimer"></div>' + counts + log + '</div>';
+      var tick = function(){
+        var t = document.getElementById("hdTimer"); if(!t) return;
+        if(L.paused){ t.textContent = "⏸"; t.classList.remove("warn"); return; }
+        var sec = Math.max(0, Math.ceil((L.endAt - Date.now()) / 1000));
+        t.textContent = Math.floor(sec / 60) + ":" + ("0" + (sec % 60)).slice(-2);
+        t.classList.toggle("warn", sec <= 10);
+      };
+      tick(); HD.timer = setInterval(tick, 250);
+    }
+    el.hidden = false;
+  }
 
   /* ============ boot: fetch content banks from Supabase, then init ============ */
   var bootEls = {

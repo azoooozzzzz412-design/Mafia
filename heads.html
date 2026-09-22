@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14110d">
+<title>حطها على راسك — طاولة السهرة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style>
+  :root{
+    color-scheme: dark;
+    --ink:#14110d; --panel:#1c170f; --panel2:#241d13; --text:#f2e9d8; --dim:#a8987d; --faint:#726352;
+    --gold:#f0c65f; --gold2:#c99a3c; --border:rgba(217,171,80,.18); --c:#5ec4e0;
+    --W:100vw; --H:100vh;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  [hidden]{ display:none !important; }
+  html, body{ height:100%; overflow:hidden; background:var(--ink); color:var(--text); font-family:"Cairo", Tahoma, sans-serif; }
+  body{ touch-action:manipulation; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; -webkit-tap-highlight-color:transparent; }
+  button{ font-family:inherit; cursor:pointer; }
+
+  /* المسرح: يتدوّر لو الجوال بالعرض وقفل الدوران شغّال */
+  .stage{ position:fixed; left:50%; top:50%; width:var(--W); height:var(--H); transform:translate(-50%,-50%); overflow:hidden; }
+  .stage.rot90, .stage.rotm90{ width:var(--H); height:var(--W); }
+  .stage.rot90{ transform:translate(-50%,-50%) rotate(90deg); }
+  .stage.rotm90{ transform:translate(-50%,-50%) rotate(-90deg); }
+  .sc{
+    position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
+    padding: max(16px, env(safe-area-inset-top)) 16px max(18px, env(safe-area-inset-bottom)); text-align:center;
+  }
+
+  /* الإعداد */
+  .sc.setup, .sc.result{ justify-content:flex-start; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  .top-row{ width:100%; max-width:520px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .top-row h1{ font-size:1.55rem; font-weight:900; }
+  .home{ color:var(--dim); text-decoration:none; font-size:.85rem; font-weight:800; border:1px solid var(--border); border-radius:999px; padding:5px 12px; }
+  .team-badge{
+    display:flex; flex-direction:column; align-items:center; gap:2px; width:100%; max-width:520px;
+    background:rgba(255,255,255,.05); border:1px solid var(--border); border-top:5px solid var(--c);
+    border-radius:14px; padding:8px 14px; font-weight:900; font-size:1.05rem;
+  }
+  .team-badge small{ font-size:.78rem; font-weight:700; color:var(--dim); }
+  .how{ color:var(--dim); font-size:.92rem; line-height:1.85; max-width:40ch; }
+  .how b{ color:var(--text); }
+  .lbl{ width:100%; max-width:520px; text-align:right; font-size:.95rem; font-weight:900; color:var(--gold); margin-top:4px; }
+  .decks{ display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; width:100%; max-width:520px; }
+  .deck{
+    background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:10px 4px; color:var(--text);
+    font-weight:800; font-size:.84rem; display:flex; flex-direction:column; align-items:center; gap:3px;
+  }
+  .deck .ic{ font-size:1.55rem; line-height:1.2; }
+  .deck small{ color:var(--faint); font-weight:700; font-size:.68rem; }
+  .deck.on{ border-color:var(--gold); background:#2c2416; box-shadow:0 0 0 2px var(--gold) inset; }
+  .durs{ display:flex; gap:8px; }
+  .durs button{
+    background:var(--panel); border:1px solid var(--border); color:var(--text); border-radius:999px;
+    padding:8px 18px; font-weight:800; font-size:.95rem;
+  }
+  .durs button.on{ background:var(--gold); color:#241a08; border-color:var(--gold); }
+  .big-btn{
+    width:100%; max-width:420px; background:linear-gradient(135deg, var(--gold), var(--gold2)); color:#241a08;
+    border:none; border-radius:16px; padding:15px; font-size:1.25rem; font-weight:900; flex-shrink:0;
+  }
+  .big-btn:disabled{ opacity:.5; }
+  .ghost{
+    background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.18); color:var(--text);
+    border-radius:12px; padding:10px 18px; font-weight:800; font-size:.9rem;
+  }
+  .note{ color:var(--dim); font-size:.82rem; line-height:1.6; }
+
+  /* حط الجوال */
+  .big-emoji{ font-size:4.2rem; line-height:1; }
+  .spin{ display:inline-block; animation: turn 2.2s ease-in-out infinite; }
+  @keyframes turn{ 0%,20%{ transform:rotate(0); } 50%,80%{ transform:rotate(90deg); } 100%{ transform:rotate(0); } }
+  .msg{ font-size:clamp(1.3rem, 6vw, 2rem); font-weight:900; line-height:1.4; }
+  .sub{ color:var(--dim); font-size:.95rem; line-height:1.7; max-width:36ch; }
+
+  /* العد التنازلي واللعب */
+  .sc.count, .sc.play{ background: radial-gradient(circle at 50% 42%, #1f5569 0%, #0f2530 75%); }
+  .count-num{ font-size:min(42vmin, 230px); font-weight:900; color:#fff; line-height:1; }
+  .play-top{ position:absolute; top:10px; left:14px; right:14px; display:flex; align-items:center; justify-content:space-between; font-weight:900; font-size:1.15rem; }
+  .play-top .timer{ font-family:ui-monospace, "SF Mono", monospace; direction:ltr; background:rgba(0,0,0,.28); border-radius:999px; padding:2px 16px; }
+  .play-top .timer.warn{ color:#ff9b8a; }
+  .play-top .score{ background:rgba(0,0,0,.28); border-radius:999px; padding:2px 14px; }
+  .team-strip{ position:absolute; top:0; left:0; right:0; height:8px; background:var(--c); }
+  .word{
+    width:94%; height:64%; display:flex; align-items:center; justify-content:center; text-align:center;
+    font-weight:900; line-height:1.15; color:#fff; text-shadow:0 4px 18px rgba(0,0,0,.35); overflow:hidden;
+  }
+  .tap-btns{ position:absolute; bottom:12px; left:12px; right:12px; display:flex; gap:12px; }
+  .tb{ flex:1; border:none; border-radius:16px; padding:14px 8px; font-size:1.2rem; font-weight:900; color:#fff; }
+  .tb.ok{ background:#2e9e5b; }
+  .tb.pass{ background:#d9822b; }
+  .fb{ position:absolute; inset:0; z-index:5; display:flex; align-items:center; justify-content:center; font-size:min(15vmin, 110px); font-weight:900; color:#fff; text-shadow:0 4px 18px rgba(0,0,0,.25); }
+  .fb.ok{ background:#2e9e5b; }
+  .fb.pass{ background:#d9822b; }
+  .fb.end{ background:#b8322a; }
+
+  /* النتيجة */
+  .res-title{ font-size:1.6rem; font-weight:900; }
+  .res-score{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+  .res-score span{ border-radius:14px; padding:8px 16px; font-size:1.25rem; font-weight:900; }
+  .res-score .ok{ background:rgba(46,158,91,.22); color:#8fe0b0; }
+  .res-score .pass{ background:rgba(255,255,255,.06); color:var(--dim); }
+  .res-ack{ font-weight:800; font-size:.95rem; color:var(--dim); max-width:36ch; line-height:1.6; }
+  .res-ack.ok{ color:#8fe0b0; }
+  .res-ack.bad{ color:#ffb3a7; }
+  .res-list{ list-style:none; width:100%; max-width:520px; display:flex; flex-wrap:wrap; gap:6px; justify-content:center; }
+  .res-list li{ padding:5px 12px; border-radius:999px; font-weight:800; font-size:.9rem; }
+  .res-list li.ok{ background:rgba(46,158,91,.18); color:#8fe0b0; border:1px solid rgba(46,158,91,.45); }
+  .res-list li.pass{ background:rgba(255,255,255,.04); color:var(--faint); border:1px solid rgba(255,255,255,.1); }
+  .res-btns{ width:100%; max-width:420px; display:flex; flex-direction:column; gap:8px; align-items:stretch; }
+  @media (prefers-reduced-motion: reduce){ *{ animation:none !important; } }
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+
+  <section class="sc setup" id="scSetup">
+    <div class="top-row"><h1>🤳 حطها على راسك</h1><a class="home" href="./">🏠 الطاولة</a></div>
+    <div class="team-badge" id="teamBadge" hidden></div>
+    <p class="how">واحد يحط الجوال على جبهته <b>بالعرض</b> والشاشة لفريقه، وتطلع كلمة ما يشوفها وفريقه يعطيه تلميحات.<br>👇 <b>اقلب لتحت</b> إذا عرفتها &nbsp;·&nbsp; 👆 <b>لفوق</b> إذا بتعدّيها</p>
+    <h2 class="lbl">اختار الفئة</h2>
+    <div class="decks" id="decks"><p class="note">جاري تحميل الكلمات…</p></div>
+    <h2 class="lbl">مدة الجولة</h2>
+    <div class="durs" id="durs"><button type="button" data-dur="45">45 ثانية</button><button type="button" data-dur="60">دقيقة</button><button type="button" data-dur="90">90 ثانية</button></div>
+    <button class="big-btn" id="startBtn" type="button" disabled>▶ ابدأ</button>
+    <p class="note" id="setupNote">أول مرة ممكن يطلب الجوال إذن «الحركة والاتجاه» — وافق عليه عشان يحس بالقلبة.</p>
+  </section>
+
+  <section class="sc place" id="scPlace" hidden>
+    <div class="big-emoji"><span class="spin">📱</span></div>
+    <p class="msg" id="placeMsg">حط الجوال على جبهتك بالعرض</p>
+    <p class="sub" id="placeSub">والشاشة لفريقك — اللعب يبدأ لحاله</p>
+    <button class="big-btn" id="tapStartBtn" type="button" hidden>▶ ابدأ</button>
+    <button class="ghost" id="useTapBtn" type="button">الحساس ما اشتغل؟ العب باللمس</button>
+    <button class="ghost" id="cancelBtn" type="button">رجوع</button>
+  </section>
+
+  <section class="sc count" id="scCount" hidden>
+    <div class="count-num" id="countNum">3</div>
+    <p class="sub" id="countSub" style="color:#cfe9f2">استعدوا…</p>
+  </section>
+
+  <section class="sc play" id="scPlay" hidden>
+    <div class="team-strip" id="teamStrip" hidden></div>
+    <div class="play-top"><span class="timer" id="timer">60</span><span class="score" id="score">✅ 0</span></div>
+    <div class="word" id="word"></div>
+    <div class="tap-btns" id="tapBtns" hidden>
+      <button class="tb pass" id="tapPass" type="button">⏭️ عدّها</button>
+      <button class="tb ok" id="tapOk" type="button">✅ صح</button>
+    </div>
+  </section>
+
+  <section class="sc pause" id="scPause" hidden>
+    <div class="big-emoji">⏸</div>
+    <p class="msg">وقّفنا الجولة</p>
+    <p class="sub" id="pauseSub"></p>
+    <button class="big-btn" id="resumeBtn" type="button">▶ كمّل</button>
+    <button class="ghost" id="quitBtn" type="button">إنهاء الجولة</button>
+  </section>
+
+  <section class="sc result" id="scResult" hidden>
+    <p class="res-title" id="resTitle">خلص الوقت! ⏰</p>
+    <div class="res-score" id="resScore"></div>
+    <p class="res-ack" id="resAck"></p>
+    <ul class="res-list" id="resList"></ul>
+    <div class="res-btns">
+      <button class="big-btn" id="againBtn" type="button">▶ جولة ثانية</button>
+      <button class="ghost" id="backBtn" type="button">تغيير الفئة</button>
+    </div>
+  </section>
+
+  <div class="fb" id="fb" hidden></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  var stage = $("stage");
+  function esc(s){ return String(s).replace(/[&<>"']/g, function(c){ return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]; }); }
+
+  /* ?r=الغرفة&t=الفريق — لما ينمسح الباركود من شاشة الطاولة (النقاط تنضاف لحالها) */
+  var qs = new URLSearchParams(location.search);
+  var room = (qs.get("r") || "").trim().toLowerCase();
+  var teamId = (qs.get("t") || "").trim().slice(0, 40);
+  var connected = /^[a-z0-9]{4,16}$/.test(room) && !!teamId;
+  var secParam = parseInt(qs.get("sec"), 10);
+  var DURS = [45, 60, 90];
+
+  var LS = "sahra-heads-v1";
+  var prefs = { deck:"all", dur:60, used:{} };
+  try{
+    var raw = JSON.parse(localStorage.getItem(LS) || "null");
+    if(raw && typeof raw === "object"){
+      if(typeof raw.deck === "string") prefs.deck = raw.deck;
+      if(DURS.indexOf(raw.dur) !== -1) prefs.dur = raw.dur;
+      if(raw.used && typeof raw.used === "object" && !Array.isArray(raw.used)) prefs.used = raw.used;
+    }
+  }catch(e){}
+  function savePrefs(){ try{ localStorage.setItem(LS, JSON.stringify(prefs)); }catch(e){} }
+  var pid = "", myName = "";
+  try{
+    pid = localStorage.getItem("sahra-buzz-pid") || "";
+    if(!pid){ pid = "p" + Math.random().toString(36).slice(2, 10); localStorage.setItem("sahra-buzz-pid", pid); }
+    myName = String(localStorage.getItem("sahra-buzz-name") || "").trim().slice(0, 16);
+  }catch(e){ if(!pid) pid = "p" + Math.random().toString(36).slice(2, 10); }
+
+  var DATA = null;
+  var G = { state:"setup", mode:"sensor", results:[], cur:null, endAt:0, left:0, armed:true, fbUntil:0,
+            rot:0, base:0, rid:null, placeSince:0, countT:null, lastTick:-1, resume:false, placeT:null };
+  var S = { ok:false, nz:0, gamma:0, beta:0, t:0 };
+  var screens = { setup:$("scSetup"), place:$("scPlace"), count:$("scCount"), play:$("scPlay"), pause:$("scPause"), result:$("scResult") };
+  var SCREEN_OF = { setup:"setup", place:"place", count:"count", play:"play", fb:"play", ending:"play", pause:"pause", result:"result" };
+
+  function setState(s){
+    G.state = s;
+    var sc = SCREEN_OF[s];
+    Object.keys(screens).forEach(function(k){ screens[k].hidden = (k !== sc); });
+    applyRot();
+  }
+
+  /* ===== مقاس الشاشة والتدوير ===== */
+  function sizeVars(){
+    var r = document.documentElement.style;
+    r.setProperty("--W", window.innerWidth + "px");
+    r.setProperty("--H", window.innerHeight + "px");
+    applyRot(); fitWord();
+  }
+  function applyRot(){
+    var portrait = window.innerHeight > window.innerWidth;
+    var inGame = G.state === "count" || G.state === "play" || G.state === "fb" || G.state === "ending";
+    var r = (inGame && portrait && G.mode === "sensor") ? G.rot : 0;
+    stage.classList.toggle("rot90", r === 90);
+    stage.classList.toggle("rotm90", r === -90);
+  }
+  window.addEventListener("resize", sizeVars);
+  window.addEventListener("orientationchange", function(){ setTimeout(sizeVars, 250); });
+
+  function fitWord(){
+    var el = $("word");
+    if(screens.play.hidden) return;
+    var W = el.clientWidth, H = el.clientHeight;
+    if(!W || !H) return;
+    var size = Math.min(H * 0.6, W * 0.3);
+    el.style.fontSize = size + "px";
+    for(var i=0; i<30 && (el.scrollWidth > W + 1 || el.scrollHeight > H + 1); i++){ size *= 0.9; el.style.fontSize = size + "px"; }
+  }
+
+  /* ===== الكلمات ===== */
+  function decks(){ return DATA ? DATA.decks : []; }
+  function deckWords(id){
+    if(id === "all"){
+      var seen = {}, out = [];
+      decks().forEach(function(d){ d.words.forEach(function(w){ if(!seen[w]){ seen[w] = 1; out.push(w); } }); });
+      return out;
+    }
+    for(var i=0;i<decks().length;i++) if(decks()[i].id === id) return decks()[i].words;
+    return [];
+  }
+  function deckName(id){
+    if(id === "all") return "كل الفئات";
+    for(var i=0;i<decks().length;i++) if(decks()[i].id === id) return decks()[i].name;
+    return "";
+  }
+  function validOrder(o, n){
+    if(!Array.isArray(o) || o.length !== n) return false;
+    var seen = {};
+    for(var i=0;i<n;i++){ var v = o[i]; if(typeof v !== "number" || v < 0 || v >= n || Math.floor(v) !== v || seen[v]) return false; seen[v] = 1; }
+    return true;
+  }
+  function shuffledIdx(n){
+    var a = []; for(var i=0;i<n;i++) a.push(i);
+    for(var j=n-1;j>0;j--){ var k = Math.floor(Math.random() * (j + 1)); var t = a[j]; a[j] = a[k]; a[k] = t; }
+    return a;
+  }
+  /* الكلمات ما تتكرر لين تخلص الفئة كلها — والترتيب محفوظ بالجوال */
+  function drawWord(){
+    var words = deckWords(prefs.deck), n = words.length;
+    if(!n) return "؟";
+    var u = prefs.used[prefs.deck];
+    if(!u || !validOrder(u.order, n) || typeof u.idx !== "number" || u.idx < 0 || u.idx >= n){
+      u = { order: shuffledIdx(n), idx: 0 }; prefs.used[prefs.deck] = u;
+    }
+    var w = words[u.order[u.idx]]; u.idx += 1; savePrefs();
+    return w;
+  }
+
+  /* ===== شاشة الإعداد ===== */
+  function renderSetup(){
+    if(!DATA) return;
+    var list = [{ id:"all", name:"كل الفئات", icon:"🎲", n: deckWords("all").length }].concat(decks().map(function(d){ return { id:d.id, name:d.name, icon:d.icon, n:d.words.length }; }));
+    if(!list.some(function(d){ return d.id === prefs.deck; })) prefs.deck = "all";
+    $("decks").innerHTML = list.map(function(d){
+      return '<button type="button" class="deck' + (d.id === prefs.deck ? " on" : "") + '" data-deck="' + esc(d.id) + '"><span class="ic">' + d.icon + '</span>' + esc(d.name) + '<small>' + d.n + ' كلمة</small></button>';
+    }).join("");
+    Array.prototype.forEach.call($("durs").querySelectorAll("[data-dur]"), function(b){ b.classList.toggle("on", +b.getAttribute("data-dur") === prefs.dur); });
+    $("startBtn").disabled = false;
+    renderTeamBadge();
+  }
+  $("decks").addEventListener("click", function(e){
+    var b = e.target.closest("[data-deck]"); if(!b) return;
+    prefs.deck = b.getAttribute("data-deck"); savePrefs(); renderSetup();
+  });
+  $("durs").addEventListener("click", function(e){
+    var b = e.target.closest("[data-dur]"); if(!b) return;
+    prefs.dur = +b.getAttribute("data-dur"); savePrefs(); renderSetup();
+  });
+
+  /* ===== البداية: إذن الحساس (آيفون) + ملء الشاشة (أندرويد) ===== */
+  function startFlow(){
+    if(!DATA) return;
+    unlockAudio(); keepAwake(); goFullscreen();
+    var D = window.DeviceOrientationEvent, ask;
+    try{
+      ask = (D && typeof D.requestPermission === "function") ? D.requestPermission() : Promise.resolve(D ? "granted" : "denied");
+    }catch(e){ ask = Promise.resolve("denied"); }
+    ask.then(function(r){ beginPlace(r === "granted"); }, function(){ beginPlace(false); });
+  }
+  $("startBtn").addEventListener("click", function(){ G.resume = false; startFlow(); });
+
+  function beginPlace(sensorAllowed){
+    G.mode = sensorAllowed ? "sensor" : "tap";
+    G.placeSince = 0;
+    setState("place");
+    renderPlace();
+    clearTimeout(G.placeT);
+    if(G.mode === "sensor"){
+      var t0 = Date.now();
+      /* ما وصلت أي قراءة من الحساس خلال ثانيتين (كمبيوتر مثلًا) → نلعب باللمس */
+      G.placeT = setTimeout(function(){ if(G.state === "place" && G.mode === "sensor" && S.t < t0){ G.mode = "tap"; renderPlace(); } }, 2000);
+    }
+  }
+  function renderPlace(){
+    var sensor = G.mode === "sensor";
+    $("placeMsg").textContent = sensor ? "حط الجوال على جبهتك بالعرض" : "العب باللمس";
+    $("placeSub").textContent = sensor
+      ? "والشاشة لفريقك — اللعب يبدأ لحاله أول ما يثبت الجوال"
+      : "حط الجوال على جبهتك والشاشة لفريقك، وأحد من فريقك يضغط «✅ صح» أو «⏭️ عدّها» على الشاشة.";
+    $("tapStartBtn").hidden = sensor;
+    $("useTapBtn").hidden = !sensor;
+    $("cancelBtn").textContent = G.resume ? "إنهاء الجولة" : "رجوع";
+  }
+  $("useTapBtn").addEventListener("click", function(){ G.mode = "tap"; renderPlace(); });
+  $("tapStartBtn").addEventListener("click", function(){ unlockAudio(); startCountdown(); });
+  $("cancelBtn").addEventListener("click", function(){
+    clearTimeout(G.placeT);
+    if(G.resume){ G.resume = false; finishRound(false); return; }
+    exitFullscreen(); setState("setup");
+  });
+
+  function startCountdown(){
+    if(G.state !== "place") return;
+    clearTimeout(G.placeT);
+    G.rot = (G.mode === "sensor" && Math.abs(S.gamma) > 45) ? (S.gamma > 0 ? -90 : 90) : 0;
+    setState("count");
+    var n = 3;
+    $("countNum").textContent = n; $("countSub").textContent = G.resume ? "نكمّل…" : "استعدوا…"; beep(660, 0.12);
+    clearInterval(G.countT);
+    G.countT = setInterval(function(){
+      n -= 1;
+      if(n > 0){ $("countNum").textContent = n; beep(660, 0.12); }
+      else { clearInterval(G.countT); startRound(); }
+    }, 900);
+  }
+
+  function startRound(){
+    G.base = Math.max(-0.3, Math.min(0.3, S.nz || 0));
+    G.armed = true;
+    $("tapBtns").hidden = G.mode !== "tap";
+    beep(990, 0.18);
+    if(G.resume){
+      G.resume = false;
+      G.endAt = Date.now() + G.left;
+      if(!G.cur) G.cur = drawWord();
+      showWord();
+      heads({ type:"resume", left: Math.round(G.left / 1000) });
+      return;
+    }
+    var dur = (secParam >= 3 && secParam <= 300) ? secParam : prefs.dur;
+    G.results = []; G.lastTick = -1;
+    G.rid = "h" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    G.endAt = Date.now() + dur * 1000;
+    rt.pending = null; rt.acked = null; rt.failed = false; clearTimeout(rt.endT);
+    G.cur = drawWord();
+    showWord();
+    heads({ type:"start", left: dur, deck: deckName(prefs.deck), name: myName });
+  }
+  function showWord(){
+    $("word").textContent = G.cur;
+    $("fb").hidden = true;
+    setState("play");
+    fitWord(); updateHud();
+  }
+  function count(){
+    var ok = 0, pass = 0;
+    G.results.forEach(function(r){ if(r.ok) ok++; else pass++; });
+    return { ok:ok, pass:pass };
+  }
+  function updateHud(){
+    var left = Math.max(0, G.endAt - Date.now()), sec = Math.ceil(left / 1000);
+    var t = $("timer");
+    t.textContent = Math.floor(sec / 60) + ":" + ("0" + (sec % 60)).slice(-2);
+    t.classList.toggle("warn", sec <= 10);
+    $("score").textContent = "✅ " + count().ok;
+  }
+
+  function answer(ok){
+    if(G.state !== "play" || !G.cur) return;
+    G.results.push({ w:G.cur, ok:!!ok });
+    var c = count();
+    heads({ type:"ans", w:G.cur, ok:!!ok, correct:c.ok, passed:c.pass, left: Math.max(0, Math.round((G.endAt - Date.now()) / 1000)) });
+    G.cur = null;
+    var fb = $("fb");
+    fb.className = "fb " + (ok ? "ok" : "pass");
+    fb.textContent = ok ? "صح! ✅" : "عدّها ⏭️";
+    fb.hidden = false;
+    G.armed = (G.mode !== "sensor");      /* بالحساس: لازم يرجع الجوال مستقيم قبل الكلمة الجاية */
+    G.fbUntil = Date.now() + (ok ? 650 : 550);
+    G.state = "fb";
+    if(ok){ vibrate(60); soundOk(); } else { vibrate([30, 40, 30]); soundPass(); }
+    updateHud();
+  }
+  $("tapOk").addEventListener("click", function(){ answer(true); });
+  $("tapPass").addEventListener("click", function(){ answer(false); });
+  document.addEventListener("keydown", function(e){
+    if(G.state !== "play") return;
+    if(e.key === "ArrowDown" || e.key === "Enter" || e.key === " "){ e.preventDefault(); answer(true); }
+    else if(e.key === "ArrowUp"){ e.preventDefault(); answer(false); }
+  });
+
+  /* ===== الحساس: وجه الشاشة لتحت = صح، لفوق = عدّها =====
+     nz = cos(β)·cos(γ) = مركبة اتجاه الشاشة الرأسية (1 للأعلى، -1 للأسفل، 0 والجوال واقف)
+     وتشتغل سواء الجوال بالطول أو بالعرض. */
+  window.addEventListener("deviceorientation", function(e){
+    if(e.beta == null || e.gamma == null) return;
+    S.beta = +e.beta; S.gamma = +e.gamma;
+    S.nz = Math.cos(S.beta * Math.PI / 180) * Math.cos(S.gamma * Math.PI / 180);
+    S.ok = true; S.t = Date.now();
+    onSensor();
+  });
+  function onSensor(){
+    if(G.mode !== "sensor") return;
+    var now = Date.now();
+    if(G.state === "place"){
+      if(Math.abs(S.nz) < 0.45 && Math.abs(S.gamma) > 55){
+        if(!G.placeSince) G.placeSince = now;
+        else if(now - G.placeSince > 700) startCountdown();
+      } else { G.placeSince = 0; }
+      return;
+    }
+    if(G.state === "play" || G.state === "fb"){
+      var d = S.nz - G.base;
+      if(!G.armed){ if(Math.abs(d) < 0.3) G.armed = true; return; }
+      if(G.state !== "play") return;
+      if(d < -0.55) answer(true);
+      else if(d > 0.55) answer(false);
+    }
+  }
+
+  /* ===== الحلقة الرئيسية: الوقت + الكلمة الجاية ===== */
+  setInterval(function(){
+    if(G.state !== "play" && G.state !== "fb") return;
+    var now = Date.now(), left = G.endAt - now;
+    if(left <= 0){ timeUp(); return; }
+    updateHud();
+    var sec = Math.ceil(left / 1000);
+    if(sec <= 5 && sec !== G.lastTick){ G.lastTick = sec; tickSound(); }
+    if(G.state === "fb" && now >= G.fbUntil && G.armed){ G.cur = drawWord(); showWord(); }
+  }, 100);
+
+  function timeUp(){
+    if(G.state !== "play" && G.state !== "fb") return;
+    G.cur = null;
+    var fb = $("fb");
+    fb.className = "fb end"; fb.textContent = "خلص الوقت! ⏰"; fb.hidden = false;
+    G.state = "ending";
+    vibrate(400); soundEnd();
+    setTimeout(function(){ finishRound(true); }, 1400);
+  }
+  function finishRound(timeOver){
+    clearInterval(G.countT); clearTimeout(G.placeT);
+    $("fb").hidden = true;
+    var c = count();
+    if(G.rid && connected){
+      rt.pending = { type:"end", rid:G.rid, correct:c.ok, passed:c.pass, words:G.results.slice(0, 200) };
+      rt.tries = 0; rt.failed = false; sendEnd();
+    }
+    exitFullscreen();
+    $("resTitle").textContent = timeOver ? "خلص الوقت! ⏰" : "انتهت الجولة";
+    $("resScore").innerHTML = '<span class="ok">✅ ' + c.ok + ' صح</span><span class="pass">⏭️ ' + c.pass + ' عدّوها</span>';
+    $("resList").innerHTML = G.results.length
+      ? G.results.map(function(r){ return '<li class="' + (r.ok ? "ok" : "pass") + '">' + (r.ok ? "✅ " : "⏭️ ") + esc(r.w) + '</li>'; }).join("")
+      : '<li class="pass">ما جاوبتوا ولا كلمة 😅</li>';
+    setState("result");
+    renderAck();
+  }
+  function pointsText(n){
+    if(n === 1) return "نقطة وحدة";
+    if(n === 2) return "نقطتين";
+    return n + (n >= 3 && n <= 10 ? " نقاط" : " نقطة");
+  }
+  function renderAck(){
+    var el = $("resAck"), c = count();
+    el.className = "res-ack";
+    if(!connected){
+      el.textContent = c.ok ? "زيدوا فريقكم " + pointsText(c.ok) + " من «👥 الفرق والنقاط»" : "";
+      return;
+    }
+    if(rt.acked && rt.acked.rid === G.rid){
+      var a = rt.acked.added | 0;
+      el.textContent = a ? "✅ انضافت " + pointsText(a) + " لـ " + (rt.acked.teamName || "فريقكم") : "📺 وصلت النتيجة للشاشة";
+      el.className = "res-ack ok";
+    } else if(rt.failed){
+      el.textContent = "⚠️ ما وصلت النتيجة للشاشة — زيدوا " + pointsText(c.ok) + " يدوي من «👥 الفرق والنقاط»";
+      el.className = "res-ack bad";
+    } else {
+      el.textContent = "⏳ نرسل النتيجة للشاشة…";
+    }
+  }
+  $("againBtn").addEventListener("click", function(){ G.resume = false; startFlow(); });
+  $("backBtn").addEventListener("click", function(){ setState("setup"); renderSetup(); });
+
+  /* ===== إيقاف مؤقت لو طفت الشاشة أو طلع من الصفحة ===== */
+  document.addEventListener("visibilitychange", function(){
+    if(document.visibilityState === "hidden"){
+      if(G.state === "play" || G.state === "fb"){
+        G.left = Math.max(1000, G.endAt - Date.now());
+        if(G.state === "fb"){ G.cur = null; }
+        $("fb").hidden = true;
+        $("pauseSub").textContent = "باقي " + Math.ceil(G.left / 1000) + " ثانية — ✅ " + count().ok;
+        setState("pause");
+        heads({ type:"pause", left: Math.round(G.left / 1000) });
+      } else if(G.state === "count"){
+        clearInterval(G.countT); G.placeSince = 0; setState("place"); renderPlace();
+      }
+    } else {
+      keepAwake();
+      if(connected && rt.client && !rt.on) rtRejoin(); else if(connected) send("hello", { team:teamId, pid:pid, role:"heads" });
+    }
+  });
+  $("resumeBtn").addEventListener("click", function(){ G.resume = true; startFlow(); });
+  $("quitBtn").addEventListener("click", function(){ G.resume = false; finishRound(false); });
+
+  /* ===== الاتصال بشاشة الطاولة (Supabase Realtime) ===== */
+  var rt = { client:null, ch:null, on:false, err:false, teams:null, pending:null, tries:0, endT:null, acked:null, failed:false };
+  function rtStart(){
+    if(!connected) return;
+    if(typeof window.supabase === "undefined" || !window.supabase.createClient || !window.SAHRA_SUPABASE_URL
+       || !window.SAHRA_SUPABASE_ANON_KEY || window.SAHRA_SUPABASE_URL.indexOf("xxxx") !== -1){
+      rt.err = true; renderTeamBadge(); return;
+    }
+    rt.client = window.supabase.createClient(window.SAHRA_SUPABASE_URL, window.SAHRA_SUPABASE_ANON_KEY, {
+      auth: { persistSession:false, autoRefreshToken:false, detectSessionInUrl:false }
+    });
+    rtJoin();
+  }
+  function rtJoin(){
+    var c = rt.client.channel("sahra-buzz-" + room, { config: { broadcast: { self:false } } });
+    c.on("broadcast", { event:"state" }, function(m){
+      if(rt.ch !== c) return;
+      var p = m && m.payload;
+      if(p && Array.isArray(p.teams)){ rt.teams = p.teams; renderTeamBadge(); }
+    });
+    c.on("broadcast", { event:"headsAck" }, function(m){
+      if(rt.ch !== c) return;
+      var p = m && m.payload;
+      if(!p || !rt.pending || p.rid !== rt.pending.rid) return;
+      rt.acked = p; rt.pending = null; clearTimeout(rt.endT);
+      renderAck();
+    });
+    c.subscribe(function(s){
+      if(rt.ch !== c) return;
+      if(s === "SUBSCRIBED"){
+        rt.on = true;
+        send("hello", { team:teamId, pid:pid, role:"heads" });
+        if(rt.pending){ rt.tries = 0; sendEnd(); }
+      } else if(s === "CHANNEL_ERROR" || s === "TIMED_OUT" || s === "CLOSED"){ rt.on = false; }
+      renderTeamBadge();
+    });
+    rt.ch = c;
+  }
+  function rtRejoin(){
+    var old = rt.ch; rt.ch = null; rt.on = false;
+    if(old){ try{ rt.client.removeChannel(old); }catch(e){} }
+    rtJoin();
+  }
+  function send(event, payload){
+    if(!rt.ch || !rt.on) return false;
+    try{ var p = rt.ch.send({ type:"broadcast", event:event, payload:payload }); if(p && p.catch) p.catch(function(){}); return true; }
+    catch(e){ return false; }
+  }
+  function heads(payload){
+    if(!connected) return false;
+    payload.team = teamId; payload.pid = pid;
+    if(!payload.rid) payload.rid = G.rid;
+    return send("heads", payload);
+  }
+  function sendEnd(){
+    if(!rt.pending) return;
+    heads(rt.pending);
+    rt.tries += 1;
+    clearTimeout(rt.endT);
+    if(rt.tries < 8){ rt.endT = setTimeout(function(){ if(rt.pending) sendEnd(); }, 2000); }
+    else { rt.failed = true; if(G.state === "result") renderAck(); }
+  }
+  function teamInfo(){
+    if(!rt.teams) return null;
+    for(var i=0;i<rt.teams.length;i++) if(rt.teams[i] && rt.teams[i].id === teamId) return rt.teams[i];
+    return null;
+  }
+  function renderTeamBadge(){
+    var b = $("teamBadge");
+    if(!connected){ b.hidden = true; $("teamStrip").hidden = true; return; }
+    var t = teamInfo();
+    var status = rt.err ? "⚠️ إعدادات الاتصال ناقصة — النقاط تنحسب يدوي"
+      : !rt.on ? "⏳ نتصل بشاشة الطاولة…"
+      : !rt.teams ? "⏳ ننتظر شاشة الطاولة… تأكد إنها مفتوحة على «حطها على راسك»"
+      : t ? "📺 متصل بالشاشة — النقاط تنضاف لفريقك لحالها"
+      : "⚠️ هذا الفريق مو موجود بالشاشة — امسح الباركود من جديد";
+    b.hidden = false;
+    b.style.setProperty("--c", t && t.color ? t.color : "#8a8074");
+    b.innerHTML = '<span>' + esc(t ? t.name : "فريقك") + '</span><small>' + status + '</small>';
+    var strip = $("teamStrip");
+    strip.hidden = !t;
+    if(t) strip.style.setProperty("--c", t.color || "#5ec4e0");
+  }
+
+  /* ===== أصوات، اهتزاز، الشاشة ما تطفي، ملء الشاشة ===== */
+  var AC = null, wakeLock = null;
+  function unlockAudio(){
+    try{
+      var C = window.AudioContext || window.webkitAudioContext;
+      if(!C) return;
+      if(!AC) AC = new C();
+      if(AC.state === "suspended") AC.resume();
+    }catch(e){}
+  }
+  function tone(freqs, dur, vol, type){
+    try{
+      if(!AC) return;
+      var t0 = AC.currentTime, o = AC.createOscillator(), g = AC.createGain();
+      o.type = type || "triangle";
+      freqs.forEach(function(f, i){ o.frequency.setValueAtTime(f, t0 + i * dur / freqs.length); });
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(vol, t0 + 0.015);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      o.connect(g); g.connect(AC.destination); o.start(t0); o.stop(t0 + dur + 0.02);
+    }catch(e){}
+  }
+  function beep(f, d){ tone([f], d, 0.25, "sine"); }
+  function soundOk(){ tone([660, 990], 0.3, 0.3, "triangle"); }
+  function soundPass(){ tone([440, 300], 0.26, 0.25, "triangle"); }
+  function tickSound(){ tone([1250], 0.06, 0.16, "square"); }
+  function soundEnd(){ tone([320, 210], 0.75, 0.3, "sawtooth"); }
+  function vibrate(p){ try{ if(navigator.vibrate) navigator.vibrate(p); }catch(e){} }
+  function keepAwake(){
+    try{
+      if(!("wakeLock" in navigator) || wakeLock || document.visibilityState !== "visible") return;
+      navigator.wakeLock.request("screen").then(function(l){ wakeLock = l; l.addEventListener("release", function(){ wakeLock = null; }); }).catch(function(){});
+    }catch(e){}
+  }
+  function goFullscreen(){
+    try{
+      var el = document.documentElement, req = el.requestFullscreen || el.webkitRequestFullscreen;
+      if(!req || document.fullscreenElement) return;
+      var p = req.call(el, { navigationUI:"hide" });
+      if(p && p.then){
+        p.then(function(){ try{ if(screen.orientation && screen.orientation.lock) screen.orientation.lock("landscape").catch(function(){}); }catch(e){} })
+         .catch(function(){});
+      }
+    }catch(e){}
+  }
+  function exitFullscreen(){
+    try{ if(screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); }catch(e){}
+    try{ if(document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function(){}); }catch(e){}
+  }
+
+  /* ===== التشغيل ===== */
+  sizeVars();
+  renderTeamBadge();
+  rtStart();
+  fetch("games/heads.json", { cache:"no-cache" })
+    .then(function(r){ if(!r.ok) throw new Error("http " + r.status); return r.json(); })
+    .then(function(d){
+      if(!d || !Array.isArray(d.decks) || !d.decks.length) throw new Error("bad data");
+      DATA = d; renderSetup();
+    })
+    .catch(function(){
+      $("decks").innerHTML = '<p class="note">تعذّر تحميل الكلمات — تأكد من الإنترنت و<a href="" style="color:var(--gold)">حدّث الصفحة</a></p>';
+    });
+})();
+</script>
+</body>
+</html>
