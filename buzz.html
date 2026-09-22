@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14110d">
+<title>أسرع إصبع — طاولة السهرة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style>
+  :root{
+    color-scheme: dark;
+    --ink:#14110d; --panel:#1c170f; --text:#f2e9d8; --dim:#a8987d; --faint:#726352;
+    --gold:#f0c65f; --c:#8a8074;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  [hidden]{ display:none !important; }
+  html, body{ height:100%; }
+  body{
+    background:var(--ink); color:var(--text); font-family:"Cairo", Tahoma, sans-serif;
+    display:flex; flex-direction:column; align-items:center; justify-content:space-between;
+    min-height:100%; min-height:100dvh; overflow:hidden;
+    padding: max(14px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+    touch-action: manipulation; -webkit-user-select:none; user-select:none;
+    -webkit-touch-callout:none; -webkit-tap-highlight-color:transparent;
+    transition: background-color .25s;
+  }
+  body.st-win{ background:var(--c); }
+  body.st-lost{ background:#2a0f0f; }
+  body.st-armed{ background: radial-gradient(circle at 50% 50%, #2b1313 0%, var(--ink) 70%); }
+
+  .top{ width:100%; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .team{
+    display:flex; align-items:center; gap:9px; background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.12); border-radius:999px; padding:7px 16px 7px 12px;
+    font-weight:900; font-size:1.05rem; max-width:70%;
+  }
+  .team .dot{ width:16px; height:16px; border-radius:5px; background:var(--c); flex-shrink:0; }
+  .team span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .conn{ display:flex; align-items:center; gap:6px; font-size:.75rem; font-weight:700; color:var(--dim); }
+  .conn i{ width:9px; height:9px; border-radius:50%; background:#d9a53c; display:inline-block; }
+  .conn.ok i{ background:#5fd18f; }
+  .conn.bad i{ background:#e05a5a; }
+
+  .center{ flex:1; width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:22px; }
+  .btn{
+    --size: min(76vw, 52vh, 380px);
+    width:var(--size); height:var(--size); border-radius:50%; border:none; cursor:pointer;
+    font-family:inherit; font-weight:900; font-size:calc(var(--size) * .17); color:#fff;
+    background: radial-gradient(circle at 35% 30%, #6d655a, #3a342c 70%);
+    box-shadow: 0 0 0 10px color-mix(in srgb, var(--c) 45%, transparent), 0 18px 40px rgba(0,0,0,.6), inset 0 -10px 24px rgba(0,0,0,.35);
+    box-shadow: 0 0 0 10px var(--c), 0 18px 40px rgba(0,0,0,.6), inset 0 -10px 24px rgba(0,0,0,.35);
+    opacity:.55; transition: transform .08s, opacity .2s, background .2s;
+    text-shadow:0 3px 10px rgba(0,0,0,.35);
+    display:flex; align-items:center; justify-content:center; line-height:1.1; text-align:center;
+  }
+  .btn[hidden]{ display:none; }
+  body.st-armed .btn{
+    opacity:1; background: radial-gradient(circle at 35% 28%, #ff7a6b, #e21b1b 55%, #9d0b0b);
+    animation: pulse 1s ease-in-out infinite;
+  }
+  body.st-pressed .btn{ opacity:1; transform:scale(.93); background: radial-gradient(circle at 35% 30%, #b3342a, #7a0d0d 70%); }
+  body.st-win .btn{ opacity:1; background: radial-gradient(circle at 35% 30%, #ffffff, #efe3c6 70%); color:var(--ink); text-shadow:none; animation: pop .5s ease; }
+  body.st-lost .btn, body.st-excluded .btn{ opacity:.45; }
+  .btn:active{ transform:scale(.95); }
+  @keyframes pulse{
+    0%,100%{ box-shadow:0 0 0 10px var(--c), 0 0 0 10px rgba(255,60,60,.55), 0 18px 40px rgba(0,0,0,.6); }
+    50%{ box-shadow:0 0 0 10px var(--c), 0 0 0 30px rgba(255,60,60,0), 0 18px 40px rgba(0,0,0,.6); }
+  }
+  @keyframes pop{ 0%{ transform:scale(.8); } 60%{ transform:scale(1.06); } 100%{ transform:scale(1); } }
+
+  .msg{ font-size:clamp(1.3rem, 6.4vw, 2rem); font-weight:900; text-align:center; line-height:1.35; min-height:1.4em; }
+  .sub{ font-size:.92rem; color:var(--dim); text-align:center; line-height:1.7; max-width:34ch; }
+  body.st-win .msg{ color:#fff; font-size:clamp(1.8rem, 9vw, 2.6rem); text-shadow:0 2px 14px rgba(0,0,0,.35); }
+  body.st-win .sub, body.st-win .conn, body.st-win .foot{ color:rgba(255,255,255,.9); }
+  body.st-win .team{ background:rgba(0,0,0,.18); border-color:rgba(255,255,255,.35); }
+  .big-emoji{ font-size:4.4rem; line-height:1; }
+  .reload{
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.2); color:var(--text);
+    border-radius:12px; padding:10px 20px; font-family:inherit; font-weight:800; font-size:.9rem;
+  }
+  .reload[hidden]{ display:none; }
+  .foot{ font-size:.72rem; color:var(--faint); text-align:center; }
+  .foot b{ font-family:ui-monospace, monospace; direction:ltr; unicode-bidi:isolate; }
+  @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
+</style>
+</head>
+<body>
+  <div class="top">
+    <div class="team" id="team"><i class="dot"></i><span id="teamName">فريقك</span></div>
+    <div class="conn" id="conn"><i></i><span id="connText">جاري الاتصال…</span></div>
+  </div>
+
+  <div class="center">
+    <div class="big-emoji" id="bigEmoji" hidden></div>
+    <button class="btn" id="btn" type="button" aria-label="زر الضغط">…</button>
+    <p class="msg" id="msg">جاري الاتصال…</p>
+    <p class="sub" id="sub"></p>
+    <button class="reload" id="reload" type="button" data-nopress hidden>🔄 تحديث الصفحة</button>
+  </div>
+
+  <p class="foot" id="foot">طاولة السهرة · أسرع إصبع</p>
+
+<script>
+(function(){
+  "use strict";
+  var qs = new URLSearchParams(location.search);
+  var room = (qs.get("r") || "").trim().toLowerCase();
+  var teamId = (qs.get("t") || "").trim();
+  var $ = function(id){ return document.getElementById(id); };
+  var els = { team:$("team"), teamName:$("teamName"), conn:$("conn"), connText:$("connText"),
+              btn:$("btn"), msg:$("msg"), sub:$("sub"), reload:$("reload"), big:$("bigEmoji"), foot:$("foot") };
+
+  var pid;
+  try{
+    pid = localStorage.getItem("sahra-buzz-pid");
+    if(!pid){ pid = "p" + Math.random().toString(36).slice(2, 10); localStorage.setItem("sahra-buzz-pid", pid); }
+  }catch(e){ pid = "p" + Math.random().toString(36).slice(2, 10); }
+
+  /* الحالة: الشاشة (المضيف) هي الحَكَم — هنا بس نعرض اللي توصلنا منها ونرسل الضغطة */
+  var S = { conn:"connecting", connSince:Date.now(), host:null, lastSeen:0,
+            pressedQid:null, pressedAt:0, celebrated:null, wakeLock:null, audio:null };
+  var client = null, ch = null;
+
+  els.reload.addEventListener("click", function(){ location.reload(); });
+
+  function fatal(emoji, msg, sub){
+    els.btn.hidden = true;
+    els.big.hidden = false; els.big.textContent = emoji;
+    els.msg.textContent = msg; els.sub.textContent = sub || "";
+    els.conn.hidden = true; els.team.hidden = true;
+  }
+  if(!/^[a-z0-9]{4,16}$/.test(room) || !teamId){
+    fatal("📷", "امسح الباركود من الشاشة", "افتح «📱 أسرع إصبع» من طاولة السهرة، وصوّب كاميرا جوالك على باركود فريقك.");
+    return;
+  }
+  if(typeof window.supabase === "undefined" || !window.supabase.createClient){
+    fatal("⚠️", "ما قدرنا نحمّل الصفحة", "تأكد من الإنترنت واضغط تحديث.");
+    els.reload.hidden = false;
+    return;
+  }
+  if(!window.SAHRA_SUPABASE_URL || !window.SAHRA_SUPABASE_ANON_KEY || window.SAHRA_SUPABASE_URL.indexOf("xxxx") !== -1){
+    fatal("⚠️", "إعدادات الموقع ناقصة", "ملف config.js ما فيه بيانات Supabase.");
+    return;
+  }
+  els.foot.innerHTML = "رمز الغرفة: <b>" + room + "</b>";
+
+  client = window.supabase.createClient(window.SAHRA_SUPABASE_URL, window.SAHRA_SUPABASE_ANON_KEY, {
+    auth: { persistSession:false, autoRefreshToken:false, detectSessionInUrl:false }
+  });
+
+  function setConn(c){ if(S.conn !== c){ S.conn = c; S.connSince = Date.now(); } }
+  function connect(){
+    setConn("connecting");
+    var c = client.channel("sahra-buzz-" + room, {
+      config: { broadcast: { self:false }, presence: { key:pid } }
+    });
+    c.on("broadcast", { event:"state" }, function(m){ if(ch === c) onState(m && m.payload); });
+    c.subscribe(function(status){
+      if(ch !== c) return;
+      if(status === "SUBSCRIBED"){
+        setConn("on");
+        try{ var p = c.track({ team:teamId, pid:pid }); if(p && p.catch) p.catch(function(){}); }catch(e){}
+        hello();
+      } else if(status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED"){
+        setConn("error");
+      }
+      render();
+    });
+    ch = c;
+  }
+  function reconnect(){
+    var old = ch; ch = null;
+    if(old){ try{ client.removeChannel(old); }catch(e){} }
+    connect();
+  }
+  function send(event, payload){
+    if(!ch || S.conn !== "on") return false;
+    try{
+      var p = ch.send({ type:"broadcast", event:event, payload:payload });
+      if(p && p.catch) p.catch(function(){});
+      return true;
+    }catch(e){ return false; }
+  }
+  function hello(){ send("hello", { team:teamId, pid:pid }); }
+
+  function onState(p){
+    if(!p || typeof p !== "object") return;
+    var prev = S.host;
+    S.host = p; S.lastSeen = Date.now();
+    /* الأزرار انفتحت من جديد (سؤال جديد أو «افتح للباقين») — نسمح بضغطة جديدة */
+    if(p.state === "armed" && (!prev || prev.state !== "armed" || prev.qid !== p.qid)){ S.pressedQid = null; }
+    if(p.state === "locked" && p.winner === teamId){
+      var key = p.qid + "|" + (p.excluded || []).join(",");
+      if(S.celebrated !== key){ S.celebrated = key; vibrate([80, 50, 120]); winSound(); }
+    }
+    render();
+  }
+
+  function myTeam(){
+    var t = S.host && Array.isArray(S.host.teams) ? S.host.teams : [];
+    for(var i=0;i<t.length;i++) if(t[i].id === teamId) return t[i];
+    return null;
+  }
+  function teamById(id){
+    var t = S.host && Array.isArray(S.host.teams) ? S.host.teams : [];
+    for(var i=0;i<t.length;i++) if(t[i].id === id) return t[i];
+    return null;
+  }
+  function hostAlive(){ return !!S.host && (Date.now() - S.lastSeen) < 16000; }
+  function view(){
+    if(S.conn === "connecting") return hostAlive() ? viewFromHost() : "connecting";
+    if(S.conn !== "on") return "error";
+    if(!hostAlive()) return "nohost";
+    return viewFromHost();
+  }
+  function viewFromHost(){
+    var h = S.host;
+    if(!myTeam()) return "noteam";
+    if(h.state === "locked") return h.winner === teamId ? "win" : "lost";
+    if(h.state === "armed"){
+      if((h.excluded || []).indexOf(teamId) !== -1) return "excluded";
+      if(S.pressedQid === h.qid && Date.now() - S.pressedAt < 2500) return "pressed";
+      return "armed";
+    }
+    return "idle";
+  }
+
+  var LAST = "";
+  function render(){
+    var v = view(), me = myTeam();
+    var color = me && me.color ? me.color : "#8a8074";
+    document.body.style.setProperty("--c", color);
+    els.teamName.textContent = me ? me.name : "فريقك";
+    var conn = S.conn === "on" && hostAlive() ? "ok" : (S.conn === "error" ? "bad" : "");
+    els.conn.className = "conn " + conn;
+    els.connText.textContent = conn === "ok" ? "متصل" : (S.conn === "error" ? "مقطوع" : (S.conn === "on" ? "ننتظر الشاشة" : "جاري الاتصال…"));
+    var btn = "", msg = "", sub = "";
+    switch(v){
+      case "connecting": btn = "…"; msg = "جاري الاتصال…"; break;
+      case "error": btn = "📡"; msg = "⚠️ انقطع الاتصال"; sub = "نحاول نرجع لحالنا… إذا طوّل اضغط تحديث."; break;
+      case "nohost": btn = "📺"; msg = "ننتظر الشاشة"; sub = "تأكد إن «📱 أسرع إصبع» شغّال على جهاز اللعبة."; break;
+      case "noteam": btn = "❓"; msg = "هذا الفريق مو موجود"; sub = "يمكن انحذف أو تغيّر — امسح الباركود من جديد."; break;
+      case "idle": btn = "⏳"; msg = "استعدوا"; sub = "الزر ينفتح مع السؤال — لا تضغطون قبل."; break;
+      case "armed": btn = "اضغط!"; msg = "الأزرار مفتوحة!"; sub = "اضغط بأي مكان بالشاشة"; break;
+      case "pressed": btn = "✓"; msg = "وصلت ضغطتكم…"; break;
+      case "win": btn = "🎉"; msg = "أنتم أول! جاوبوا"; break;
+      case "lost":
+        var w = teamById(S.host.winner);
+        btn = "⛔"; msg = "سبقكم " + (w ? w.name : "فريق ثاني"); sub = "انتظروا — لو غلطوا تنفتح لكم."; break;
+      case "excluded": btn = "✋"; msg = "جاوبتوا بهالسؤال"; sub = "انتظروا السؤال الجاي."; break;
+    }
+    els.reload.hidden = !(v === "error" && Date.now() - S.connSince > 8000);
+    var key = v + "|" + btn + "|" + msg + "|" + sub + "|" + color + "|" + els.teamName.textContent;
+    if(key === LAST) return;
+    LAST = key;
+    document.body.className = "st-" + v;
+    els.btn.textContent = btn; els.msg.textContent = msg; els.sub.textContent = sub;
+  }
+
+  /* الضغط: أي مكان بالشاشة (الشاشة كلها زر) */
+  function press(e){
+    if(e && e.target && e.target.closest && e.target.closest("[data-nopress]")) return;
+    if(e && e.cancelable) e.preventDefault();
+    unlockAudio(); keepAwake();
+    if(view() !== "armed") return;
+    if(!send("buzz", { team:teamId, qid:S.host.qid, pid:pid })) return;
+    S.pressedQid = S.host.qid; S.pressedAt = Date.now();
+    vibrate(40); clickSound();
+    render();
+  }
+  document.addEventListener("pointerdown", press, { passive:false });
+  document.addEventListener("keydown", function(e){ if(e.key === " " || e.key === "Enter"){ press(e); } });
+  document.addEventListener("contextmenu", function(e){ e.preventDefault(); });
+
+  /* أصوات واهتزاز */
+  function vibrate(p){ try{ if(navigator.vibrate) navigator.vibrate(p); }catch(e){} }
+  function unlockAudio(){
+    try{
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      if(!Ctx) return;
+      if(!S.audio) S.audio = new Ctx();
+      if(S.audio.state === "suspended") S.audio.resume();
+    }catch(e){}
+  }
+  function tone(freqs, dur, vol){
+    try{
+      if(!S.audio) return;
+      var a = S.audio, t0 = a.currentTime, o = a.createOscillator(), g = a.createGain();
+      o.type = "triangle";
+      freqs.forEach(function(f, i){ o.frequency.setValueAtTime(f, t0 + i * dur / freqs.length); });
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(vol, t0 + 0.015);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      o.connect(g); g.connect(a.destination); o.start(t0); o.stop(t0 + dur + 0.02);
+    }catch(e){}
+  }
+  function clickSound(){ tone([620], 0.09, 0.25); }
+  function winSound(){ tone([660, 880, 1320], 0.5, 0.3); }
+
+  /* الشاشة ما تطفي وقت اللعب */
+  function keepAwake(){
+    try{
+      if(!("wakeLock" in navigator) || S.wakeLock || document.visibilityState !== "visible") return;
+      navigator.wakeLock.request("screen").then(function(l){
+        S.wakeLock = l;
+        l.addEventListener("release", function(){ S.wakeLock = null; });
+      }).catch(function(){});
+    }catch(e){}
+  }
+  document.addEventListener("visibilitychange", function(){
+    if(document.visibilityState !== "visible") return;
+    keepAwake();
+    /* رجعنا للصفحة بعد ما طفت الشاشة — الاتصال غالبًا انقطع */
+    if(S.conn !== "on") reconnect(); else hello();
+    render();
+  });
+
+  /* مراقبة: نحدّث العرض كل ثانية، ونعيد الاتصال لو طوّل الانقطاع */
+  setInterval(function(){
+    var now = Date.now();
+    if(S.conn === "error" && now - S.connSince > 10000){ reconnect(); }
+    else if(S.conn === "connecting" && now - S.connSince > 20000){ reconnect(); }
+    else if(S.conn === "on" && S.host && now - S.lastSeen > 14000 && (Math.floor(now / 1000) % 5 === 0)){ hello(); }
+    render();
+  }, 1000);
+
+  connect();
+  render();
+})();
+</script>
+</body>
+</html>
