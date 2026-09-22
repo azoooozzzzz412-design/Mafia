@@ -40,6 +40,24 @@
   }
   .team .dot{ width:16px; height:16px; border-radius:5px; background:var(--c); flex-shrink:0; }
   .team span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  button.team{ font-family:inherit; color:inherit; cursor:pointer; text-align:right; }
+  .team .me{ color:var(--dim); font-weight:800; font-size:.88rem; }
+  .team .me:empty{ display:none; }
+  .team .edit{ font-size:.78rem; opacity:.75; flex-shrink:0; }
+  .name-form{ display:flex; flex-direction:column; align-items:center; gap:14px; width:100%; max-width:340px; }
+  .name-form .big-emoji{ font-size:3.6rem; }
+  .name-form input{
+    width:100%; font-family:inherit; font-size:1.35rem; font-weight:800; text-align:center;
+    padding:14px 16px; border-radius:14px; border:2px solid var(--c); background:rgba(255,255,255,.06);
+    color:var(--text); outline:none; -webkit-user-select:text; user-select:text;
+  }
+  .name-form input::placeholder{ color:var(--faint); }
+  .name-form button{
+    width:100%; font-family:inherit; font-size:1.15rem; font-weight:900; padding:14px;
+    border:none; border-radius:14px; background:var(--gold); color:#241a08; cursor:pointer;
+  }
+  .name-form.shake input{ animation: shake .35s; border-color:#e05a5a; }
+  @keyframes shake{ 0%,100%{ transform:translateX(0); } 25%{ transform:translateX(-8px); } 75%{ transform:translateX(8px); } }
   .conn{ display:flex; align-items:center; gap:6px; font-size:.75rem; font-weight:700; color:var(--dim); }
   .conn i{ width:9px; height:9px; border-radius:50%; background:#d9a53c; display:inline-block; }
   .conn.ok i{ background:#5fd18f; }
@@ -77,6 +95,7 @@
   body.st-win .msg{ color:#fff; font-size:clamp(1.8rem, 9vw, 2.6rem); text-shadow:0 2px 14px rgba(0,0,0,.35); }
   body.st-win .sub, body.st-win .conn, body.st-win .foot{ color:rgba(255,255,255,.9); }
   body.st-win .team{ background:rgba(0,0,0,.18); border-color:rgba(255,255,255,.35); }
+  body.st-win .team .me{ color:rgba(255,255,255,.85); }
   .big-emoji{ font-size:4.4rem; line-height:1; }
   .reload{
     background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.2); color:var(--text);
@@ -90,12 +109,19 @@
 </head>
 <body>
   <div class="top">
-    <div class="team" id="team"><i class="dot"></i><span id="teamName">فريقك</span></div>
+    <button class="team" id="team" type="button" data-nopress aria-label="تغيير الاسم"><i class="dot"></i><span id="teamName">فريقك</span><span class="me" id="meName"></span><span class="edit" id="editIcon" hidden>✏️</span></button>
     <div class="conn" id="conn"><i></i><span id="connText">جاري الاتصال…</span></div>
   </div>
 
   <div class="center">
     <div class="big-emoji" id="bigEmoji" hidden></div>
+    <form class="name-form" id="nameForm" data-nopress hidden>
+      <div class="big-emoji">👋</div>
+      <p class="msg">وش اسمك؟</p>
+      <p class="sub">يطلع اسمك على الشاشة إذا ضغطت أول</p>
+      <input id="nameInput" type="text" maxlength="16" autocomplete="nickname" autocapitalize="words" enterkeyhint="go" placeholder="اكتب اسمك">
+      <button type="submit">يلا 👍</button>
+    </form>
     <button class="btn" id="btn" type="button" aria-label="زر الضغط">…</button>
     <p class="msg" id="msg">جاري الاتصال…</p>
     <p class="sub" id="sub"></p>
@@ -112,13 +138,21 @@
   var teamId = (qs.get("t") || "").trim();
   var $ = function(id){ return document.getElementById(id); };
   var els = { team:$("team"), teamName:$("teamName"), conn:$("conn"), connText:$("connText"),
-              btn:$("btn"), msg:$("msg"), sub:$("sub"), reload:$("reload"), big:$("bigEmoji"), foot:$("foot") };
+              btn:$("btn"), msg:$("msg"), sub:$("sub"), reload:$("reload"), big:$("bigEmoji"), foot:$("foot"),
+              meName:$("meName"), editIcon:$("editIcon"), nameForm:$("nameForm"), nameInput:$("nameInput") };
 
   var pid;
   try{
     pid = localStorage.getItem("sahra-buzz-pid");
     if(!pid){ pid = "p" + Math.random().toString(36).slice(2, 10); localStorage.setItem("sahra-buzz-pid", pid); }
   }catch(e){ pid = "p" + Math.random().toString(36).slice(2, 10); }
+
+  /* اسم اللاعب — ينحفظ بالجوال عشان ما يكتبه كل مرة */
+  var NAME_KEY = "sahra-buzz-name";
+  function cleanName(n){ return String(n || "").replace(/\s+/g, " ").trim().slice(0, 16); }
+  var myName = "";
+  try{ myName = cleanName(localStorage.getItem(NAME_KEY)); }catch(e){}
+  var editing = !myName;
 
   /* الحالة: الشاشة (المضيف) هي الحَكَم — هنا بس نعرض اللي توصلنا منها ونرسل الضغطة */
   var S = { conn:"connecting", connSince:Date.now(), host:null, lastSeen:0,
@@ -163,7 +197,7 @@
       if(ch !== c) return;
       if(status === "SUBSCRIBED"){
         setConn("on");
-        try{ var p = c.track({ team:teamId, pid:pid }); if(p && p.catch) p.catch(function(){}); }catch(e){}
+        track();
         hello();
       } else if(status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED"){
         setConn("error");
@@ -186,6 +220,31 @@
     }catch(e){ return false; }
   }
   function hello(){ send("hello", { team:teamId, pid:pid }); }
+  function track(){
+    if(!ch || S.conn !== "on") return;
+    try{ var p = ch.track({ team:teamId, pid:pid, name:myName }); if(p && p.catch) p.catch(function(){}); }catch(e){}
+  }
+
+  /* نموذج الاسم */
+  function openNameForm(){
+    editing = true; els.nameInput.value = myName; render();
+    setTimeout(function(){ try{ els.nameInput.focus(); }catch(e){} }, 50);
+  }
+  els.nameForm.addEventListener("submit", function(e){
+    e.preventDefault();
+    var v = cleanName(els.nameInput.value);
+    if(!v){
+      els.nameForm.classList.remove("shake"); void els.nameForm.offsetWidth; els.nameForm.classList.add("shake");
+      try{ els.nameInput.focus(); }catch(err){}
+      return;
+    }
+    myName = v; editing = false;
+    try{ localStorage.setItem(NAME_KEY, myName); }catch(err){}
+    try{ els.nameInput.blur(); }catch(err){}
+    unlockAudio(); keepAwake();
+    track(); render();
+  });
+  els.team.addEventListener("click", function(){ if(!editing) openNameForm(); });
 
   function onState(p){
     if(!p || typeof p !== "object") return;
@@ -235,6 +294,9 @@
     var color = me && me.color ? me.color : "#8a8074";
     document.body.style.setProperty("--c", color);
     els.teamName.textContent = me ? me.name : "فريقك";
+    els.meName.textContent = myName ? "· " + myName : "";
+    els.editIcon.hidden = editing || !myName;
+    if(editing){ v = "name"; }
     var conn = S.conn === "on" && hostAlive() ? "ok" : (S.conn === "error" ? "bad" : "");
     els.conn.className = "conn " + conn;
     els.connText.textContent = conn === "ok" ? "متصل" : (S.conn === "error" ? "مقطوع" : (S.conn === "on" ? "ننتظر الشاشة" : "جاري الاتصال…"));
@@ -247,34 +309,42 @@
       case "idle": btn = "⏳"; msg = "استعدوا"; sub = "الزر ينفتح مع السؤال — لا تضغطون قبل."; break;
       case "armed": btn = "اضغط!"; msg = "الأزرار مفتوحة!"; sub = "اضغط بأي مكان بالشاشة"; break;
       case "pressed": btn = "✓"; msg = "وصلت ضغطتكم…"; break;
-      case "win": btn = "🎉"; msg = "أنتم أول! جاوبوا"; break;
+      case "win":
+        btn = "🎉";
+        if(S.host.winnerPid && S.host.winnerPid === pid){ msg = "ضغطت أول! جاوبوا"; }
+        else { msg = "أنتم أول! جاوبوا"; if(S.host.winnerName) sub = "اللي ضغط: " + S.host.winnerName; }
+        break;
       case "lost":
         var w = teamById(S.host.winner);
-        btn = "⛔"; msg = "سبقكم " + (w ? w.name : "فريق ثاني"); sub = "انتظروا — لو غلطوا تنفتح لكم."; break;
+        btn = "⛔"; msg = "سبقكم " + (w ? w.name : "فريق ثاني");
+        sub = (S.host.winnerName ? "اللي ضغط: " + S.host.winnerName + " — " : "") + "لو غلطوا تنفتح لكم."; break;
       case "excluded": btn = "✋"; msg = "جاوبتوا بهالسؤال"; sub = "انتظروا السؤال الجاي."; break;
     }
     els.reload.hidden = !(v === "error" && Date.now() - S.connSince > 8000);
-    var key = v + "|" + btn + "|" + msg + "|" + sub + "|" + color + "|" + els.teamName.textContent;
+    var key = v + "|" + btn + "|" + msg + "|" + sub + "|" + color + "|" + els.teamName.textContent + "|" + myName;
     if(key === LAST) return;
     LAST = key;
     document.body.className = "st-" + v;
+    els.nameForm.hidden = v !== "name";
+    els.btn.hidden = els.msg.hidden = els.sub.hidden = (v === "name");
     els.btn.textContent = btn; els.msg.textContent = msg; els.sub.textContent = sub;
   }
 
   /* الضغط: أي مكان بالشاشة (الشاشة كلها زر) */
   function press(e){
     if(e && e.target && e.target.closest && e.target.closest("[data-nopress]")) return;
+    if(editing) return;
     if(e && e.cancelable) e.preventDefault();
     unlockAudio(); keepAwake();
     if(view() !== "armed") return;
-    if(!send("buzz", { team:teamId, qid:S.host.qid, pid:pid })) return;
+    if(!send("buzz", { team:teamId, qid:S.host.qid, pid:pid, name:myName })) return;
     S.pressedQid = S.host.qid; S.pressedAt = Date.now();
     vibrate(40); clickSound();
     render();
   }
   document.addEventListener("pointerdown", press, { passive:false });
   document.addEventListener("keydown", function(e){ if(e.key === " " || e.key === "Enter"){ press(e); } });
-  document.addEventListener("contextmenu", function(e){ e.preventDefault(); });
+  document.addEventListener("contextmenu", function(e){ if(!(e.target && e.target.closest && e.target.closest("input"))) e.preventDefault(); });
 
   /* أصوات واهتزاز */
   function vibrate(p){ try{ if(navigator.vibrate) navigator.vibrate(p); }catch(e){} }

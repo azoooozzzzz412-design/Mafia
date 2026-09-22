@@ -577,6 +577,8 @@
   .bz-qr svg{ width:176px; height:176px; max-width:100%; display:block; margin:0 auto; background:#fff; border-radius:10px; padding:6px; }
   .bz-status{ font-size:.8rem; margin-top:8px; color:var(--text-faint); font-weight:700; }
   .bz-status.on{ color:#7fd6a8; }
+  .bz-names{ display:flex; flex-wrap:wrap; gap:4px; justify-content:center; margin-top:6px; }
+  .bz-names span{ background:var(--panel-2); border:1px solid var(--border); border-radius:999px; padding:1px 9px; font-size:.74rem; font-weight:700; color:var(--text); }
   .bz-copy{
     font-size:.72rem; margin-top:8px; background:none; border:1px dashed var(--border-strong);
     color:var(--text-dim); border-radius:8px; padding:4px 10px;
@@ -627,6 +629,7 @@
     text-shadow:0 4px 18px rgba(0,0,0,.35); animation:bzFlash 1.5s ease forwards;
   }
   .buzz-flash[hidden]{ display:none; }
+  .buzz-flash .bf-name{ font-size:.55em; margin-top:.15em; opacity:.95; }
   @keyframes bzFlash{ 0%{ opacity:0; transform:scale(1.08); } 10%{ opacity:1; transform:scale(1); } 72%{ opacity:1; } 100%{ opacity:0; } }
   .challenge-award > button[data-emojiaward], .challenge-award > button[data-flaward]{
     border:none; border-radius:10px; padding:10px 16px; font-weight:800; font-size:.85rem; color:#fff;
@@ -2016,7 +2019,7 @@
      الشاشة هي الحَكَم: أول ضغطة توصلها تقفل الباقين. الجوالات تسمع حالة
      الشاشة (مقفل/مفتوح/فلان سبق) وترسل ضغطتها بس.
      ====================================================================== */
-  var buzz = { client:null, channel:null, status:"off", state:"idle", qid:null, winner:null,
+  var buzz = { client:null, channel:null, status:"off", state:"idle", qid:null, winner:null, winnerName:"", winnerPid:null,
                excluded:[], presence:{}, hb:null, audio:null, flashT:null, sendT:null };
   var buzzEls = {
     openBtn: document.getElementById("buzzOpenBtn"),
@@ -2043,11 +2046,12 @@
     return base + "buzz.html?r=" + encodeURIComponent(store.buzz.room) + "&t=" + encodeURIComponent(t.id);
   }
   function buzzActive(){ return buzz.status === "on" || buzz.status === "connecting"; }
+  function buzzCleanName(n){ return String(n || "").replace(/\s+/g, " ").trim().slice(0, 20); }
   function buzzSend(){
     if(!buzz.channel || buzz.status !== "on") return;
     try{
       buzz.channel.send({ type:"broadcast", event:"state", payload:{
-        v:1, state:buzz.state, qid:buzz.qid, winner:buzz.winner, excluded:buzz.excluded,
+        v:1, state:buzz.state, qid:buzz.qid, winner:buzz.winner, winnerName:buzz.winnerName, winnerPid:buzz.winnerPid, excluded:buzz.excluded,
         teams: store.teams.map(function(t){ return { id:t.id, name:t.name, color:t.color }; })
       }});
     }catch(e){}
@@ -2090,11 +2094,14 @@
     ch.on("broadcast", { event:"buzz" }, function(m){ onBuzz((m && m.payload) || {}); });
     ch.on("broadcast", { event:"hello" }, function(){ buzzSend(); });
     ch.on("presence", { event:"sync" }, function(){
-      var st = ch.presenceState(), counts = {};
+      var st = ch.presenceState(), per = {};
       Object.keys(st).forEach(function(k){
-        (st[k] || []).forEach(function(meta){ if(meta && meta.team) counts[meta.team] = (counts[meta.team] || 0) + 1; });
+        (st[k] || []).forEach(function(meta){
+          if(!meta || !meta.team) return;
+          (per[meta.team] || (per[meta.team] = [])).push(buzzCleanName(meta.name) || "لاعب");
+        });
       });
-      buzz.presence = counts; renderBuzzUI();
+      buzz.presence = per; renderBuzzUI();
     });
     ch.subscribe(function(status){
       if(buzz.channel !== ch) return;
@@ -2110,28 +2117,28 @@
     clearInterval(buzz.hb); buzz.hb = null;
     var ch = buzz.channel; buzz.channel = null;
     if(ch && buzz.client){ try{ buzz.client.removeChannel(ch); }catch(e){} }
-    buzz.status = "off"; buzz.state = "idle"; buzz.winner = null; buzz.excluded = []; buzz.presence = {};
+    buzz.status = "off"; buzz.state = "idle"; buzz.winner = null; buzz.winnerName = ""; buzz.winnerPid = null; buzz.excluded = []; buzz.presence = {};
     if(!keepEnabled){ store.buzz.enabled = false; persist(); }
     renderBuzzUI();
   }
   function buzzArm(qid, force){
     if(!buzzActive()) return;
     buzz.qid = qid || ("q" + Date.now());
-    buzz.winner = null; buzz.excluded = [];
+    buzz.winner = null; buzz.winnerName = ""; buzz.winnerPid = null; buzz.excluded = [];
     buzz.state = (force || store.buzz.auto) ? "armed" : "idle";
     buzzSend(); renderBuzzUI();
   }
   function buzzReopen(){
     if(!buzzActive()) return;
     if(buzz.winner && buzz.excluded.indexOf(buzz.winner) === -1) buzz.excluded.push(buzz.winner);
-    buzz.winner = null; buzz.state = "armed";
+    buzz.winner = null; buzz.winnerName = ""; buzz.winnerPid = null; buzz.state = "armed";
     if(!buzz.qid) buzz.qid = "q" + Date.now();
     buzzSend(); renderBuzzUI();
   }
   function buzzIdle(){
     if(!buzzActive()) return;
     if(buzz.state === "idle" && !buzz.winner) return;
-    buzz.state = "idle"; buzz.winner = null; buzz.excluded = [];
+    buzz.state = "idle"; buzz.winner = null; buzz.winnerName = ""; buzz.winnerPid = null; buzz.excluded = [];
     buzzSend(); renderBuzzUI();
   }
   function onBuzz(p){
@@ -2140,12 +2147,14 @@
     var team = store.teams.find(function(t){ return t.id === p.team; });
     if(!team || buzz.excluded.indexOf(team.id) !== -1) return;
     buzz.state = "locked"; buzz.winner = team.id;
-    buzzSend(); renderBuzzUI(); buzzFlash(team); buzzBeep();
+    buzz.winnerName = buzzCleanName(p.name); buzz.winnerPid = typeof p.pid === "string" ? p.pid.slice(0, 40) : null;
+    buzzSend(); renderBuzzUI(); buzzFlash(team, buzz.winnerName); buzzBeep();
   }
-  function buzzFlash(team){
+  function buzzFlash(team, who){
     var el = buzzEls.flash;
     el.style.setProperty("--c", team.color);
-    el.textContent = "⚡ " + team.name;
+    el.innerHTML = '<div><div>⚡ ' + escapeHtml(team.name) + '</div>'
+      + (who ? '<div class="bf-name">' + escapeHtml(who) + '</div>' : '') + '</div>';
     el.hidden = true; void el.offsetWidth; el.hidden = false;
     clearTimeout(buzz.flashT);
     buzz.flashT = setTimeout(function(){ el.hidden = true; }, 1550);
@@ -2179,7 +2188,9 @@
         var wt = store.teams.find(function(t){ return t.id === buzz.winner; });
         bar.classList.add("locked");
         bar.style.setProperty("--c", wt ? wt.color : "#555");
-        html = '<span>⚡ ' + escapeHtml(wt ? wt.name : "") + ' ضغط أول!</span>'
+        html = (buzz.winnerName
+            ? '<span>⚡ أول ضغطة: ' + escapeHtml(buzz.winnerName) + ' (' + escapeHtml(wt ? wt.name : "") + ')</span>'
+            : '<span>⚡ ' + escapeHtml(wt ? wt.name : "") + ' ضغط أول!</span>')
           + '<button type="button" data-bb="reopen">❌ غلط — افتح للباقين</button>'
           + '<button type="button" data-bb="idle">🔒 قفل</button>';
       } else if(buzz.state === "armed"){
@@ -2215,11 +2226,12 @@
       return;
     }
     buzzEls.grid.innerHTML = store.teams.map(function(t){
-      var n = buzz.presence[t.id] || 0;
+      var names = buzz.presence[t.id] || [], n = names.length;
       return '<div class="bz-team" style="--c:' + t.color + '">'
         + '<h4>' + escapeHtml(t.name) + '</h4>'
         + '<div class="bz-qr" data-qr="' + t.id + '"></div>'
-        + '<div class="bz-status' + (n ? " on" : "") + '">' + (n ? "✅ متصل" + (n > 1 ? " (" + n + " جوالات)" : "") : "⏳ ما فيه جوال متصل") + '</div>'
+        + '<div class="bz-status' + (n ? " on" : "") + '">' + (n ? "✅ " + (n > 1 ? n + " متصلين" : "متصل") : "⏳ ما فيه جوال متصل") + '</div>'
+        + (n ? '<div class="bz-names">' + names.map(function(x){ return '<span>' + escapeHtml(x) + '</span>'; }).join("") + '</div>' : '')
         + '<button class="bz-copy" type="button" data-copy="' + t.id + '">نسخ الرابط</button>'
         + '</div>';
     }).join("");
