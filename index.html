@@ -212,6 +212,21 @@
     width:100%; background:none; border:none; color:var(--text-faint);
     font-size:.76rem; text-decoration:underline; text-underline-offset:3px; padding:4px 0;
   }
+  .reset-all-btn{
+    width:100%; margin-top:14px; background:rgba(224,90,90,.08); border:1px solid rgba(224,90,90,.35);
+    color:#f0a595; font-size:.82rem; font-weight:800; border-radius:10px; padding:10px;
+  }
+  .reset-all-btn:hover{ background:rgba(224,90,90,.16); }
+  .home-reset-row{ text-align:center; margin-top:14px; }
+  .home-reset{
+    background:none; border:1px solid var(--border); color:var(--text-faint);
+    font-size:.8rem; font-weight:700; border-radius:999px; padding:8px 18px;
+  }
+  .home-reset:hover{ color:var(--text-dim); border-color:var(--border-strong); }
+  .rm-intro{ font-weight:800; margin-bottom:6px; }
+  .rm-list{ text-align:right; margin:0 0 12px; padding-right:22px; line-height:1.9; font-size:.9rem; list-style:disc; }
+  .rm-list li::marker{ color:#b0472f; }
+  .rm-note{ font-size:.8rem; color:var(--paper-ink-2); margin-bottom:16px; line-height:1.7; }
   .teams-close{
     position:absolute; top:16px; left:16px; width:28px; height:28px; border-radius:50%;
     border:1px solid var(--border-strong); background:var(--panel-2); color:var(--text); font-size:.85rem;
@@ -745,6 +760,7 @@
       </button>
     </div>
     <button class="buzz-home-card" id="buzzHomeBtn" type="button">📱 <b>أسرع إصبع:</b> خلّوا كل فريق يمسح باركود بجواله ويصير جواله زر ضغط — أول فريق يضغط هو اللي يجاوب. يشتغل مع سين جيم والحروف والأعلام وتحدي الصور.</button>
+    <div class="home-reset-row"><button class="home-reset" id="homeResetBtn" type="button">🔄 سهرة جديدة (مسح كل شي)</button></div>
   </section>
 
   <!-- TRIVIA -->
@@ -908,10 +924,11 @@
 <aside class="teams-panel" id="teamsPanel" hidden>
   <button class="teams-close" id="teamsClose" aria-label="إغلاق" type="button">✕</button>
   <h3>👥 الفرق والنقاط</h3>
-  <p class="th-sub">يُستخدم في سين جيم وتحدي الصور والحروف والأعلام والتمثيل.</p>
+  <p class="th-sub">يُستخدم في سين جيم وتحدي الصور والحروف والأعلام وحطها على راسك والتمثيل.</p>
   <div id="teamsList"></div>
   <button class="add-team-btn" id="addTeamBtn" type="button">إضافة فريق +</button>
   <button class="reset-scores-btn" id="resetScoresBtn" type="button">تصفير كل النقاط</button>
+  <button class="reset-all-btn" id="resetAllBtn" type="button">🔄 سهرة جديدة — ابدأ كل شي من الصفر</button>
 </aside>
 
 <!-- trivia modal -->
@@ -994,6 +1011,23 @@
       <button class="btn-ghost" id="bzOffBtn" type="button">⏻ إيقاف الأزرار</button>
     </div>
     <p class="bz-room">رمز الغرفة: <b class="ltr" id="bzRoom"></b> — «باركود جديد» يفصل الجوالات القديمة.</p>
+  </div>
+</div>
+<!-- new night: reset everything -->
+<div class="modal-overlay" id="resetModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true">
+    <div style="font-size:2.6rem;line-height:1.2">🔄</div>
+    <h3 style="font-size:1.3rem;margin:6px 0 10px">نبدأ سهرة جديدة؟</h3>
+    <p class="rm-intro">بيرجع كل شي من الصفر:</p>
+    <ul class="rm-list">
+      <li>أسماء الفرق ونقاطهم — يرجعون «فريق 1» و«فريق 2»</li>
+      <li>لوحة سين جيم، ولوحة الحروف وجولاتها</li>
+      <li>نتائج «حطها على راسك» ودور التمثيل</li>
+      <li>المافيا: اللاعبين وأدوارهم</li>
+    </ul>
+    <p class="rm-note">الأسئلة والكلمات اللي طلعت قبل ما بتتكرر، وجوالات «أسرع إصبع» تبقى متصلة.</p>
+    <button class="btn-primary" id="resetYesBtn" type="button" style="width:100%">🔄 إيه، سهرة جديدة</button>
+    <button class="btn-ghost" id="resetNoBtn" type="button" style="width:100%;margin-top:8px">لا، رجوع</button>
   </div>
 </div>
 <div class="buzz-bar" id="buzzBar" hidden></div>
@@ -2806,6 +2840,41 @@
       tick(); HD.timer = setInterval(tick, 250);
     }
     el.hidden = false;
+  }
+
+  /* ============ سهرة جديدة: كل شي من الصفر (الفرق وأسماءها ونقاطها وكل الألعاب) ============ */
+  var resetEls = { modal: document.getElementById("resetModal"), yes: document.getElementById("resetYesBtn"), no: document.getElementById("resetNoBtn") };
+  function openResetModal(){ resetEls.modal.hidden = false; }
+  function closeResetModal(){ resetEls.modal.hidden = true; }
+  document.getElementById("resetAllBtn").addEventListener("click", function(){ closeTeams(); openResetModal(); });
+  document.getElementById("homeResetBtn").addEventListener("click", openResetModal);
+  resetEls.no.addEventListener("click", closeResetModal);
+  resetEls.modal.addEventListener("click", function(e){ if(e.target === resetEls.modal) closeResetModal(); });
+  resetEls.yes.addEventListener("click", function(){ closeResetModal(); resetEverything(); });
+  function resetEverything(){
+    /* نسكّر أي نافذة مفتوحة */
+    trivEls.modal.hidden = true; activeCell = null;
+    ltEls.modal.hidden = true; ltEls.win.hidden = true; LT.cur = null;
+    mCloseTicket(); closeBuzzPanel(); closeTeams();
+    /* الفرق: فريقين بالأسماء الافتراضية — ونخلي رقم أول فريقين عشان جوالات «أسرع إصبع» تبقى شغالة */
+    var keep = store.teams.slice(0, 2).map(function(t){ return t.id; });
+    store.teams = [0, 1].map(function(i){
+      return { id: keep[i] || uid(), name: "فريق " + (i + 1), color: TEAM_PALETTE[i], score: 0 };
+    });
+    /* الألعاب — ونخلي سجل «اللي طلع قبل» عشان الأسئلة والكلمات ما تتكرر */
+    store.trivia.cells = [];
+    store.letters = { board: [], owners: {}, history: [], wins: {}, pools: store.letters.pools || {}, lastWin: null };
+    store.charades.turn = 0;
+    store.heads = { done: [], last: {} };
+    HD.live = null;
+    store.mafia = { caseId:null, round:0, players:[], counts:{ mafia:0, detective:0, doctor:0 } };
+    emojiState.awarding = false;
+    resetTimer("emoji", 20); resetTimer("char", 60);
+    persist();
+    renderTeams(); renderTriviaAwardButtons(); renderEmojiAward(); renderCharTurnBanner(); mRender(); renderHeadsLive();
+    buzzIdle(); teamsChanged();
+    showView("home");
+    toast("🎉 بدأت سهرة جديدة");
   }
 
   /* ============ boot: fetch content banks from Supabase, then init ============ */
