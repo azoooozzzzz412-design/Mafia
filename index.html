@@ -100,8 +100,13 @@
   }
   .nav-pills button:hover{ color:var(--text); border-color:var(--border-strong); }
   .nav-pills button.active{ background:var(--gold); color:var(--ink-deep); border-color:var(--gold-bright); }
+  .top-actions{ margin-inline-start:auto; display:flex; align-items:center; gap:10px; }
+  /* لما ما يكفي سطر واحد: الشعار والأزرار فوق، والألعاب تحتهم بسطر كامل */
+  @media (min-width:641px){
+    .topbar.stacked .top-actions{ order:1; }
+    .topbar.stacked .nav-pills{ order:2; flex-basis:100%; margin-inline-start:0; }
+  }
   .teams-btn{
-    margin-inline-start:auto;
     background:var(--panel-2); border:1px solid var(--border-strong);
     color:var(--gold-bright); font-size:.82rem; font-weight:700;
     padding:10px 16px; border-radius:999px;
@@ -234,7 +239,7 @@
 
   /* ---------------- trivia board ---------------- */
   .trivia-board{
-    display:grid; grid-template-columns:repeat(6,1fr); gap:8px;
+    display:grid; grid-template-columns:repeat(var(--cols, 6),1fr); gap:8px;
   }
   @media (max-width:760px){ .trivia-board{ grid-template-columns:repeat(3,1fr); } }
   .tb-cat{
@@ -676,11 +681,75 @@
   .hd-done{ font-size:1.1rem; font-weight:900; margin-bottom:12px; }
   .hd-done b{ color:var(--c); filter:brightness(1.3); }
   .hd-last{ font-size:.78rem; color:var(--text-dim); margin-top:8px; font-weight:700; }
+
+  /* ================= الدخول والحساب ================= */
+  .gh-hidden{ display:none !important; }
+  .auth-gate{
+    position:fixed; inset:0; z-index:120; background:var(--ink);
+    display:flex; align-items:center; justify-content:center; padding:24px; overflow-y:auto;
+  }
+  .auth-gate[hidden]{ display:none; }
+  .ag-card{
+    width:min(420px, 100%); background:var(--panel); border:1px solid var(--border-strong); border-radius:18px;
+    padding:30px 24px 24px; text-align:center; box-shadow:var(--shadow);
+  }
+  .ag-logo{ font-size:3rem; line-height:1.1; }
+  .ag-title{ font-family:var(--font-display); color:var(--gold-bright); font-size:1.9rem; margin:6px 0 4px; }
+  .ag-sub{ color:var(--text-dim); font-size:.92rem; line-height:1.8; margin-bottom:18px; }
+  .ag-google{
+    width:100%; display:flex; align-items:center; justify-content:center; gap:10px;
+    background:#fff; color:#1f1f1f; border:none; border-radius:12px; padding:14px 16px;
+    font-size:1rem; font-weight:800;
+  }
+  .ag-google:hover{ filter:brightness(.95); }
+  .ag-note{ color:var(--text-faint); font-size:.78rem; margin-top:14px; line-height:1.7; }
+  .ag-note a{ color:var(--text-dim); text-underline-offset:3px; white-space:nowrap; }
+  .ag-note a:hover{ color:var(--gold-bright); }
+  .ag-err{ background:rgba(224,90,90,.12); border:1px solid rgba(224,90,90,.4); color:#ffc2c2; border-radius:10px; padding:10px 12px; font-size:.84rem; margin-bottom:14px; line-height:1.7; }
+  .ag-user{ display:flex; align-items:center; justify-content:center; gap:10px; margin:6px 0 14px; }
+  .ag-user img{ width:44px; height:44px; border-radius:50%; object-fit:cover; background:var(--panel-2); }
+  .ag-user b{ display:block; font-size:1rem; }
+  .ag-user small{ color:var(--text-faint); font-size:.75rem; direction:ltr; unicode-bidi:isolate; }
+  .ag-state{ font-size:1.25rem; font-weight:900; margin-bottom:8px; }
+  .ag-btns{ display:flex; flex-direction:column; gap:8px; margin-top:16px; }
+  .user-chip{ position:relative; flex-shrink:0; }
+  .uc-btn{
+    width:40px; height:40px; padding:0; border-radius:50%; overflow:hidden;
+    display:grid; place-items:center; background:var(--panel-2); border:1px solid var(--border-strong);
+    color:var(--gold-bright); font-size:1.05rem; font-weight:900; font-family:inherit;
+  }
+  .uc-btn:hover, .uc-btn[aria-expanded="true"]{ border-color:var(--gold); }
+  .uc-btn img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .uc-btn img[hidden], .uc-btn span[hidden]{ display:none; }
+  .uc-menu{
+    position:absolute; top:calc(100% + 8px); left:0; z-index:30; width:max-content; min-width:210px; max-width:min(300px, calc(100vw - 20px));
+    background:var(--panel); border:1px solid var(--border-strong); border-radius:12px; padding:6px;
+    box-shadow:0 18px 40px rgba(0,0,0,.55); display:flex; flex-direction:column; gap:2px;
+  }
+  .uc-menu.to-right{ left:auto; right:0; }
+  .uc-menu[hidden]{ display:none; }
+  .uc-item{
+    display:block; text-align:right; background:none; border:none; color:var(--text); text-decoration:none;
+    font-size:.85rem; font-weight:700; padding:9px 12px; border-radius:8px; font-family:inherit;
+  }
+  .uc-item:hover{ background:var(--panel-2); }
+  .uc-item[hidden]{ display:none; }
+  .uc-who{ padding:6px 12px 10px; border-bottom:1px solid var(--border); margin-bottom:4px; text-align:right; min-width:0; }
+  .uc-who b{ display:block; font-size:.9rem; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .uc-who small{ display:block; margin-top:2px; font-size:.74rem; color:var(--text-faint); direction:ltr; unicode-bidi:isolate; text-align:right; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 </style>
 </head>
 <body>
 
 <div class="grain"></div>
+
+<div class="auth-gate" id="authGate" hidden>
+  <div class="ag-card">
+    <div class="ag-logo">🎲</div>
+    <h2 class="ag-title">طاولة السهرة</h2>
+    <div id="agBody"></div>
+  </div>
+</div>
 
 <div class="boot-overlay" id="bootOverlay">
   <div class="boot-spinner" id="bootSpinner"></div>
@@ -703,8 +772,18 @@
     <button data-view="charades">🎬 التمثيل</button>
     <button data-view="mafia">🕵️ المافيا</button>
   </nav>
+  <div class="top-actions" id="topActions">
   <button class="teams-btn" id="teamsBtn" type="button">👥 الفرق والنقاط</button>
   <button class="buzz-btn-top" id="buzzOpenBtn" type="button">📱 أسرع إصبع</button>
+  <div class="user-chip" id="userChip" hidden>
+    <button class="uc-btn" id="ucBtn" type="button" aria-label="حسابي" aria-haspopup="true" aria-expanded="false"><img id="ucAvatar" alt="" referrerpolicy="no-referrer" hidden><span id="ucInitial"></span></button>
+    <div class="uc-menu" id="ucMenu" hidden>
+      <div class="uc-who"><b id="ucName"></b><small id="ucEmail"></small></div>
+      <a class="uc-item" id="ucAdmin" href="admin.html" hidden>⚙️ لوحة الأدمن</a>
+      <button class="uc-item" id="ucLogout" type="button">🚪 تسجيل خروج</button>
+    </div>
+  </div>
+  </div>
 </header>
 
 <main>
@@ -1076,7 +1155,8 @@
   var CHARADES_BANK = [];
 
 
-  var sharedSb = null;   /* عميل Supabase واحد للصفحة كلها (الأسئلة + أزرار أسرع إصبع) */
+  var sharedSb = null;   /* عميل Supabase واحد للصفحة كلها (الدخول + الأسئلة + أزرار أسرع إصبع) */
+  var HIDDEN_GAMES = [];  /* الألعاب اللي خبّاها الأدمن */
   var TEAM_PALETTE = ["#63a897","#e07a9b","#e8a35f","#8d7ae0","#6fb0e0","#d9b23c"];
 
   /* ============ state ============ */
@@ -1101,14 +1181,16 @@
      to a fresh rebuild instead of crashing the renderer and leaving a blank board/card. */
   function isTriviaCellsValid(cells){
     if(!Array.isArray(cells) || cells.length === 0) return false;
-    if(typeof CATS === "undefined" || typeof TIERS === "undefined") return true; // not ready to check yet
-    if(cells.length !== CATS.length * TIERS.length) return false;
+    if(typeof TIERS === "undefined") return true; // not ready to check yet
+    /* فئات اللوحة تنقرا من الخانات نفسها (الأدمن يقدر يضيف فئات، واللوحة تاخذ 6 منها بحد أقصى) */
+    var CATS = [];
     for(var i=0;i<cells.length;i++){
       var c = cells[i];
-      if(!c || typeof c.id !== "string" || typeof c.q !== "string" || typeof c.a !== "string") return false;
-      if(CATS.indexOf(c.cat) === -1) return false;
+      if(!c || typeof c.id !== "string" || typeof c.q !== "string" || typeof c.a !== "string" || typeof c.cat !== "string") return false;
       if(TIERS.indexOf(c.points) === -1) return false;
+      if(CATS.indexOf(c.cat) === -1) CATS.push(c.cat);
     }
+    if(CATS.length > 6 || cells.length !== CATS.length * TIERS.length) return false;
     return CATS.every(function(cat){
       return TIERS.every(function(tier){
         return cells.some(function(c){ return c.cat === cat && c.points === tier; });
@@ -1203,6 +1285,8 @@
   /* ============ view router ============ */
   var views = ["home","trivia","emoji","letters","flags","heads","charades","mafia"];
   function showView(name){
+    if(name !== "home" && HIDDEN_GAMES.indexOf(name) !== -1){ toast("هذي اللعبة مقفلة حاليًا 🔒"); name = "home"; }
+    if(name !== "home") logPlay(name);
     /* أي انتقال بين الألعاب يقفل أزرار «أسرع إصبع» — اللعبة الجديدة تفتحها مع سؤالها */
     if(typeof buzzIdle === "function") buzzIdle();
     views.forEach(function(v){
@@ -1328,8 +1412,13 @@
     teamBtns: document.getElementById("tmTeamBtns"),
     skipBtn: document.getElementById("tmSkipBtn")
   };
-  var CATS = Object.keys(TRIVIA);
+  var TRIVIA_CATS = [];   /* الفئات اللي فيها أسئلة لكل المستويات الأربعة */
   var TIERS = [100,200,300,400];
+  function boardCats(){
+    var out = [];
+    (store.trivia.cells || []).forEach(function(c){ if(out.indexOf(c.cat) === -1) out.push(c.cat); });
+    return out;
+  }
   var activeCell = null;
 
   function pickTriviaQuestion(cat, tier){
@@ -1347,7 +1436,13 @@
   }
   function newTriviaBoard(){
     var cells = [];
-    CATS.forEach(function(cat){
+    if(!TRIVIA_CATS.length){
+      store.trivia.cells = [];
+      trivEls.board.innerHTML = '<p class="boot-error" style="grid-column:1/-1;text-align:center">ما فيه أسئلة كافية للوحة — لازم كل فئة يكون فيها أسئلة 100 و200 و300 و400.</p>';
+      return;
+    }
+    var cats = TRIVIA_CATS.length > 6 ? shuffle(TRIVIA_CATS).slice(0, 6) : TRIVIA_CATS.slice();
+    cats.forEach(function(cat){
       TIERS.forEach(function(tier){
         var chosen = pickTriviaQuestion(cat, tier);
         cells.push({ id: cat+"-"+tier, cat:cat, points:tier, q:chosen.q, a:chosen.a, used:false });
@@ -1367,6 +1462,8 @@
       newTriviaBoard();
       return;
     }
+    var CATS = boardCats();
+    trivEls.board.style.setProperty("--cols", CATS.length);
     var html = CATS.map(function(cat){ return '<div class="tb-cat">'+escapeHtml(cat)+'</div>'; }).join("");
     TIERS.forEach(function(tier){
       CATS.forEach(function(cat){
@@ -2380,6 +2477,7 @@
      فوق↔تحت، والثاني يمين↔يسار. أسئلة كل حرف من games/letters.json
      ====================================================================== */
   var LT = { data:null, loading:null, cur:null };
+  var AR_ALPHA = "ابتثجحخدذرزسشصضطظعغفقكلمنهوي";
   var ltEls = {
     legend: document.getElementById("ltLegend"),
     note: document.getElementById("ltNote"),
@@ -2405,8 +2503,19 @@
   function lettersLoad(){
     if(LT.data) return Promise.resolve(LT.data);
     if(LT.loading) return LT.loading;
-    LT.loading = fetch("games/letters.json", { cache:"no-cache" })
-      .then(function(r){ if(!r.ok) throw new Error("http " + r.status); return r.json(); })
+    /* الأسئلة من Supabase (الأدمن يعدّلها من لوحته) — ولو صار خطأ اتصال نرجع للملف الثابت */
+    var fromDb = sharedSb ? fetchAll("letters_questions", "id,letter,question,answer").then(function(rows){
+      var q = {};
+      rows.forEach(function(r){ if(r && r.letter && r.question && r.answer) (q[r.letter] || (q[r.letter] = [])).push({ q: r.question, a: r.answer }); });
+      var letters = Object.keys(q).sort(function(a, b){ return AR_ALPHA.indexOf(a) - AR_ALPHA.indexOf(b); });
+      if(letters.length < 25) throw { few: true, n: letters.length };
+      return { letters: letters, q: q };
+    }) : Promise.reject(new Error("no db"));
+    LT.loading = fromDb
+      .catch(function(e){
+        if(e && e.few) throw new Error("few letters");
+        return fetch("games/letters.json", { cache:"no-cache" }).then(function(r){ if(!r.ok) throw new Error("http " + r.status); return r.json(); });
+      })
       .then(function(d){
         if(!d || !Array.isArray(d.letters) || d.letters.length < 25 || !d.q) throw new Error("bad data");
         LT.data = d; return d;
@@ -2425,8 +2534,10 @@
     if(!LT.data) ltEls.frame.innerHTML = '<p class="lt-note">جاري تحميل الحروف…</p>';
     lettersLoad().then(function(){
       if(!lettersBoardValid()) lettersNewBoard(true); else lettersRender();
-    }).catch(function(){
-      ltEls.frame.innerHTML = '<p class="lt-note">تعذّر تحميل لعبة الحروف — تأكد من الإنترنت وحدّث الصفحة</p>';
+    }).catch(function(e){
+      ltEls.frame.innerHTML = '<p class="lt-note">' + (e && e.message === "few letters"
+        ? "لعبة الحروف تحتاج 25 حرف على الأقل فيها أسئلة — زيدها من لوحة الأدمن"
+        : "تعذّر تحميل لعبة الحروف — تأكد من الإنترنت وحدّث الصفحة") + '</p>';
     });
   }
   function lettersNewBoard(silent){
@@ -2905,59 +3016,265 @@
        عشان لما اللاعبين يوصلون لها تكون محفوظة بالكاش وما فيه تأخير */
     if(typeof preloadAllChallengeImagesInBackground === "function") preloadAllChallengeImagesInBackground();
   }
+  /* يجيب كل صفوف الجدول (على دفعات 1000) */
+  function fetchAll(table, cols){
+    var out = [], size = 1000;
+    function page(from){
+      return sharedSb.from(table).select(cols).order("id", { ascending:true }).range(from, from + size - 1).then(function(r){
+        if(r.error) throw r.error;
+        var rows = r.data || [];
+        out = out.concat(rows);
+        return rows.length === size ? page(from + size) : out;
+      });
+    }
+    return page(0);
+  }
   function loadGameData(){
-    if(!window.SAHRA_SUPABASE_URL || !window.SAHRA_SUPABASE_ANON_KEY || window.SAHRA_SUPABASE_URL.indexOf("xxxx") !== -1){
-      return Promise.reject(new Error("لازم تعبّي بيانات Supabase في ملف config.js أول (الرابط والمفتاح العام)"));
-    }
-    if(typeof window.supabase === "undefined" || !window.supabase.createClient){
-      return Promise.reject(new Error("مكتبة Supabase ما تحمّلت — تأكد من اتصال الإنترنت وحدّث الصفحة"));
-    }
-    /* auth: false يمنع مكتبة Supabase من محاولة استخدام التخزين المحلي لجلسة دخول —
-       اللعبة تقرأ بس (anon public)، وما نحتاج جلسة دخول أصلًا. بعض المتصفحات (خصوصًا Edge
-       بوضع "منع التتبع") تمنع هذا النوع من الوصول للتخزين، وبدون هذا الإعداد كان يسبب
-       تحميل بيانات ناقصة بصمت بدل ما يطلع خطأ واضح. */
-    var sb = window.supabase.createClient(window.SAHRA_SUPABASE_URL, window.SAHRA_SUPABASE_ANON_KEY, {
-      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
-    });
-    sharedSb = sb;
+    var sb = sharedSb;
     /* ألغاز «كلمة بكلمة» ملف ثابت مع الموقع — لو ما انوجد نكمل بالأمثال القديمة بدون ما نوقف اللعبة */
     var rebus2Promise = fetch("rebus2/puzzles.json", {cache: "no-cache"})
       .then(function(r){ return r.ok ? r.json() : []; })
       .catch(function(){ return []; });
+    function tag(p, what){ return p.catch(function(e){ throw new Error("فشل تحميل " + what + ": " + ((e && e.message) || e)); }); }
     return Promise.all([
-      sb.from("trivia_questions").select("category,tier,question,answer").order("id", {ascending:true}),
-      sb.from("rebus_puzzles").select("category,answer,hint,image1_url,image2_url").order("id", {ascending:true}),
-      sb.from("charades_titles").select("title").order("id", {ascending:true}),
-      rebus2Promise
+      tag(fetchAll("trivia_questions", "id,category,tier,question,answer"), "أسئلة سين جيم"),
+      tag(fetchAll("rebus_puzzles", "id,category,answer,hint,image1_url,image2_url"), "ألغاز تحدي الصور"),
+      tag(fetchAll("charades_titles", "id,title"), "عناوين التمثيل"),
+      rebus2Promise,
+      sb.from("app_settings").select("key,value").then(function(r){ return r.error ? [] : (r.data || []); }, function(){ return []; })
     ]).then(function(results){
-      var trivRes = results[0], rebusRes = results[1], charRes = results[2];
-      if(trivRes.error) throw new Error("فشل تحميل أسئلة سين جيم: " + trivRes.error.message);
-      if(rebusRes.error) throw new Error("فشل تحميل ألغاز تحدي الصور: " + rebusRes.error.message);
-      if(charRes.error) throw new Error("فشل تحميل عناوين التمثيل: " + charRes.error.message);
-      if(!trivRes.data.length || !rebusRes.data.length || !charRes.data.length){
-        throw new Error("قاعدة البيانات فاضية — تأكد إنك شغّلت سكربت رفع البيانات (upload.js)");
+      var trivRows = results[0], rebusRows = results[1], charRows = results[2];
+      if(!trivRows.length || !charRows.length){
+        throw new Error("ما وصلت الأسئلة — تأكد إن حسابك مقبول وإن سكربت قاعدة البيانات اشتغل");
       }
       var newTrivia = {};
-      trivRes.data.forEach(function(row){
+      trivRows.forEach(function(row){
         if(!newTrivia[row.category]) newTrivia[row.category] = [];
         newTrivia[row.category].push({ p: row.tier, q: row.question, a: row.answer });
       });
       TRIVIA = newTrivia;
-      REBUS_BANK = rebusRes.data.map(function(row){
+      TRIVIA_CATS = Object.keys(TRIVIA).filter(function(cat){
+        return TIERS.every(function(t){ return TRIVIA[cat].some(function(q){ return q.p === t; }); });
+      });
+      REBUS_BANK = rebusRows.map(function(row){
         return { cat: row.category, parts: [row.image1_url, row.image2_url], a: row.answer, h: row.hint };
       });
-      CHARADES_BANK = charRes.data.map(function(row){ return row.title; });
-      // re-derive values that were computed once from the (previously empty) banks
-      CATS = Object.keys(TRIVIA);
+      CHARADES_BANK = charRows.map(function(row){ return row.title; });
       REBUS2_BANK = Array.isArray(results[3]) ? results[3].filter(function(x){
         return x && Array.isArray(x.parts) && x.parts.filter(function(p){ return partSrc(p); }).length >= 2 && typeof x.a === "string";
       }) : [];
+      /* لو ما فيه أمثال (الأدمن حذفها) نخلي «كلمة بكلمة» بس */
+      if(!REBUS_BANK.length) REBUS_BANK = REBUS2_BANK.slice();
       CHALLENGE_POOL = poolForMode(store.emoji.mode);
+      (results[4] || []).forEach(function(row){
+        if(row && row.key === "hidden_games" && Array.isArray(row.value)){
+          HIDDEN_GAMES = row.value.filter(function(x){ return typeof x === "string" && x !== "home"; });
+        }
+      });
     });
   }
-  loadGameData().then(runInit).catch(function(err){
-    bootShowError(err && err.message ? err.message : String(err));
-  });
+
+  /* ============ الدخول بحساب Google + موافقة الأدمن ============ */
+  var ME = null;
+  var authEls = {
+    gate: document.getElementById("authGate"), body: document.getElementById("agBody"),
+    chip: document.getElementById("userChip"), chipBtn: document.getElementById("ucBtn"), avatar: document.getElementById("ucAvatar"),
+    name: document.getElementById("ucName"), initial: document.getElementById("ucInitial"), menu: document.getElementById("ucMenu"), email: document.getElementById("ucEmail"),
+    admin: document.getElementById("ucAdmin"), logout: document.getElementById("ucLogout")
+  };
+  var authPollT = null, authWatchT = null;
+  function cleanAuthUrl(){
+    try{
+      var u = new URL(location.href), had = false;
+      ["code", "error", "error_code", "error_description", "state"].forEach(function(k){ if(u.searchParams.has(k)){ u.searchParams.delete(k); had = true; } });
+      if(had || /access_token|error_description/.test(location.hash)){ history.replaceState(null, "", u.pathname + u.search); }
+    }catch(e){}
+  }
+  function authError(){
+    try{
+      var u = new URL(location.href);
+      var d = u.searchParams.get("error_description") || new URLSearchParams(location.hash.slice(1)).get("error_description");
+      return d ? decodeURIComponent(String(d).replace(/\+/g, " ")) : "";
+    }catch(e){ return ""; }
+  }
+  function signInWithGoogle(){
+    var btn = document.getElementById("agGoogleBtn");
+    if(btn){ btn.disabled = true; btn.textContent = "جاري التحويل لـ Google…"; }
+    sharedSb.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: location.origin + location.pathname, queryParams: { prompt: "select_account" } }
+    }).then(function(r){
+      if(r && r.error) showGate("login", "ما قدرنا نفتح تسجيل الدخول: " + r.error.message);
+    }, function(e){ showGate("login", "ما قدرنا نفتح تسجيل الدخول: " + ((e && e.message) || e)); });
+  }
+  function signOut(){
+    clearInterval(authPollT); clearInterval(authWatchT);
+    var done = function(){ location.replace(location.pathname); };
+    try{ sharedSb.auth.signOut().then(done, done); }catch(e){ done(); }
+  }
+  function userBox(){
+    if(!ME) return "";
+    return '<div class="ag-user">' + (ME.avatar_url ? '<img src="' + escapeHtml(ME.avatar_url) + '" alt="" referrerpolicy="no-referrer">' : '')
+      + '<div style="text-align:right"><b>' + escapeHtml(ME.full_name || "") + '</b><small>' + escapeHtml(ME.email || "") + '</small></div></div>';
+  }
+  function showGate(state, msg){
+    bootEls.overlay.hidden = true;
+    var html = "";
+    if(state === "login"){
+      html = '<p class="ag-sub">سجّل دخولك بحساب Google عشان تلعب.<br>أول مرة يوصل طلبك للأدمن، وأول ما يوافق يفتح لك الموقع.</p>'
+        + (msg ? '<div class="ag-err">' + escapeHtml(msg) + '</div>' : '')
+        + '<button class="ag-google" id="agGoogleBtn" type="button">🔐 الدخول بحساب Google</button>'
+        + '<p class="ag-note">ما نشوف كلمة مرورك — Google يأكد لنا اسمك وإيميلك بس. <a href="privacy.html">سياسة الخصوصية</a></p>';
+    } else if(state === "pending"){
+      html = userBox() + '<p class="ag-state">⏳ طلبك وصل للأدمن</p>'
+        + '<p class="ag-sub">أول ما يوافق على حسابك يفتح لك الموقع لحاله — خلّ الصفحة مفتوحة.</p>'
+        + '<div class="ag-btns"><button class="btn-primary" id="agCheckBtn" type="button">🔄 تحقق الحين</button>'
+        + '<button class="btn-ghost" id="agLogoutBtn" type="button">تسجيل خروج (حساب ثاني)</button></div>';
+    } else if(state === "blocked"){
+      html = userBox() + '<p class="ag-state">⛔ حسابك موقوف</p>'
+        + '<p class="ag-sub">تواصل مع صاحب الطاولة إذا تشوف إن هذا غلط.</p>'
+        + '<div class="ag-btns"><button class="btn-ghost" id="agLogoutBtn" type="button">تسجيل خروج</button></div>';
+    } else {
+      html = '<div class="ag-err">' + escapeHtml(msg || "صار خطأ") + '</div>'
+        + '<div class="ag-btns"><button class="btn-primary" type="button" onclick="location.reload()">إعادة المحاولة 🔄</button>'
+        + '<button class="btn-ghost" id="agLogoutBtn" type="button">تسجيل خروج</button></div>';
+    }
+    authEls.body.innerHTML = html;
+    authEls.gate.hidden = false;
+    var g = document.getElementById("agGoogleBtn"); if(g) g.addEventListener("click", signInWithGoogle);
+    var c = document.getElementById("agCheckBtn"); if(c) c.addEventListener("click", function(){ c.disabled = true; checkPending(true); });
+    var o = document.getElementById("agLogoutBtn"); if(o) o.addEventListener("click", signOut);
+  }
+  function fetchMe(){
+    return sharedSb.auth.getUser().then(function(r){
+      var user = r && r.data && r.data.user;
+      if(!user) return null;
+      return sharedSb.rpc("touch_me").then(function(t){
+        if(t && t.error) throw new Error(/touch_me|function/i.test(t.error.message)
+          ? "قاعدة البيانات ما تجهّزت للدخول — شغّل سكربت auth_admin.sql في Supabase"
+          : t.error.message);
+        return sharedSb.from("profiles").select("id,email,full_name,avatar_url,role,status").eq("id", user.id).maybeSingle();
+      }).then(function(p){
+        if(p && p.error) throw new Error(p.error.message);
+        return (p && p.data) || null;
+      });
+    });
+  }
+  function checkPending(manual){
+    fetchMe().then(function(p){
+      if(p && p.status === "approved"){ location.reload(); return; }
+      ME = p || ME;
+      if(p && p.status === "blocked"){ clearInterval(authPollT); showGate("blocked"); return; }
+      if(manual){ showGate("pending"); toast("لسا ما وافق الأدمن ⏳"); }
+    }, function(){ if(manual) showGate("pending"); });
+  }
+  /* الشريط العلوي: سطر واحد إذا يكفي، وإلا الألعاب تنزل سطر لحالها */
+  var topbarEl = document.querySelector(".topbar"), fitRaf = 0;
+  function fitTopbar(){
+    topbarEl.classList.remove("stacked");
+    var b = document.getElementById("brandBtn").getBoundingClientRect(),
+        n = document.getElementById("navPills").getBoundingClientRect(),
+        a = document.getElementById("topActions").getBoundingClientRect();
+    var oneRow = n.height < 48 && Math.abs(n.top - b.top) < 24 && Math.abs(a.top - b.top) < 24;
+    topbarEl.classList.toggle("stacked", !oneRow);
+  }
+  window.addEventListener("resize", function(){ cancelAnimationFrame(fitRaf); fitRaf = requestAnimationFrame(fitTopbar); });
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitTopbar);
+  fitTopbar();
+  function renderUserChip(){
+    if(!ME) return;
+    var full = (ME.full_name || "").trim() || (ME.email || "").split("@")[0];
+    authEls.chip.hidden = false;
+    authEls.name.textContent = full;
+    authEls.email.textContent = ME.email || "";
+    authEls.initial.textContent = Array.from(full)[0] || "؟";
+    authEls.chipBtn.title = full;
+    authEls.chipBtn.setAttribute("aria-label", "حسابي: " + full);
+    authEls.admin.hidden = ME.role !== "admin";
+    authEls.avatar.hidden = true; authEls.initial.hidden = false;
+    if(ME.avatar_url){
+      authEls.avatar.onload = function(){ authEls.avatar.hidden = false; authEls.initial.hidden = true; };
+      authEls.avatar.onerror = function(){ authEls.avatar.hidden = true; authEls.initial.hidden = false; };
+      authEls.avatar.src = ME.avatar_url;
+    }
+    fitTopbar();
+  }
+  function toggleUserMenu(open){
+    var m = authEls.menu;
+    if(open === undefined) open = m.hidden;
+    m.hidden = !open;
+    authEls.chipBtn.setAttribute("aria-expanded", open ? "true" : "false");
+    if(open){
+      /* القائمة تفتح لجهة الشاشة اللي فيها مكان */
+      var r = authEls.chip.getBoundingClientRect();
+      m.classList.toggle("to-right", r.left + r.width / 2 > window.innerWidth / 2);
+    }
+  }
+  authEls.chipBtn.addEventListener("click", function(e){ e.stopPropagation(); toggleUserMenu(); });
+  document.addEventListener("click", function(e){ if(!authEls.menu.hidden && !authEls.chip.contains(e.target)) toggleUserMenu(false); });
+  document.addEventListener("keydown", function(e){ if(e.key === "Escape" && !authEls.menu.hidden){ toggleUserMenu(false); authEls.chipBtn.focus(); } });
+  authEls.logout.addEventListener("click", signOut);
+  /* نسجّل فتح اللعبة للإحصائيات (مرة كل 10 دقايق لكل لعبة) */
+  var playLogged = {};
+  function logPlay(game){
+    if(!ME || !sharedSb) return;
+    var now = Date.now();
+    if(playLogged[game] && now - playLogged[game] < 600000) return;
+    playLogged[game] = now;
+    try{ sharedSb.from("play_events").insert({ game: game }).then(function(){}, function(){}); }catch(e){}
+  }
+  function applyHiddenGames(){
+    document.querySelectorAll(".nav-pills [data-view], .mode-card[data-view]").forEach(function(el){
+      el.classList.toggle("gh-hidden", HIDDEN_GAMES.indexOf(el.getAttribute("data-view")) !== -1);
+    });
+    fitTopbar();
+  }
+  function authBoot(){
+    if(!window.SAHRA_SUPABASE_URL || !window.SAHRA_SUPABASE_ANON_KEY || window.SAHRA_SUPABASE_URL.indexOf("xxxx") !== -1){
+      bootShowError("لازم تعبّي بيانات Supabase في ملف config.js أول (الرابط والمفتاح العام)"); return;
+    }
+    if(typeof window.supabase === "undefined" || !window.supabase.createClient){
+      bootShowError("مكتبة Supabase ما تحمّلت — تأكد من اتصال الإنترنت وحدّث الصفحة"); return;
+    }
+    sharedSb = window.supabase.createClient(window.SAHRA_SUPABASE_URL, window.SAHRA_SUPABASE_ANON_KEY, {
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: "pkce" }
+    });
+    var urlErr = authError();
+    bootEls.msg.textContent = "جاري التحقق من الدخول…";
+    sharedSb.auth.getSession().then(function(r){
+      cleanAuthUrl();
+      var session = r && r.data && r.data.session;
+      if(!session){ showGate("login", urlErr ? "ما تم تسجيل الدخول: " + urlErr : ""); return null; }
+      bootEls.msg.textContent = "جاري تحميل الأسئلة والألغاز...";
+      return fetchMe().then(function(p){
+        ME = p;
+        if(!p){ showGate("error", "ما لقينا حسابك — جرّب تسجل خروج وتدخل من جديد"); return; }
+        if(p.status === "blocked"){ showGate("blocked"); return; }
+        if(p.status !== "approved"){
+          showGate("pending");
+          authPollT = setInterval(function(){ checkPending(false); }, 12000);
+          return;
+        }
+        renderUserChip();
+        return loadGameData().then(function(){
+          runInit();
+          applyHiddenGames();
+          /* لو الأدمن أوقف الحساب وهو شغّال */
+          authWatchT = setInterval(function(){
+            fetchMe().then(function(q){
+              if(!q) return;
+              ME = q; renderUserChip();
+              if(q.status === "blocked") showGate("blocked");
+            }, function(){});
+          }, 240000);
+        });
+      });
+    }).catch(function(err){
+      bootShowError(err && err.message ? err.message : String(err));
+    });
+    sharedSb.auth.onAuthStateChange(function(event){ if(event === "SIGNED_OUT" && ME) location.replace(location.pathname); });
+  }
+  authBoot();
 })();
 </script>
 </body>

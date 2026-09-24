@@ -132,6 +132,13 @@
     <p class="note" id="setupNote">أول مرة ممكن يطلب الجوال إذن «الحركة والاتجاه» — وافق عليه عشان يحس بالقلبة.</p>
   </section>
 
+  <section class="sc lock" id="scLock" hidden>
+    <div class="big-emoji">🔒</div>
+    <p class="msg">سجّل دخولك من الطاولة أول</p>
+    <p class="sub" id="lockSub">«حطها على راسك» تنلعب بعد ما تسجل دخولك ويوافق الأدمن على حسابك — أو امسح الباركود من شاشة الطاولة.</p>
+    <a class="big-btn" href="./" style="text-decoration:none;display:block">🏠 افتح الطاولة</a>
+  </section>
+
   <section class="sc place" id="scPlace" hidden>
     <div class="big-emoji"><span class="spin">📱</span></div>
     <p class="msg" id="placeMsg">حط الجوال على جبهتك بالعرض</p>
@@ -215,8 +222,8 @@
   var G = { state:"setup", mode:"sensor", results:[], cur:null, endAt:0, left:0, armed:true, fbUntil:0,
             rot:0, base:0, rid:null, placeSince:0, countT:null, lastTick:-1, resume:false, placeT:null };
   var S = { ok:false, nz:0, gamma:0, beta:0, t:0 };
-  var screens = { setup:$("scSetup"), place:$("scPlace"), count:$("scCount"), play:$("scPlay"), pause:$("scPause"), result:$("scResult") };
-  var SCREEN_OF = { setup:"setup", place:"place", count:"count", play:"play", fb:"play", ending:"play", pause:"pause", result:"result" };
+  var screens = { setup:$("scSetup"), place:$("scPlace"), count:$("scCount"), play:$("scPlay"), pause:$("scPause"), result:$("scResult"), lock:$("scLock") };
+  var SCREEN_OF = { setup:"setup", place:"place", count:"count", play:"play", fb:"play", ending:"play", pause:"pause", result:"result", lock:"lock" };
 
   function setState(s){
     G.state = s;
@@ -549,15 +556,18 @@
 
   /* ===== الاتصال بشاشة الطاولة (Supabase Realtime) ===== */
   var rt = { client:null, ch:null, on:false, err:false, teams:null, pending:null, tries:0, endT:null, acked:null, failed:false };
+  var SB = null;
+  if(typeof window.supabase !== "undefined" && window.supabase.createClient && window.SAHRA_SUPABASE_URL
+     && window.SAHRA_SUPABASE_ANON_KEY && window.SAHRA_SUPABASE_URL.indexOf("xxxx") === -1){
+    /* نفس جلسة الدخول اللي في صفحة الطاولة (نفس الموقع) */
+    SB = window.supabase.createClient(window.SAHRA_SUPABASE_URL, window.SAHRA_SUPABASE_ANON_KEY, {
+      auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:false }
+    });
+  }
   function rtStart(){
     if(!connected) return;
-    if(typeof window.supabase === "undefined" || !window.supabase.createClient || !window.SAHRA_SUPABASE_URL
-       || !window.SAHRA_SUPABASE_ANON_KEY || window.SAHRA_SUPABASE_URL.indexOf("xxxx") !== -1){
-      rt.err = true; renderTeamBadge(); return;
-    }
-    rt.client = window.supabase.createClient(window.SAHRA_SUPABASE_URL, window.SAHRA_SUPABASE_ANON_KEY, {
-      auth: { persistSession:false, autoRefreshToken:false, detectSessionInUrl:false }
-    });
+    if(!SB){ rt.err = true; renderTeamBadge(); return; }
+    rt.client = SB;
     rtJoin();
   }
   function rtJoin(){
@@ -681,19 +691,59 @@
     try{ if(document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function(){}); }catch(e){}
   }
 
+  /* ===== الكلمات: من Supabase (الأدمن يعدّلها) — ولو صار خطأ نرجع للملف الثابت ===== */
+  function loadWordsFromDb(){
+    if(!SB) return Promise.reject(new Error("no db"));
+    var words = [], size = 1000;
+    function page(from){
+      return SB.from("heads_words").select("id,deck,word").order("id", { ascending:true }).range(from, from + size - 1).then(function(r){
+        if(r.error) throw r.error;
+        words = words.concat(r.data || []);
+        return (r.data || []).length === size ? page(from + size) : words;
+      });
+    }
+    return Promise.all([
+      SB.from("heads_decks").select("id,name,icon,sort").order("sort", { ascending:true }).then(function(r){ if(r.error) throw r.error; return r.data || []; }),
+      page(0)
+    ]).then(function(res){
+      var byId = {}, decks = res[0].map(function(d){ var x = { id:d.id, name:d.name, icon:d.icon || "🎲", words:[] }; byId[d.id] = x; return x; });
+      res[1].forEach(function(w){ if(w && byId[w.deck] && w.word) byId[w.deck].words.push(w.word); });
+      decks = decks.filter(function(d){ return d.words.length; });
+      if(!decks.length) throw new Error("empty");
+      return { decks: decks };
+    });
+  }
+  /* اللعب لحالك (بدون باركود من الشاشة) يحتاج حساب مقبول — اللي يمسحون الباركود ضيوف على الطاولة */
+  function allowedHere(){
+    if(connected) return Promise.resolve(true);
+    if(!SB) return Promise.resolve(false);
+    return SB.auth.getSession().then(function(r){
+      var session = r && r.data && r.data.session;
+      if(!session) return false;
+      return SB.from("profiles").select("status").eq("id", session.user.id).maybeSingle().then(function(p){
+        return !!(p && !p.error && p.data && p.data.status === "approved");
+      });
+    }).catch(function(){ return false; });
+  }
+
   /* ===== التشغيل ===== */
   sizeVars();
   renderTeamBadge();
   rtStart();
-  fetch("games/heads.json", { cache:"no-cache" })
-    .then(function(r){ if(!r.ok) throw new Error("http " + r.status); return r.json(); })
-    .then(function(d){
-      if(!d || !Array.isArray(d.decks) || !d.decks.length) throw new Error("bad data");
-      DATA = d; renderSetup();
-    })
-    .catch(function(){
-      $("decks").innerHTML = '<p class="note">تعذّر تحميل الكلمات — تأكد من الإنترنت و<a href="" style="color:var(--gold)">حدّث الصفحة</a></p>';
-    });
+  allowedHere().then(function(ok){
+    if(!ok){ setState("lock"); return; }
+    loadWordsFromDb()
+      .catch(function(){
+        return fetch("games/heads.json", { cache:"no-cache" }).then(function(r){ if(!r.ok) throw new Error("http " + r.status); return r.json(); });
+      })
+      .then(function(d){
+        if(!d || !Array.isArray(d.decks) || !d.decks.length) throw new Error("bad data");
+        DATA = d; renderSetup();
+      })
+      .catch(function(){
+        $("decks").innerHTML = '<p class="note">تعذّر تحميل الكلمات — تأكد من الإنترنت و<a href="" style="color:var(--gold)">حدّث الصفحة</a></p>';
+      });
+  });
 })();
 </script>
 </body>
