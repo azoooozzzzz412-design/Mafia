@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#14110d">
+<meta name="robots" content="noindex">
 <title>حطها على راسك — طاولة السهرة</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -114,6 +115,11 @@
   .res-list li.ok{ background:rgba(46,158,91,.18); color:#8fe0b0; border:1px solid rgba(46,158,91,.45); }
   .res-list li.pass{ background:rgba(255,255,255,.04); color:var(--faint); border:1px solid rgba(255,255,255,.1); }
   .res-btns{ width:100%; max-width:420px; display:flex; flex-direction:column; gap:8px; align-items:stretch; }
+  .turn-info{ width:100%; max-width:420px; background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:14px 16px; }
+  .turn-info .big{ font-size:1.5rem; font-weight:900; }
+  .turn-info .sm{ color:var(--dim); font-size:.9rem; margin-top:2px; }
+  .turn-info .kind{ display:inline-block; margin-top:8px; font-size:.78rem; font-weight:800; border-radius:999px; padding:3px 12px; background:rgba(127,214,168,.14); color:#8fe0b0; }
+  a.big-btn{ text-decoration:none; display:block; }
   @media (prefers-reduced-motion: reduce){ *{ animation:none !important; } }
 </style>
 </head>
@@ -121,22 +127,27 @@
 <div class="stage" id="stage">
 
   <section class="sc setup" id="scSetup">
-    <div class="top-row"><h1>🤳 حطها على راسك</h1><a class="home" href="./">🏠 الطاولة</a></div>
+    <div class="top-row"><h1>🤳 حطها على راسك</h1><a class="home" href="./#heads" id="homeLink">🏠 الطاولة</a></div>
     <div class="team-badge" id="teamBadge" hidden></div>
     <p class="how">واحد يحط الجوال على جبهته <b>بالعرض</b> والشاشة لفريقه، وتطلع كلمة ما يشوفها وفريقه يعطيه تلميحات.<br>👇 <b>اقلب لتحت</b> إذا عرفتها &nbsp;·&nbsp; 👆 <b>لفوق</b> إذا بتعدّيها</p>
-    <h2 class="lbl">اختار الفئة</h2>
-    <div class="decks" id="decks"><p class="note">جاري تحميل الكلمات…</p></div>
-    <h2 class="lbl">مدة الجولة</h2>
-    <div class="durs" id="durs"><button type="button" data-dur="45">45 ثانية</button><button type="button" data-dur="60">دقيقة</button><button type="button" data-dur="90">90 ثانية</button></div>
+    <div class="turn-info" id="turnInfo"></div>
     <button class="big-btn" id="startBtn" type="button" disabled>▶ ابدأ</button>
     <p class="note" id="setupNote">أول مرة ممكن يطلب الجوال إذن «الحركة والاتجاه» — وافق عليه عشان يحس بالقلبة.</p>
   </section>
 
   <section class="sc lock" id="scLock" hidden>
-    <div class="big-emoji">🔒</div>
-    <p class="msg">سجّل دخولك من الطاولة أول</p>
-    <p class="sub" id="lockSub">«حطها على راسك» تنلعب بعد ما تسجل دخولك ويوافق الأدمن على حسابك — أو امسح الباركود من شاشة الطاولة.</p>
-    <a class="big-btn" href="./" style="text-decoration:none;display:block">🏠 افتح الطاولة</a>
+    <div class="big-emoji">🤳</div>
+    <p class="msg">ابدأ الجولة من شاشة الطاولة</p>
+    <p class="sub" id="lockSub">افتح «حطها على راسك» في الطاولة وابدأ جولة، وبعدها امسح باركود فريقك أو اضغط «العب من هذا الجهاز».</p>
+    <a class="big-btn" href="./#heads">🏠 افتح الطاولة</a>
+  </section>
+
+  <section class="sc wait" id="scWait" hidden>
+    <div class="team-badge" id="teamBadge2" hidden></div>
+    <div class="big-emoji" id="waitEmoji">⏳</div>
+    <p class="msg" id="waitMsg">ننتظر الجولة من الشاشة…</p>
+    <p class="sub" id="waitSub">اللي عند الشاشة يبدأ جولة «حطها على راسك»، وكلماتكم توصل هنا لحالها.</p>
+    <a class="big-btn" id="waitHome" href="./#heads" hidden>🏠 رجوع للطاولة</a>
   </section>
 
   <section class="sc place" id="scPlace" hidden>
@@ -177,8 +188,8 @@
     <p class="res-ack" id="resAck"></p>
     <ul class="res-list" id="resList"></ul>
     <div class="res-btns">
-      <button class="big-btn" id="againBtn" type="button">▶ جولة ثانية</button>
-      <button class="ghost" id="backBtn" type="button">تغيير الفئة</button>
+      <a class="big-btn" id="resHome" href="./#heads" hidden>🏠 رجوع للطاولة</a>
+      <p class="note" id="resNext" hidden>⏳ الدور الجاي يبدأ من شاشة الطاولة</p>
     </div>
   </section>
 
@@ -192,23 +203,20 @@
   var stage = $("stage");
   function esc(s){ return String(s).replace(/[&<>"']/g, function(c){ return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]; }); }
 
-  /* ?r=الغرفة&t=الفريق — لما ينمسح الباركود من شاشة الطاولة (النقاط تنضاف لحالها) */
+  /* ?r=الغرفة&t=الفريق — لما ينمسح الباركود من شاشة الطاولة (الكلمات توصل من الشاشة، والنقاط ترجع لها)
+     ?local=1 — اللعب على نفس جهاز الطاولة (الكلمات والنتيجة عن طريق localStorage) */
   var qs = new URLSearchParams(location.search);
   var room = (qs.get("r") || "").trim().toLowerCase();
   var teamId = (qs.get("t") || "").trim().slice(0, 40);
   var connected = /^[a-z0-9]{4,16}$/.test(room) && !!teamId;
+  var localMode = !connected && qs.get("local") === "1";
   var secParam = parseInt(qs.get("sec"), 10);
-  var DURS = [45, 60, 90];
 
-  var LS = "sahra-heads-v1";
-  var prefs = { deck:"all", dur:60, used:{} };
+  var LS = "sahra-heads-v2";
+  var prefs = { doneRids: [] };
   try{
     var raw = JSON.parse(localStorage.getItem(LS) || "null");
-    if(raw && typeof raw === "object"){
-      if(typeof raw.deck === "string") prefs.deck = raw.deck;
-      if(DURS.indexOf(raw.dur) !== -1) prefs.dur = raw.dur;
-      if(raw.used && typeof raw.used === "object" && !Array.isArray(raw.used)) prefs.used = raw.used;
-    }
+    if(raw && Array.isArray(raw.doneRids)) prefs.doneRids = raw.doneRids.filter(function(x){ return typeof x === "string"; }).slice(-40);
   }catch(e){}
   function savePrefs(){ try{ localStorage.setItem(LS, JSON.stringify(prefs)); }catch(e){} }
   var pid = "", myName = "";
@@ -218,12 +226,13 @@
     myName = String(localStorage.getItem("sahra-buzz-name") || "").trim().slice(0, 16);
   }catch(e){ if(!pid) pid = "p" + Math.random().toString(36).slice(2, 10); }
 
-  var DATA = null;
+  /* دور الفريق: { rid, words[], dur, deck, kind, teamName, color } */
+  var TURN = null;
   var G = { state:"setup", mode:"sensor", results:[], cur:null, endAt:0, left:0, armed:true, fbUntil:0,
-            rot:0, base:0, rid:null, placeSince:0, countT:null, lastTick:-1, resume:false, placeT:null };
+            rot:0, base:0, rid:null, placeSince:0, countT:null, lastTick:-1, resume:false, placeT:null, wi:0 };
   var S = { ok:false, nz:0, gamma:0, beta:0, t:0 };
-  var screens = { setup:$("scSetup"), place:$("scPlace"), count:$("scCount"), play:$("scPlay"), pause:$("scPause"), result:$("scResult"), lock:$("scLock") };
-  var SCREEN_OF = { setup:"setup", place:"place", count:"count", play:"play", fb:"play", ending:"play", pause:"pause", result:"result", lock:"lock" };
+  var screens = { setup:$("scSetup"), place:$("scPlace"), count:$("scCount"), play:$("scPlay"), pause:$("scPause"), result:$("scResult"), lock:$("scLock"), wait:$("scWait") };
+  var SCREEN_OF = { setup:"setup", place:"place", count:"count", play:"play", fb:"play", ending:"play", pause:"pause", result:"result", lock:"lock", wait:"wait" };
 
   function setState(s){
     G.state = s;
@@ -259,69 +268,51 @@
     for(var i=0; i<30 && (el.scrollWidth > W + 1 || el.scrollHeight > H + 1); i++){ size *= 0.9; el.style.fontSize = size + "px"; }
   }
 
-  /* ===== الكلمات ===== */
-  function decks(){ return DATA ? DATA.decks : []; }
-  function deckWords(id){
-    if(id === "all"){
-      var seen = {}, out = [];
-      decks().forEach(function(d){ d.words.forEach(function(w){ if(!seen[w]){ seen[w] = 1; out.push(w); } }); });
-      return out;
-    }
-    for(var i=0;i<decks().length;i++) if(decks()[i].id === id) return decks()[i].words;
-    return [];
-  }
-  function deckName(id){
-    if(id === "all") return "كل الفئات";
-    for(var i=0;i<decks().length;i++) if(decks()[i].id === id) return decks()[i].name;
-    return "";
-  }
-  function validOrder(o, n){
-    if(!Array.isArray(o) || o.length !== n) return false;
-    var seen = {};
-    for(var i=0;i<n;i++){ var v = o[i]; if(typeof v !== "number" || v < 0 || v >= n || Math.floor(v) !== v || seen[v]) return false; seen[v] = 1; }
-    return true;
-  }
-  function shuffledIdx(n){
-    var a = []; for(var i=0;i<n;i++) a.push(i);
-    for(var j=n-1;j>0;j--){ var k = Math.floor(Math.random() * (j + 1)); var t = a[j]; a[j] = a[k]; a[k] = t; }
-    return a;
-  }
-  /* الكلمات ما تتكرر لين تخلص الفئة كلها — والترتيب محفوظ بالجوال */
+  /* ===== الكلمات: من دور الفريق بالترتيب (10 كلمات بالجولة) ===== */
+  function wordsLeft(){ return TURN ? TURN.words.length - G.wi : 0; }
   function drawWord(){
-    var words = deckWords(prefs.deck), n = words.length;
-    if(!n) return "؟";
-    var u = prefs.used[prefs.deck];
-    if(!u || !validOrder(u.order, n) || typeof u.idx !== "number" || u.idx < 0 || u.idx >= n){
-      u = { order: shuffledIdx(n), idx: 0 }; prefs.used[prefs.deck] = u;
-    }
-    var w = words[u.order[u.idx]]; u.idx += 1; savePrefs();
+    if(!TURN || G.wi >= TURN.words.length) return null;
+    var w = TURN.words[G.wi]; G.wi += 1;
     return w;
   }
+  function durOf(){ return (secParam >= 3 && secParam <= 300) ? secParam : ([45, 60, 90].indexOf(TURN && TURN.dur) !== -1 ? TURN.dur : 60); }
+  function wordsText(n){ return n === 1 ? "كلمة وحدة" : n === 2 ? "كلمتين" : n + (n >= 3 && n <= 10 ? " كلمات" : " كلمة"); }
 
-  /* ===== شاشة الإعداد ===== */
+  /* ===== شاشة الاستعداد ===== */
   function renderSetup(){
-    if(!DATA) return;
-    var list = [{ id:"all", name:"كل الفئات", icon:"🎲", n: deckWords("all").length }].concat(decks().map(function(d){ return { id:d.id, name:d.name, icon:d.icon, n:d.words.length }; }));
-    if(!list.some(function(d){ return d.id === prefs.deck; })) prefs.deck = "all";
-    $("decks").innerHTML = list.map(function(d){
-      return '<button type="button" class="deck' + (d.id === prefs.deck ? " on" : "") + '" data-deck="' + esc(d.id) + '"><span class="ic">' + d.icon + '</span>' + esc(d.name) + '<small>' + d.n + ' كلمة</small></button>';
-    }).join("");
-    Array.prototype.forEach.call($("durs").querySelectorAll("[data-dur]"), function(b){ b.classList.toggle("on", +b.getAttribute("data-dur") === prefs.dur); });
+    if(!TURN) return;
+    var d = durOf();
+    $("turnInfo").innerHTML = '<div class="big">' + wordsText(TURN.words.length) + '</div>'
+      + '<div class="sm">⏱️ ' + (d === 60 ? "دقيقة" : d + " ثانية") + (TURN.deck ? " · " + esc(TURN.deck) : "") + '</div>'
+      + (TURN.kind === "trial" ? '<div class="kind">🎁 تجربة مجانية</div>' : '');
     $("startBtn").disabled = false;
     renderTeamBadge();
+    setState("setup");
   }
-  $("decks").addEventListener("click", function(e){
-    var b = e.target.closest("[data-deck]"); if(!b) return;
-    prefs.deck = b.getAttribute("data-deck"); savePrefs(); renderSetup();
-  });
-  $("durs").addEventListener("click", function(e){
-    var b = e.target.closest("[data-dur]"); if(!b) return;
-    prefs.dur = +b.getAttribute("data-dur"); savePrefs(); renderSetup();
-  });
+  function showWait(reason, c, kind){
+    var msg = "ننتظر الجولة من الشاشة…", sub = "اللي عند الشاشة يبدأ جولة «حطها على راسك»، وكلماتكم توصل هنا لحالها.", emo = "⏳";
+    if(reason === "done"){ emo = "✅"; msg = "خلص دوركم"; sub = (c ? "جبتوا " + c + " صح. " : "") + (localMode ? "ارجعوا للطاولة وكمّلوا السهرة." : "انتظروا الجولة الجاية من الشاشة."); }
+    if(reason === "no_words"){ msg = "ما لكم كلمات بهالجولة"; sub = (kind === "trial" ? "التجربة المجانية لفريق واحد" : "كلمات الفئة ما كفّت كل الفرق") + " — انتظروا الجولة الجاية."; }
+    $("waitEmoji").textContent = emo; $("waitMsg").textContent = msg; $("waitSub").textContent = sub;
+    $("waitHome").hidden = !localMode;
+    renderTeamBadge();
+    setState("wait");
+  }
+  function takeTurn(p){
+    if(!p || p.team !== teamId) return;
+    if(G.state !== "setup" && G.state !== "wait" && G.state !== "result") return;   /* لا نقاطع دور شغّال */
+    if(p.none){ if(G.state !== "result") showWait(p.reason, p.c, p.kind); return; }
+    if(!Array.isArray(p.words) || !p.words.length || typeof p.rid !== "string") return;
+    if(prefs.doneRids.indexOf(p.rid) !== -1){ if(G.state !== "result") showWait("done"); return; }
+    if(TURN && TURN.rid === p.rid && G.state === "setup") return;
+    TURN = { rid:p.rid, words:p.words.map(function(w){ return String(w).slice(0, 60); }).slice(0, 20), dur:p.dur, deck:String(p.deck || "").slice(0, 30), kind:p.kind, teamName:p.teamName, color:p.color };
+    G.wi = 0;
+    renderSetup();
+  }
 
   /* ===== البداية: إذن الحساس (آيفون) + ملء الشاشة (أندرويد) ===== */
   function startFlow(){
-    if(!DATA) return;
+    if(!TURN) return;
     unlockAudio(); keepAwake(); goFullscreen();
     var D = window.DeviceOrientationEvent, ask;
     try{
@@ -358,7 +349,7 @@
   $("cancelBtn").addEventListener("click", function(){
     clearTimeout(G.placeT);
     if(G.resume){ G.resume = false; finishRound(false); return; }
-    exitFullscreen(); setState("setup");
+    exitFullscreen(); renderSetup();
   });
 
   function startCountdown(){
@@ -385,18 +376,19 @@
       G.resume = false;
       G.endAt = Date.now() + G.left;
       if(!G.cur) G.cur = drawWord();
+      if(!G.cur){ finishRound("words"); return; }
       showWord();
       heads({ type:"resume", left: Math.round(G.left / 1000) });
       return;
     }
-    var dur = (secParam >= 3 && secParam <= 300) ? secParam : prefs.dur;
-    G.results = []; G.lastTick = -1;
-    G.rid = "h" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    var dur = durOf();
+    G.results = []; G.lastTick = -1; G.wi = 0;
+    G.rid = TURN.rid;
     G.endAt = Date.now() + dur * 1000;
     rt.pending = null; rt.acked = null; rt.failed = false; clearTimeout(rt.endT);
     G.cur = drawWord();
     showWord();
-    heads({ type:"start", left: dur, deck: deckName(prefs.deck), name: myName });
+    heads({ type:"start", left: dur, deck: TURN.deck || "", name: myName });
   }
   function showWord(){
     $("word").textContent = G.cur;
@@ -478,9 +470,21 @@
     updateHud();
     var sec = Math.ceil(left / 1000);
     if(sec <= 5 && sec !== G.lastTick){ G.lastTick = sec; tickSound(); }
-    if(G.state === "fb" && now >= G.fbUntil && G.armed){ G.cur = drawWord(); showWord(); }
+    if(G.state === "fb" && now >= G.fbUntil && G.armed){
+      if(!wordsLeft()){ wordsDone(); return; }
+      G.cur = drawWord(); showWord();
+    }
   }, 100);
 
+  function wordsDone(){
+    if(G.state !== "fb") return;
+    G.cur = null;
+    var fb = $("fb");
+    fb.className = "fb ok"; fb.textContent = "خلصت الكلمات! 🎉"; fb.hidden = false;
+    G.state = "ending";
+    vibrate([60, 60, 60]); soundOk();
+    setTimeout(function(){ finishRound("words"); }, 1300);
+  }
   function timeUp(){
     if(G.state !== "play" && G.state !== "fb") return;
     G.cur = null;
@@ -494,12 +498,22 @@
     clearInterval(G.countT); clearTimeout(G.placeT);
     $("fb").hidden = true;
     var c = count();
-    if(G.rid && connected){
-      rt.pending = { type:"end", rid:G.rid, correct:c.ok, passed:c.pass, words:G.results.slice(0, 200) };
-      rt.tries = 0; rt.failed = false; sendEnd();
+    if(G.rid){
+      if(prefs.doneRids.indexOf(G.rid) === -1){ prefs.doneRids.push(G.rid); if(prefs.doneRids.length > 40) prefs.doneRids.shift(); savePrefs(); }
+      if(connected){
+        rt.pending = { type:"end", rid:G.rid, correct:c.ok, passed:c.pass, words:G.results.slice(0, 200) };
+        rt.tries = 0; rt.failed = false; sendEnd();
+      } else if(localMode){
+        try{
+          localStorage.setItem("sahra-heads-result", JSON.stringify({ rid:G.rid, team:teamId, correct:c.ok, passed:c.pass, words:G.results.slice(0, 200), at:Date.now() }));
+          localStorage.removeItem("sahra-heads-local");
+        }catch(e){}
+      }
     }
     exitFullscreen();
-    $("resTitle").textContent = timeOver ? "خلص الوقت! ⏰" : "انتهت الجولة";
+    $("resTitle").textContent = timeOver === "words" ? "خلصت الكلمات! 🎉" : timeOver ? "خلص الوقت! ⏰" : "انتهى الدور";
+    $("resHome").hidden = !localMode;
+    $("resNext").hidden = !connected;
     $("resScore").innerHTML = '<span class="ok">✅ ' + c.ok + ' صح</span><span class="pass">⏭️ ' + c.pass + ' عدّوها</span>';
     $("resList").innerHTML = G.results.length
       ? G.results.map(function(r){ return '<li class="' + (r.ok ? "ok" : "pass") + '">' + (r.ok ? "✅ " : "⏭️ ") + esc(r.w) + '</li>'; }).join("")
@@ -516,7 +530,7 @@
     var el = $("resAck"), c = count();
     el.className = "res-ack";
     if(!connected){
-      el.textContent = c.ok ? "زيدوا فريقكم " + pointsText(c.ok) + " من «👥 الفرق والنقاط»" : "";
+      el.textContent = localMode ? (c.ok ? "ارجعوا للطاولة وتنضاف لكم " + pointsText(c.ok) + " لحالها" : "ارجعوا للطاولة") : "";
       return;
     }
     if(rt.acked && rt.acked.rid === G.rid){
@@ -530,8 +544,6 @@
       el.textContent = "⏳ نرسل النتيجة للشاشة…";
     }
   }
-  $("againBtn").addEventListener("click", function(){ G.resume = false; startFlow(); });
-  $("backBtn").addEventListener("click", function(){ setState("setup"); renderSetup(); });
 
   /* ===== إيقاف مؤقت لو طفت الشاشة أو طلع من الصفحة ===== */
   document.addEventListener("visibilitychange", function(){
@@ -576,6 +588,10 @@
       if(rt.ch !== c) return;
       var p = m && m.payload;
       if(p && Array.isArray(p.teams)){ rt.teams = p.teams; renderTeamBadge(); }
+    });
+    c.on("broadcast", { event:"headsTurn" }, function(m){
+      if(rt.ch !== c) return;
+      takeTurn(m && m.payload);
     });
     c.on("broadcast", { event:"headsAck" }, function(m){
       if(rt.ch !== c) return;
@@ -625,8 +641,16 @@
     return null;
   }
   function renderTeamBadge(){
-    var b = $("teamBadge");
-    if(!connected){ b.hidden = true; $("teamStrip").hidden = true; return; }
+    var b = $("teamBadge"), b2 = $("teamBadge2");
+    if(localMode){
+      b2.hidden = true;
+      if(!TURN){ b.hidden = true; return; }
+      b.hidden = false; b.style.setProperty("--c", TURN.color || "#5ec4e0");
+      b.innerHTML = '<span>' + esc(TURN.teamName || "فريقك") + '</span><small>🖥️ على جهاز الطاولة — النقاط تنضاف لما ترجعون لها</small>';
+      $("teamStrip").hidden = false; $("teamStrip").style.setProperty("--c", TURN.color || "#5ec4e0");
+      return;
+    }
+    if(!connected){ b.hidden = true; b2.hidden = true; $("teamStrip").hidden = true; return; }
     var t = teamInfo();
     var status = rt.err ? "⚠️ إعدادات الاتصال ناقصة — النقاط تنحسب يدوي"
       : !rt.on ? "⏳ نتصل بشاشة الطاولة…"
@@ -636,6 +660,7 @@
     b.hidden = false;
     b.style.setProperty("--c", t && t.color ? t.color : "#8a8074");
     b.innerHTML = '<span>' + esc(t ? t.name : "فريقك") + '</span><small>' + status + '</small>';
+    b2.hidden = false; b2.style.setProperty("--c", t && t.color ? t.color : "#8a8074"); b2.innerHTML = b.innerHTML;
     var strip = $("teamStrip");
     strip.hidden = !t;
     if(t) strip.style.setProperty("--c", t.color || "#5ec4e0");
@@ -691,59 +716,23 @@
     try{ if(document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function(){}); }catch(e){}
   }
 
-  /* ===== الكلمات: من Supabase (الأدمن يعدّلها) — ولو صار خطأ نرجع للملف الثابت ===== */
-  function loadWordsFromDb(){
-    if(!SB) return Promise.reject(new Error("no db"));
-    var words = [], size = 1000;
-    function page(from){
-      return SB.from("heads_words").select("id,deck,word").order("id", { ascending:true }).range(from, from + size - 1).then(function(r){
-        if(r.error) throw r.error;
-        words = words.concat(r.data || []);
-        return (r.data || []).length === size ? page(from + size) : words;
-      });
-    }
-    return Promise.all([
-      SB.from("heads_decks").select("id,name,icon,sort").order("sort", { ascending:true }).then(function(r){ if(r.error) throw r.error; return r.data || []; }),
-      page(0)
-    ]).then(function(res){
-      var byId = {}, decks = res[0].map(function(d){ var x = { id:d.id, name:d.name, icon:d.icon || "🎲", words:[] }; byId[d.id] = x; return x; });
-      res[1].forEach(function(w){ if(w && byId[w.deck] && w.word) byId[w.deck].words.push(w.word); });
-      decks = decks.filter(function(d){ return d.words.length; });
-      if(!decks.length) throw new Error("empty");
-      return { decks: decks };
-    });
-  }
-  /* اللعب لحالك (بدون باركود من الشاشة) يحتاج حساب مقبول — اللي يمسحون الباركود ضيوف على الطاولة */
-  function allowedHere(){
-    if(connected) return Promise.resolve(true);
-    if(!SB) return Promise.resolve(false);
-    return SB.auth.getSession().then(function(r){
-      var session = r && r.data && r.data.session;
-      if(!session) return false;
-      return SB.from("profiles").select("status").eq("id", session.user.id).maybeSingle().then(function(p){
-        return !!(p && !p.error && p.data && p.data.status === "approved");
-      });
-    }).catch(function(){ return false; });
-  }
-
   /* ===== التشغيل ===== */
   sizeVars();
   renderTeamBadge();
-  rtStart();
-  allowedHere().then(function(ok){
-    if(!ok){ setState("lock"); return; }
-    loadWordsFromDb()
-      .catch(function(){
-        return fetch("games/heads.json", { cache:"no-cache" }).then(function(r){ if(!r.ok) throw new Error("http " + r.status); return r.json(); });
-      })
-      .then(function(d){
-        if(!d || !Array.isArray(d.decks) || !d.decks.length) throw new Error("bad data");
-        DATA = d; renderSetup();
-      })
-      .catch(function(){
-        $("decks").innerHTML = '<p class="note">تعذّر تحميل الكلمات — تأكد من الإنترنت و<a href="" style="color:var(--gold)">حدّث الصفحة</a></p>';
-      });
-  });
+  if(connected){
+    showWait("no_round");
+    rtStart();
+  } else if(localMode){
+    var turn = null;
+    try{ turn = JSON.parse(localStorage.getItem("sahra-heads-local") || "null"); }catch(e){}
+    if(turn && Array.isArray(turn.words) && turn.words.length && typeof turn.rid === "string" && typeof turn.team === "string"
+       && Date.now() - (+turn.at || 0) < 12 * 3600 * 1000){
+      teamId = turn.team;
+      takeTurn(turn);
+    } else setState("lock");
+  } else {
+    setState("lock");
+  }
 })();
 </script>
 </body>

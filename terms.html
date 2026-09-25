@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>الشروط وسياسة الاسترجاع — طاولة السهرة</title>
+<meta name="description" content="شروط استخدام طاولة السهرة: الجولات والأسعار والدفع عن طريق ميسّر وسياسة استرجاع المبلغ وطرق التواصل.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@700&family=Cairo:wght@400;600;700;800&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style>
+  :root{
+    color-scheme: dark;
+    --ink:#14110d; --panel:#1c170f; --panel-2:#241d13;
+    --gold:#c99a3c; --gold-bright:#f0c65f;
+    --text:#f2e9d8; --text-dim:#a8987d; --text-faint:#726352;
+    --border:rgba(217,171,80,0.16); --border-strong:rgba(217,171,80,0.32);
+    --font-display:"Aref Ruqaa", "Times New Roman", serif;
+    --font-body:"Cairo", "Tahoma", sans-serif;
+  }
+  *,*::before,*::after{ box-sizing:border-box; }
+  body{ margin:0; background:var(--ink); color:var(--text); font-family:var(--font-body); line-height:1.9; }
+  main{ max-width:760px; margin:0 auto; padding:34px 18px 60px; }
+  .head{ text-align:center; margin-bottom:22px; }
+  .logo{ font-size:2.4rem; line-height:1; }
+  h1{ font-family:var(--font-display); color:var(--gold-bright); font-size:2rem; margin:8px 0 2px; }
+  .meta{ color:var(--text-faint); font-size:.85rem; }
+  .card{ background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:18px 20px; margin-bottom:14px; }
+  .card.key{ border-color:var(--border-strong); }
+  h2{ font-size:1.1rem; color:var(--gold-bright); margin:0 0 6px; }
+  p{ margin:0 0 8px; color:var(--text); }
+  ul{ margin:0; padding-inline-start:20px; }
+  li{ margin-bottom:6px; }
+  .dim{ color:var(--text-dim); }
+  a{ color:var(--gold-bright); }
+  .contact{ display:flex; flex-wrap:wrap; gap:10px; margin-top:6px; }
+  .wa{ display:inline-block; text-decoration:none; font-weight:800; font-size:.92rem; color:#10261b; background:#43c07a; border-radius:999px; padding:8px 18px; }
+  .seller{ color:var(--text-dim); font-size:.9rem; white-space:pre-line; }
+  .back{ display:inline-block; margin-top:10px; text-decoration:none; font-weight:800; font-size:.9rem;
+         color:var(--text); border:1px solid var(--border-strong); border-radius:999px; padding:8px 18px; background:var(--panel-2); }
+  .back:hover{ border-color:var(--gold); }
+  footer{ text-align:center; }
+  .links{ color:var(--text-faint); font-size:.85rem; margin-top:14px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="head">
+    <div class="logo">🎲</div>
+    <h1>الشروط وسياسة الاسترجاع</h1>
+    <div class="meta">طاولة السهرة · آخر تحديث: 25 سبتمبر 2026</div>
+  </div>
+
+  <section class="card">
+    <h2>الخدمة</h2>
+    <p>«طاولة السهرة» موقع ألعاب جماعية بالعربي للسهرات (سين جيم، الحروف، تحدي الصور، حزر العلم، حطها على راسك، التمثيل الصامت والمافيا). تسجّل بحساب Google، وتجرب كل لعبة مرة وحدة مجانًا بنسخة مختصرة، وبعدها تشتري <b>جولات</b> وتلعب فيها أي لعبة.</p>
+  </section>
+
+  <section class="card">
+    <h2>الجولات والأسعار</h2>
+    <ul>
+      <li>الجولة تفتح لعبة وحدة (مثل لوحة سين جيم كاملة، أو 10 أعلام، أو 10 كلمات لكل فريق). تفاصيل كل لعبة مكتوبة في الصفحة الرئيسية.</li>
+      <li>الأسعار بالريال السعودي وتطلع لك قبل الدفع، والجولات تنضاف لرصيدك أول ما يتأكد الدفع.</li>
+      <li>تنخصم جولة وحدة لما تضغط «ابدأ جولة»، والجولات اللي ما استخدمتها تبقى برصيدك بدون تاريخ انتهاء.</li>
+      <li>الرصيد خاص بحسابك وما ينتقل لحساب ثاني.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>الدفع</h2>
+    <p>الدفع عن طريق بوابة الدفع <b>ميسّر</b> (مدى، فيزا، ماستركارد، Apple Pay). بيانات بطاقتك تنكتب في صفحة ميسّر الآمنة وما توصل لنا أبدًا، وحنا نحفظ بس سجل الطلب (الباقة، المبلغ، حالة الدفع، رقم الفاتورة).</p>
+  </section>
+
+  <section class="card key" id="refund">
+    <h2>سياسة الاسترجاع</h2>
+    <ul>
+      <li>إذا ما استخدمت <b>ولا جولة</b> من الباقة، تقدر تطلب استرجاع المبلغ كامل خلال <b>7 أيام</b> من الشراء.</li>
+      <li>الجولات اللي بدأتها ما ينرجع مبلغها، لأنها محتوى رقمي انفتح لك.</li>
+      <li>إذا انخصم المبلغ وما وصلتك الجولات، أو صار خطأ تقني ضيّع عليك جولة، تواصل معنا ونرجّعها لرصيدك أو نرجّع المبلغ.</li>
+      <li>المبلغ يرجع لنفس وسيلة الدفع، ومدة وصوله لحسابك تعتمد على البنك.</li>
+      <li>للطلب: تواصل معنا وعطنا إيميل حسابك وتاريخ الدفع.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>الاستخدام</h2>
+    <ul>
+      <li>الموقع للاستخدام الشخصي في السهرات والتجمعات. ممنوع نسخ المحتوى (الأسئلة والألغاز والصور) أو إعادة بيعه.</li>
+      <li>نقدر نوقف أي حساب يسيء الاستخدام أو يحاول يتلاعب بالنظام.</li>
+      <li>ممكن نطوّر الألعاب ونغيّر الأسعار أو المحتوى، وهذا ما يأثر على الجولات اللي اشتريتها قبل.</li>
+    </ul>
+  </section>
+
+  <section class="card" id="contact">
+    <h2>التواصل</h2>
+    <p id="contactText">لأي سؤال أو طلب استرجاع، تواصل معنا:</p>
+    <div class="contact" id="contactBox"><span class="dim">جاري تحميل طرق التواصل…</span></div>
+    <p class="seller" id="sellerBox" hidden></p>
+  </section>
+
+  <section class="card">
+    <p class="dim" style="margin:0">إذا تغيّرت هذي الشروط ينكتب التعديل هنا مع تاريخ التحديث. ويسري عليها الأنظمة المعمول بها في المملكة العربية السعودية.</p>
+  </section>
+
+  <footer>
+    <a class="back" href="./">↩️ رجوع للطاولة</a>
+    <div class="links"><a href="privacy.html">سياسة الخصوصية</a></div>
+  </footer>
+</main>
+<script>
+(function(){
+  "use strict";
+  var box = document.getElementById("contactBox"), sellerBox = document.getElementById("sellerBox");
+  function fallback(){ box.innerHTML = '<span class="dim">تواصل مع صاحب الطاولة من خلال الشخص اللي عطاك رابط الموقع.</span>'; }
+  function waLink(c){
+    c = String(c || "").trim();
+    if(!c) return "";
+    if(/^https?:\/\//.test(c)) return c;
+    var d = c.replace(/[^\d]/g, "").replace(/^00/, "");
+    if(d.length < 8) return "";
+    if(d.charAt(0) === "0") d = "966" + d.slice(1);
+    return "https://wa.me/" + d;
+  }
+  try{
+    if(!window.supabase || !window.supabase.createClient || !window.SAHRA_SUPABASE_URL || window.SAHRA_SUPABASE_URL.indexOf("xxxx") !== -1){ fallback(); return; }
+    var sb = window.supabase.createClient(window.SAHRA_SUPABASE_URL, window.SAHRA_SUPABASE_ANON_KEY, { auth: { persistSession:false, autoRefreshToken:false, detectSessionInUrl:false } });
+    sb.rpc("catalog").then(function(r){
+      var d = r && r.data; if(typeof d === "string"){ try{ d = JSON.parse(d); }catch(e){ d = null; } }
+      if(!d){ fallback(); return; }
+      var link = waLink(d.contact);
+      if(link){
+        box.innerHTML = "";
+        var a = document.createElement("a");
+        a.className = "wa"; a.href = link; a.target = "_blank"; a.rel = "noopener"; a.textContent = "💬 تواصل معنا بالواتساب";
+        box.appendChild(a);
+      } else fallback();
+      var seller = typeof d.seller === "string" ? d.seller.trim() : "";
+      if(seller){ sellerBox.textContent = seller; sellerBox.hidden = false; }
+    }, fallback);
+  }catch(e){ fallback(); }
+})();
+</script>
+</body>
+</html>
