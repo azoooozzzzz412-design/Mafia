@@ -1,0 +1,6 @@
+{
+  "redirects": [
+    { "source": "/", "destination": "https://sahratable.com/", "permanent": true },
+    { "source": "/:path*", "destination": "https://sahratable.com/:path*", "permanent": true }
+  ]
+}
