@@ -3,24 +3,27 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#14110d">
+<meta name="theme-color" content="#050507">
 <meta name="robots" content="noindex">
 <title>حطها على راسك — طاولة السهرة</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@600;700;800&family=IBM+Plex+Sans+Arabic:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="theme.css?v=5">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <style>
   :root{
     color-scheme: dark;
-    --ink:#14110d; --panel:#1c170f; --panel2:#241d13; --text:#f2e9d8; --dim:#a8987d; --faint:#726352;
-    --gold:#f0c65f; --gold2:#c99a3c; --border:rgba(217,171,80,.18); --c:#5ec4e0;
+    --ink:#050507; --panel:#15131f; --panel2:#1e1b2c; --text:#f5f3ff; --dim:#b9b3d1; --faint:#8b85a3;
+    --gold:#7c5cff; --gold2:#5a3ee8; --border:rgba(255,255,255,.12); --c:#22d3ee;
     --W:100vw; --H:100vh;
   }
   *{ box-sizing:border-box; margin:0; padding:0; }
   [hidden]{ display:none !important; }
-  html, body{ height:100%; overflow:hidden; background:var(--ink); color:var(--text); font-family:"Cairo", Tahoma, sans-serif; }
+  html, body{ height:100%; overflow:hidden; background:var(--ink); color:var(--text); font-family:var(--f-body); }
+  body{ background:radial-gradient(ellipse 120% 55% at 50% -12%, rgba(124,92,255,.26), transparent 62%), var(--ink); }
+  .top-row h1, .msg, .word, .count-num, .res-title, .turn-info .big, .big-btn, .team-badge, .tb{ font-family:var(--f-display); }
   body{ touch-action:manipulation; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; -webkit-tap-highlight-color:transparent; }
   button{ font-family:inherit; cursor:pointer; }
 
@@ -47,7 +50,7 @@
   .team-badge small{ font-size:.78rem; font-weight:700; color:var(--dim); }
   .how{ color:var(--dim); font-size:.92rem; line-height:1.85; max-width:40ch; }
   .how b{ color:var(--text); }
-  .lbl{ width:100%; max-width:520px; text-align:right; font-size:.95rem; font-weight:900; color:var(--gold); margin-top:4px; }
+  .lbl{ width:100%; max-width:520px; text-align:right; font-size:.92rem; font-weight:700; color:#a28dff; margin-top:4px; }
   .decks{ display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; width:100%; max-width:520px; }
   .deck{
     background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:10px 4px; color:var(--text);
@@ -55,16 +58,17 @@
   }
   .deck .ic{ font-size:1.55rem; line-height:1.2; }
   .deck small{ color:var(--faint); font-weight:700; font-size:.68rem; }
-  .deck.on{ border-color:var(--gold); background:#2c2416; box-shadow:0 0 0 2px var(--gold) inset; }
+  .deck.on{ border-color:var(--gold); background:rgba(124,92,255,.18); box-shadow:0 0 0 2px var(--gold) inset; }
   .durs{ display:flex; gap:8px; }
   .durs button{
     background:var(--panel); border:1px solid var(--border); color:var(--text); border-radius:999px;
     padding:8px 18px; font-weight:800; font-size:.95rem;
   }
-  .durs button.on{ background:var(--gold); color:#241a08; border-color:var(--gold); }
+  .durs button.on{ background:var(--gold); color:#fff; border-color:#a28dff; }
   .big-btn{
-    width:100%; max-width:420px; background:linear-gradient(135deg, var(--gold), var(--gold2)); color:#241a08;
-    border:none; border-radius:16px; padding:15px; font-size:1.25rem; font-weight:900; flex-shrink:0;
+    width:100%; max-width:420px; background:linear-gradient(180deg, #8a6dff, #6c4cff); color:#fff;
+    border:1px solid rgba(255,255,255,.18); border-radius:999px; padding:15px; font-size:1.2rem; font-weight:700; flex-shrink:0;
+    box-shadow:0 14px 34px -12px rgba(124,92,255,.75);
   }
   .big-btn:disabled{ opacity:.5; }
   .ghost{
@@ -81,7 +85,7 @@
   .sub{ color:var(--dim); font-size:.95rem; line-height:1.7; max-width:36ch; }
 
   /* العد التنازلي واللعب */
-  .sc.count, .sc.play{ background: radial-gradient(circle at 50% 42%, #1f5569 0%, #0f2530 75%); }
+  .sc.count, .sc.play{ background: radial-gradient(circle at 50% 42%, #0e5a6e 0%, #061820 78%); }
   .count-num{ font-size:min(42vmin, 230px); font-weight:900; color:#fff; line-height:1; }
   .play-top{ position:absolute; top:10px; left:14px; right:14px; display:flex; align-items:center; justify-content:space-between; font-weight:900; font-size:1.15rem; }
   .play-top .timer{ font-family:ui-monospace, "SF Mono", monospace; direction:ltr; background:rgba(0,0,0,.28); border-radius:999px; padding:2px 16px; }
@@ -94,8 +98,8 @@
   }
   .tap-btns{ position:absolute; bottom:12px; left:12px; right:12px; display:flex; gap:12px; }
   .tb{ flex:1; border:none; border-radius:16px; padding:14px 8px; font-size:1.2rem; font-weight:900; color:#fff; }
-  .tb.ok{ background:#2e9e5b; }
-  .tb.pass{ background:#d9822b; }
+  .tb.ok{ background:#0f9f6e; }
+  .tb.pass{ background:#e07a16; }
   .fb{ position:absolute; inset:0; z-index:5; display:flex; align-items:center; justify-content:center; font-size:min(15vmin, 110px); font-weight:900; color:#fff; text-shadow:0 4px 18px rgba(0,0,0,.25); }
   .fb.ok{ background:#2e9e5b; }
   .fb.pass{ background:#d9822b; }
