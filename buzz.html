@@ -147,6 +147,12 @@
   .clock small{ font-size:.45em; font-weight:800; opacity:.85; }
   .clock.warn{ background:#fff; color:#c0271d; border-color:#fff; animation:tick .5s ease-in-out infinite alternate; }
   @keyframes tick{ from{ transform:scale(1); } to{ transform:scale(1.08); } }
+  /* ===== الخصم (خلص الوقت أو جواب غلط) ===== */
+  .pen{ display:flex; align-items:center; gap:10px; padding:6px 16px 6px 8px; border-radius:999px; max-width:100%;
+    background:rgba(229,72,77,.16); border:1px solid rgba(255,120,120,.5); color:#ffd7d7; font-weight:800; font-size:1rem; }
+  .pen b{ font-family:var(--f-display); direction:ltr; unicode-bidi:isolate; background:#e5484d; color:#fff; border-radius:999px; padding:2px 12px; font-size:1.25rem; line-height:1.3; }
+  .pen.in{ animation: penIn .45s cubic-bezier(.2, 1.4, .4, 1); }
+  @keyframes penIn{ from{ transform:scale(.6); opacity:0; } to{ transform:none; opacity:1; } }
   .foot{ font-size:.72rem; color:var(--faint); text-align:center; }
   .foot b{ font-family:ui-monospace, monospace; direction:ltr; unicode-bidi:isolate; }
   @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
@@ -170,6 +176,7 @@
     <div class="qcard" id="qcard" hidden></div>
     <button class="btn" id="btn" type="button" aria-label="زر الضغط">…</button>
     <div class="clock" id="clock" hidden aria-live="off"><span>⏱️</span><b id="clockN">0</b><small id="clockW">ثانية</small></div>
+    <div class="pen" id="pen" hidden role="status"><b id="penN"></b><span id="penT"></span></div>
     <p class="msg" id="msg">جاري الاتصال…</p>
     <p class="sub" id="sub"></p>
     <button class="reload" id="reload" type="button" data-nopress hidden>🔄 تحديث الصفحة</button>
@@ -187,7 +194,8 @@
   var els = { team:$("team"), teamName:$("teamName"), conn:$("conn"), connText:$("connText"),
               btn:$("btn"), msg:$("msg"), sub:$("sub"), reload:$("reload"), big:$("bigEmoji"), foot:$("foot"),
               meName:$("meName"), editIcon:$("editIcon"), nameForm:$("nameForm"), nameInput:$("nameInput"),
-              qcard:$("qcard"), clock:$("clock"), clockN:$("clockN"), clockW:$("clockW") };
+              qcard:$("qcard"), clock:$("clock"), clockN:$("clockN"), clockW:$("clockW"),
+              pen:$("pen"), penN:$("penN"), penT:$("penT") };
 
   var pid;
   try{
@@ -205,7 +213,7 @@
   /* الحالة: الشاشة (المضيف) هي الحَكَم — هنا بس نعرض اللي توصلنا منها ونرسل الضغطة */
   var S = { conn:"connecting", connSince:Date.now(), host:null, lastSeen:0,
             pressedQid:null, pressedAt:0, celebrated:null, wakeLock:null, audio:null,
-            endAt:0, clockT:null, toutKey:null };
+            endAt:0, clockT:null, toutKey:null, penKey:null, penT:null };
   var client = null, ch = null;
 
   els.reload.addEventListener("click", function(){ location.reload(); });
@@ -315,7 +323,29 @@
       var tk = p.qid + "|" + p.tout + "|" + (p.excluded || []).join(",");
       if(S.toutKey !== tk){ S.toutKey = tk; if(p.tout === teamId){ vibrate([200, 80, 200]); timeUpSound(); } else { vibrate(60); } }
     }
+    /* انخصم على فريقنا (خلص الوقت أو جواب غلط) — نبيّنها مرة وحدة، وبس لو صارت قبل شوي. سؤال جديد = تختفي */
+    if(prev && prev.qid !== p.qid){ clearTimeout(S.penT); els.pen.hidden = true; }
+    var pn = myPen();
+    if(pn){
+      var pk = p.qid + "|" + pn.kind + "|" + pn.id;
+      if(S.penKey !== pk){
+        S.penKey = pk;
+        if((+pn.ago || 0) <= 8){ showPen(pn); if(pn.kind !== "timeout" || p.state !== "armed") vibrate([200, 80, 200]); }
+      }
+    }
     render();
+  }
+  function myPen(){
+    var all = S.host && S.host.pens, x = all && typeof all === "object" ? all[teamId] : null;
+    return x && typeof x === "object" && (num(x.n, 0, 999) | 0) > 0 ? x : null;
+  }
+  function penWord(n){ var m = n % 100; return n === 1 ? "نقطة" : n === 2 ? "نقطتين" : n + (m >= 3 && m <= 10 ? " نقاط" : " نقطة"); }
+  function showPen(x){
+    var n = num(x.n, 0, 999) | 0;
+    els.penN.textContent = "−" + n;
+    els.penT.textContent = "انخصمت عليكم " + penWord(n);
+    els.pen.hidden = false; els.pen.classList.remove("in"); void els.pen.offsetWidth; els.pen.classList.add("in");
+    clearTimeout(S.penT); S.penT = setTimeout(function(){ els.pen.hidden = true; }, 6000);
   }
   function timeLeft(){ return S.endAt ? Math.max(0, Math.ceil((S.endAt - Date.now()) / 1000)) : 0; }
   function secsWord(n){ return n === 1 ? "ثانية" : n === 2 ? "ثانيتين" : (n >= 3 && n <= 10 ? "ثواني" : "ثانية"); }
@@ -479,10 +509,13 @@
         btn = "⛔"; msg = "سبقكم " + (w ? w.name : "فريق ثاني");
         sub = (S.host.winnerName ? "اللي ضغط: " + S.host.winnerName + " — " : "") + (S.endAt ? "لو غلطوا أو خلص وقتهم تنفتح لكم." : "لو غلطوا تنفتح لكم."); break;
       case "excluded":
+        var mp = myPen();
         if(S.host.tout === teamId){
           var ex = S.host.excluded || [], rest = (Array.isArray(S.host.teams) ? S.host.teams : []).filter(function(t){ return t && t.id !== teamId && ex.indexOf(t.id) === -1; }).length;
           btn = "⏰"; msg = "خلص وقتكم!"; sub = "انفتح الزر " + (rest > 1 ? "للفرق الثانية" : "للفريق المنافس") + " — انتظروا السؤال الجاي.";
         }
+        else if(mp && mp.kind === "timeout"){ btn = "⏰"; msg = "خلص وقتكم"; sub = "انتظروا السؤال الجاي."; }
+        else if(mp){ btn = "❌"; msg = "جاوبتوا غلط"; sub = "انتظروا السؤال الجاي."; }
         else { btn = "✋"; msg = "جاوبتوا بهالسؤال"; sub = "انتظروا السؤال الجاي."; }
         break;
     }

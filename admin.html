@@ -188,6 +188,9 @@
   .szc .prev.bad{ color:#fecaca; }
   .szc.dirty{ border-color:var(--v-line); }
   .play-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:12px; }
+  .pg-stack{ display:flex; flex-direction:column; gap:12px; margin-bottom:14px; }
+  .pg-stack > .card{ margin-bottom:0; }
+  .pg-stack > .card:last-child{ flex:1; }
   .pts4{ display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:8px; }
   .pts4 .input, .num-in{ width:100%; text-align:center; font-family:var(--f-mono); }
   .kv{ display:grid; grid-template-columns:minmax(0, 1fr) 96px; gap:8px 12px; align-items:center; font-size:.9rem; }
@@ -337,7 +340,7 @@
       <div class="save-bar" id="setSaveBar" hidden><span id="setSaveTxt">فيه تغييرات ما انحفظت</span><span style="display:flex;gap:8px"><button class="btn-ghost sm" id="setResetBtn" type="button">تراجع</button><button class="btn-primary sm" id="setSaveBtn" type="button">💾 حفظ الإعدادات</button></span></div>
 
       <h3 class="sub-h">⏱️ مؤقت «أسرع إصبع»</h3>
-      <p class="hint">أول فريق يضغط الزر عنده هالوقت يجاوب. إذا خلص الوقت الزر يتقفل عليهم لحاله وينفتح للفريق المنافس. خلّه 0 إذا ما تبي مؤقت.</p>
+      <p class="hint">أول فريق يضغط الزر عنده هالوقت يجاوب. إذا خلص الوقت الزر يتقفل عليهم لحاله وينفتح للفريق المنافس، وينخصم عليهم حسب «➖ خصم أسرع إصبع» فوق. خلّه 0 إذا ما تبي مؤقت.</p>
       <div class="card" style="max-width:620px">
         <div class="row">
           <label class="field" style="flex:1 1 200px;margin:0"><span>وقت الجواب بالثواني (0 = بدون مؤقت، أقصى شي 120)</span><input class="input" id="gBuzzTimer" type="number" min="0" max="120" step="1" inputmode="numeric" placeholder="10"></label>
@@ -1293,7 +1296,8 @@
     heads:{ name:"🤳 حطها على راسك", unit:"كلمات لكل فريق — وبالتجربة كلمات لفريق واحد", lbl:function(n){ return arN(n, W.word) + " لكل فريق"; }, tl:function(n){ return arN(n, W.word); } },
     charades:{ name:"🎬 التمثيل الصامت", unit:"عدد العناوين بالجولة", lbl:function(n){ return arN(n, W.title); }, tl:function(n){ return arN(n, W.title); } }
   };
-  var PLAY_DEF = { trivia_pts:[1,2,3,4], pts:{ emoji:1, flags:1, charades:1, heads:1, letters:1 }, win_target:0, emoji_secs:20, char_secs:60, heads_dur:60 };
+  var PLAY_DEF = { trivia_pts:[1,2,3,4], pts:{ emoji:1, flags:1, charades:1, heads:1, letters:1 }, win_target:0, emoji_secs:20, char_secs:60, heads_dur:60,
+                   buzz_pen_timeout:1, buzz_pen_wrong:1 };
   var HEADS_DURS = [30, 45, 60, 90, 120];
   var SET = { sizes:{}, play:{}, saved:"" };
   function toInt(v){ if(typeof v === "number" && isFinite(v)) return Math.round(v); if(typeof v === "string" && /^\s*-?\d{1,6}\s*$/.test(v)) return parseInt(v, 10); return null; }
@@ -1318,6 +1322,8 @@
     var es = toInt(p.emoji_secs); out.emoji_secs = es == null ? PLAY_DEF.emoji_secs : clamp(es, 5, 600);
     var cs = toInt(p.char_secs); out.char_secs = cs == null ? PLAY_DEF.char_secs : clamp(cs, 5, 600);
     var hd = toInt(p.heads_dur); out.heads_dur = HEADS_DURS.indexOf(hd) !== -1 ? hd : PLAY_DEF.heads_dur;
+    var bt = toInt(p.buzz_pen_timeout); out.buzz_pen_timeout = bt == null ? PLAY_DEF.buzz_pen_timeout : clamp(bt, 0, 999);
+    var bw = toInt(p.buzz_pen_wrong); out.buzz_pen_wrong = bw == null ? PLAY_DEF.buzz_pen_wrong : clamp(bw, 0, 999);
     return out;
   }
   function loadGames(){
@@ -1415,8 +1421,11 @@
     var p = SET.play;
     var num = function(id, v, lo, hi){ return '<input class="input num-in" type="number" inputmode="numeric" min="' + lo + '" max="' + hi + '" step="1" data-pl="' + id + '" value="' + v + '">'; };
     $("playGrid").innerHTML =
-      '<div class="card"><h3>🎯 نقاط سين جيم لكل مستوى</h3><p class="hint">كم نقطة تاخذ الخانة (من السهل للأصعب).</p><div class="pts4">'
+      '<div class="pg-stack"><div class="card"><h3>🎯 نقاط سين جيم لكل مستوى</h3><p class="hint">كم نقطة تاخذ الخانة (من السهل للأصعب).</p><div class="pts4">'
       + ["سهل", "متوسط", "صعب", "صعب جدًا"].map(function(l, i){ return '<label class="field" style="margin:0"><span>' + l + '</span>' + num("tp" + i, p.trivia_pts[i], 0, 999) + '</label>'; }).join("") + '</div></div>'
+      + '<div class="card"><h3>➖ خصم «أسرع إصبع»</h3><p class="hint">ينخصم من الفريق اللي ضغط أول. 0 = بدون خصم.</p><div class="kv">'
+      + '<span>⏰ إذا خلص وقت الجواب (تلقائي)</span>' + num("bpt", p.buzz_pen_timeout, 0, 999)
+      + '<span>❌ جواب غلط (زر «غلط وخصم» يختاره المقدّم)</span>' + num("bpw", p.buzz_pen_wrong, 0, 999) + '</div></div></div>'
       + '<div class="card"><h3>✅ نقاط الإجابة الصح</h3><p class="hint">تنضاف للفريق لما يجاوب صح.</p><div class="kv">'
       + '<span>📸 لغز تحدي الصور</span>' + num("p_emoji", p.pts.emoji, 0, 999)
       + '<span>🚩 علم صح</span>' + num("p_flags", p.pts.flags, 0, 999)
@@ -1435,11 +1444,13 @@
     return {
       trivia_pts:[0, 1, 2, 3].map(function(i){ return v("tp" + i); }),
       pts:{ emoji:v("p_emoji"), flags:v("p_flags"), charades:v("p_charades"), heads:v("p_heads"), letters:v("p_letters") },
-      win_target:v("win"), emoji_secs:v("es"), char_secs:v("cs"), heads_dur:v("hd")
+      win_target:v("win"), emoji_secs:v("es"), char_secs:v("cs"), heads_dur:v("hd"),
+      buzz_pen_timeout:v("bpt"), buzz_pen_wrong:v("bpw")
     };
   }
   function playErr(p){
     if(p.trivia_pts.some(function(x){ return x == null || x < 0 || x > 999; })) return "نقاط سين جيم لازم من 0 لين 999";
+    if([p.buzz_pen_timeout, p.buzz_pen_wrong].some(function(x){ return x == null || x < 0 || x > 999; })) return "خصم «أسرع إصبع» لازم من 0 لين 999";
     if(Object.keys(p.pts).some(function(k){ var x = p.pts[k]; return x == null || x < 0 || x > 999; })) return "نقاط الإجابة لازم من 0 لين 999";
     if(p.win_target == null || p.win_target < 0 || p.win_target > 99999) return "نقاط الفوز لازم من 0 لين 99999";
     if(p.emoji_secs == null || p.emoji_secs < 5 || p.emoji_secs > 600 || p.char_secs == null || p.char_secs < 5 || p.char_secs > 600) return "المؤقت لازم من 5 لين 600 ثانية";

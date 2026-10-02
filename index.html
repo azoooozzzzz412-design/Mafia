@@ -570,6 +570,8 @@
   /* ================= أسرع إصبع ================= */
   .buzz-panel .modal{ width:min(820px, 100%); text-align:right; }
   .bz-intro{ color:var(--tx-2); font-size:.9rem; margin-bottom:6px; line-height:1.75; }
+  .bz-rules{ display:flex; flex-wrap:wrap; gap:6px; margin:4px 0 10px; }
+  .bz-rules span{ background:rgba(255,255,255,.05); border:1px solid var(--line); border-radius:999px; padding:4px 12px; font-size:.8rem; font-weight:600; color:var(--tx-2); }
   .bz-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(210px, 1fr)); gap:14px; margin:16px 0; }
   .bz-team{ background:rgba(255,255,255,.03); border:1px solid var(--line-2); border-top:4px solid var(--c); border-radius:18px; padding:14px; text-align:center; }
   .bz-team h4{ margin:0 0 10px; font-family:var(--f-display); font-weight:700; font-size:1rem; }
@@ -591,7 +593,7 @@
     background:rgba(21,19,31,.9); color:var(--tx); border:1px solid var(--line-2);
     border-radius:999px; padding:8px 10px 8px 18px; box-shadow:0 20px 50px -14px rgba(0,0,0,.9);
     -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px);
-    font-size:.9rem; font-weight:700; max-width:calc(100vw - 20px);
+    font-size:.9rem; font-weight:700; width:max-content; max-width:calc(100vw - 20px);   /* max-content: ما ينلف لسطرين بسبب left:50% */
   }
   .buzz-bar[hidden]{ display:none; }
   .buzz-bar .bb-dot{ width:11px; height:11px; border-radius:50%; background:#8b85a3; flex-shrink:0; }
@@ -600,16 +602,19 @@
   .buzz-bar.locked{ background:var(--c); color:#fff; border-color:rgba(255,255,255,.5); }
   .buzz-bar button{ background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); color:inherit; border-radius:999px; padding:7px 13px; font-weight:700; font-size:.82rem; }
   .buzz-bar button:hover{ background:rgba(255,255,255,.18); }
+  .buzz-bar button.bb-pen{ background:#e5484d; border-color:rgba(255,255,255,.6); color:#fff; box-shadow:0 6px 16px -6px rgba(0,0,0,.55); }
+  .buzz-bar button.bb-pen:hover{ background:#d13438; }
   .bb-conn{ display:flex; gap:4px; }
   .bb-conn i{ width:9px; height:9px; border-radius:50%; background:var(--c); opacity:.22; }
   .bb-conn i.on{ opacity:1; box-shadow:0 0 8px var(--c); }
   @keyframes bbPulse{ 0%{ box-shadow:0 0 0 0 rgba(255,77,77,.7); } 100%{ box-shadow:0 0 0 10px rgba(255,77,77,0); } }
   body.has-buzz-bar{ padding-bottom:100px; }
+  body.has-buzz-bar .toast{ bottom:calc(var(--bb-h, 72px) + 12px); }   /* الإشعار فوق شريط الأزرار — ما يغطي أزراره */
   body.has-buzz-bar .modal-overlay{ padding-bottom:96px; }
   body.has-buzz-bar .modal{ max-height:calc(100vh - 130px); max-height:calc(100dvh - 130px); }
   .buzz-panel:not([hidden]) ~ .buzz-bar{ display:none; }
   @media (max-width:560px){
-    .buzz-bar{ left:10px; right:10px; transform:none; bottom:10px; border-radius:20px; padding:10px; gap:8px; max-width:none; }
+    .buzz-bar{ left:10px; right:10px; transform:none; bottom:10px; border-radius:20px; padding:10px; gap:8px; max-width:none; width:auto; }
     .buzz-bar > span:not(.bb-dot):not(.bb-conn){ flex:1 1 100%; text-align:center; }
   }
   .bb-timer{ font-family:var(--f-mono); direction:ltr; unicode-bidi:isolate; font-variant-numeric:tabular-nums;
@@ -1642,6 +1647,7 @@
     <button class="teams-close" id="buzzPanelClose" type="button" aria-label="إغلاق">✕</button>
     <h3 style="font-size:1.35rem;margin-bottom:6px">📱 أسرع إصبع</h3>
     <p class="bz-intro">كل فريق يمسح الباركود حقه بكاميرا جوال واحد (بدون أي تطبيق) — الجوال يصير زر ضغط، وأول فريق يضغط هو اللي يجاوب.</p>
+    <p class="bz-rules" id="bzRules"></p>
     <div id="bzErr"></div>
     <div class="bz-grid" id="bzGrid"></div>
     <label class="bz-opt"><input type="checkbox" id="bzAuto"> افتح الأزرار تلقائيًا مع كل سؤال (سين جيم، الحروف، الأعلام، تحدي الصور)</label>
@@ -1790,7 +1796,8 @@
   /* ===== حجم الجولة + إعدادات اللعب (يتحكم فيها الأدمن، توصل مع catalog) ===== */
   var SIZE_DEFAULTS = { trivia:{def:6,min:4,max:8,trial:6}, emoji:{def:10,min:5,max:20,trial:10}, letters:{def:5,min:4,max:6,trial:10},
                         flags:{def:10,min:5,max:25,trial:5}, heads:{def:10,min:5,max:15,trial:5}, charades:{def:10,min:5,max:20,trial:5} };
-  var PLAY_DEFAULTS = { trivia_pts:[1,2,3,4], pts:{ emoji:1, flags:1, charades:1, heads:1, letters:1 }, win_target:0, emoji_secs:20, char_secs:60, heads_dur:60 };
+  var PLAY_DEFAULTS = { trivia_pts:[1,2,3,4], pts:{ emoji:1, flags:1, charades:1, heads:1, letters:1 }, win_target:0, emoji_secs:20, char_secs:60, heads_dur:60,
+                        buzz_pen_timeout:1, buzz_pen_wrong:1 };   /* خصم «أسرع إصبع»: إذا خلص وقت الجواب (تلقائي) + زر «غلط وخصم» (0 = بدون) */
   function clampInt(v, lo, hi, def){ v = Math.round(+v); if(!isFinite(v)) v = def; return Math.max(lo, Math.min(hi, v)); }
   function cfgSize(g){
     var d = SIZE_DEFAULTS[g]; if(!d) return null;
@@ -1810,6 +1817,8 @@
     out.char_secs = clampInt(p.char_secs, 5, 600, PLAY_DEFAULTS.char_secs);
     out.heads_dur = clampInt(p.heads_dur, 15, 300, PLAY_DEFAULTS.heads_dur);
     if(HEADS_DURS.indexOf(out.heads_dur) === -1) out.heads_dur = HEADS_DURS.reduce(function(b, x){ return Math.abs(x - out.heads_dur) < Math.abs(b - out.heads_dur) ? x : b; }, 60);
+    out.buzz_pen_timeout = clampInt(p.buzz_pen_timeout, 0, 999, PLAY_DEFAULTS.buzz_pen_timeout);
+    out.buzz_pen_wrong = clampInt(p.buzz_pen_wrong, 0, 999, PLAY_DEFAULTS.buzz_pen_wrong);
     return out;
   }
   /* الحجم اللي اختاره المقدّم (لو طلع برا حدود الأدمن يرجع للافتراضي) */
@@ -3092,7 +3101,7 @@
      الشاشة (مقفل/مفتوح/فلان سبق) وترسل ضغطتها بس.
      ====================================================================== */
   var buzz = { client:null, channel:null, status:"off", state:"idle", qid:null, winner:null, winnerName:"", winnerPid:null, q:null, endAt:0, tick:null, tout:null,
-               excluded:[], presence:{}, hb:null, audio:null, flashT:null, sendT:null };
+               excluded:[], pens:{}, presence:{}, hb:null, audio:null, flashT:null, sendT:null };
   var buzzEls = {
     openBtn: document.getElementById("buzzOpenBtn"),
     homeBtn: document.getElementById("buzzHomeBtn"),
@@ -3127,7 +3136,8 @@
         teams: store.teams.map(function(t){ return { id:t.id, name:t.name, color:t.color }; }),
         q: buzz.q,                                                        /* السؤال (بدون الإجابة) يطلع بالجوالات */
         left: buzz.state === "locked" && buzz.endAt ? Math.max(0, (buzz.endAt - Date.now()) / 1000) : 0,   /* الوقت الباقي للجواب */
-        tmax: buzzTimerSecs(), tout: buzz.tout
+        tmax: buzzTimerSecs(), tout: buzz.tout,
+        pens: buzzPensOut()                                               /* الخصم بهالسؤال: {فريق: {n, kind, ago}} */
       }});
     }catch(e){}
   }
@@ -3198,7 +3208,7 @@
     buzz.hb = setInterval(buzzSend, 6000);   /* نبضة: الجوالات تعرف إن الشاشة شغالة، واللي دخل متأخر يتزامن */
   }
   function buzzDisconnect(keepEnabled){
-    clearInterval(buzz.hb); buzz.hb = null; buzzStopTimer(); buzz.q = null; buzz.tout = null;
+    clearInterval(buzz.hb); buzz.hb = null; buzzStopTimer(); buzz.q = null; buzz.tout = null; buzz.pens = {};
     var ch = buzz.channel; buzz.channel = null;
     if(ch && buzz.client){ try{ buzz.client.removeChannel(ch); }catch(e){} }
     buzz.status = "off"; buzz.state = "idle"; buzz.winner = null; buzz.winnerName = ""; buzz.winnerPid = null; buzz.excluded = []; buzz.presence = {};
@@ -3209,7 +3219,7 @@
     if(!buzzActive()) return;
     buzzStopTimer();
     buzz.qid = qid || ("q" + Date.now());
-    buzz.q = q || null; buzz.tout = null;
+    buzz.q = q || null; buzz.tout = null; buzz.pens = {};
     buzz.winner = null; buzz.winnerName = ""; buzz.winnerPid = null; buzz.excluded = [];
     buzz.state = (force || store.buzz.auto) ? "armed" : "idle";
     buzzSend(); renderBuzzUI();
@@ -3222,6 +3232,48 @@
     buzz.winner = null; buzz.winnerName = ""; buzz.winnerPid = null; buzz.state = "armed";
     if(!buzz.qid) buzz.qid = "q" + Date.now();
     buzzSend(); renderBuzzUI();
+  }
+  /* ===== الخصم: خلص وقت الجواب (تلقائي) أو «غلط وخصم» (يختاره المقدّم) — الكمية من لوحة الأدمن ===== */
+  function penWord(n){ return arN(n, "نقطة", "نقطتين", "نقاط", "نقطة"); }
+  /* قوانين الأزرار (تطلع بنافذة «أسرع إصبع» عشان المقدّم يشرحها للفرق) */
+  function buzzRulesHtml(){
+    var s = buzzTimerSecs(), p = cfgPlay(), out = [];
+    out.push(s ? "⏱️ اللي يضغط أول عنده " + arN(s, "ثانية وحدة", "ثانيتين", "ثواني", "ثانية") + " يجاوب" : "⏱️ بدون مؤقت للجواب");
+    if(s && p.buzz_pen_timeout) out.push("⏰ إذا خلص وقته ينخصم عليه " + penWord(p.buzz_pen_timeout));
+    if(p.buzz_pen_wrong) out.push("❌ زر «غلط وخصم» يخصم " + penWord(p.buzz_pen_wrong));
+    return out.map(function(x){ return "<span>" + x + "</span>"; }).join("");
+  }
+  function buzzPensOut(){
+    var out = {}, now = Date.now();
+    Object.keys(buzz.pens || {}).forEach(function(id){
+      var p = buzz.pens[id];
+      out[id] = { n:p.n, kind:p.kind, id:p.at, ago:Math.max(0, Math.round((now - p.at) / 1000)) };
+    });
+    return out;
+  }
+  function buzzPenalize(teamId, kind){
+    var p = cfgPlay(), n = kind === "timeout" ? p.buzz_pen_timeout : p.buzz_pen_wrong;
+    var t = store.teams.find(function(x){ return x.id === teamId; });
+    if(!n || !t) return 0;
+    t.score -= n;
+    buzz.pens[t.id] = { n:n, kind:kind, at:Date.now() };
+    persist(); renderTeams();
+    return n;
+  }
+  /* «غلط»: الفريق ينقفل عليه بهالسؤال (ومع الخصم لو اختاره المقدّم) — وإذا ما بقى أحد تتقفل الأزرار */
+  function buzzWrong(withPen){
+    if(!buzzActive() || buzz.state !== "locked") return;
+    var team = store.teams.find(function(t){ return t.id === buzz.winner; });
+    var pen = withPen && team ? buzzPenalize(team.id, "wrong") : 0;
+    var penTxt = pen ? "انخصمت " + penWord(pen) + " على " + team.name : "";
+    var others = store.teams.filter(function(t){ return t.id !== buzz.winner && buzz.excluded.indexOf(t.id) === -1; });
+    if(!others.length){
+      buzzIdle();
+      toast("❌ جواب غلط" + (penTxt ? " — " + penTxt : "") + " — وما بقى فريق يجاوب");
+      return;
+    }
+    buzzReopen();
+    if(penTxt) toast("➖ " + penTxt + " — انفتحت الأزرار " + (others.length === 1 ? "لـ " + others[0].name : "للباقين"));
   }
   function buzzIdle(){
     if(!buzzActive()) return;
@@ -3260,10 +3312,12 @@
   function buzzTimeUp(){
     var team = store.teams.find(function(t){ return t.id === buzz.winner; });
     buzzStopTimer(); buzzTimeUpSound();
+    var pen = team ? buzzPenalize(team.id, "timeout") : 0;                  /* خصم تلقائي (من لوحة الأدمن) */
+    var head = "⏰ خلص وقت " + (team ? team.name : "الفريق") + (pen ? " وانخصمت عليهم " + penWord(pen) : "");
     var others = store.teams.filter(function(t){ return t.id !== buzz.winner && buzz.excluded.indexOf(t.id) === -1; });
-    if(!others.length){ buzzIdle(); toast("⏰ خلص الوقت — محد جاوب"); return; }
+    if(!others.length){ buzzIdle(); toast(head + " — محد جاوب"); return; }
     buzzReopen(true);
-    toast("⏰ خلص وقت " + (team ? team.name : "الفريق") + " — انفتحت الأزرار " + (others.length === 1 ? "لـ " + others[0].name : "للباقين"));
+    toast(head + " — انفتحت الأزرار " + (others.length === 1 ? "لـ " + others[0].name : "للباقين"));
   }
   function buzzTimeUpSound(){
     try{
@@ -3320,6 +3374,7 @@
             : '<span>⚡ ' + escapeHtml(wt ? wt.name : "") + ' ضغط أول!</span>')
           + (buzz.endAt ? '<span class="bb-timer' + (tl <= 3 ? ' warn' : '') + '" id="bbTimer">⏱️ ' + tl + '</span>' : '')
           + '<button type="button" data-bb="reopen">❌ غلط — افتح للباقين</button>'
+          + (cfgPlay().buzz_pen_wrong ? '<button type="button" class="bb-pen" data-bb="reopen-pen">➖ غلط وخصم ' + penWord(cfgPlay().buzz_pen_wrong) + '</button>' : '')
           + '<button type="button" data-bb="idle">🔒 قفل</button>';
       } else if(buzz.state === "armed"){
         bar.classList.add("armed");
@@ -3330,6 +3385,7 @@
           + '<button type="button" data-bb="arm">🔓 افتح الأزرار</button>';
       }
       bar.innerHTML = html + '<button type="button" data-bb="panel" aria-label="إعدادات الأزرار">⚙️</button>';
+      document.body.style.setProperty("--bb-h", (bar.offsetHeight + 16) + "px");
     }
     markBuzzButtons();
     if(!buzzEls.panel.hidden) renderBuzzPanel();
@@ -3339,7 +3395,8 @@
     var b = e.target.closest("[data-bb]"); if(!b) return;
     var a = b.getAttribute("data-bb");
     buzzUnlockAudio();
-    if(a === "reopen") buzzReopen();
+    if(a === "reopen") buzzWrong(false);
+    else if(a === "reopen-pen") buzzWrong(true);
     else if(a === "idle") buzzIdle();
     else if(a === "arm") buzzArm(buzz.qid, true, buzz.q);
     else if(a === "panel") openBuzzPanel();
@@ -3347,6 +3404,7 @@
   });
   function renderBuzzPanel(){
     buzzEls.room.textContent = store.buzz.room || "—";
+    document.getElementById("bzRules").innerHTML = buzzRulesHtml();
     buzzEls.auto.checked = store.buzz.auto !== false;
     buzzEls.err.innerHTML = buzz.status === "error"
       ? '<div class="bz-err">⚠️ ما قدرنا نتصل بخدمة الأزرار. تأكد من الإنترنت واضغط «إعادة المحاولة» من الشريط تحت.</div>' : "";
