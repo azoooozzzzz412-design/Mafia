@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>طاولة السهرة — ألعاب جماعية للسهرات بالعربي</title>
-<meta name="description" content="سبع ألعاب جماعية للسهرات بالعربي: سين جيم، الحروف، تحدي الصور، حزر العلم، حطها على راسك، التمثيل الصامت والمافيا. شاشة وحدة والجوالات تصير أزرار، ومخطط السهرة يرتّب لكم الجولات — جرّب كل لعبة مجانًا.">
+<meta name="description" content="ثمان ألعاب جماعية للسهرات بالعربي: سين جيم، الحروف، تحدي الصور، حزر العلم، حطها على راسك، التمثيل الصامت، طريق المليون والمافيا. شاشة وحدة والجوالات تصير أزرار، ومخطط السهرة يرتّب لكم الجولات — جرّب كل لعبة مجانًا.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="طاولة السهرة">
 <meta property="og:title" content="طاولة السهرة — سهرتكم، بمستوى ثاني">
-<meta property="og:description" content="سين جيم، الحروف، تحدي الصور، حزر العلم، حطها على راسك، التمثيل الصامت والمافيا — على شاشة وحدة، والجوالات تصير أزرار. جرّب كل لعبة مجانًا.">
+<meta property="og:description" content="سين جيم، الحروف، تحدي الصور، حزر العلم، حطها على راسك، التمثيل الصامت، طريق المليون والمافيا — على شاشة وحدة، والجوالات تصير أزرار. جرّب كل لعبة مجانًا.">
 <meta property="og:locale" content="ar_SA">
 <meta name="theme-color" content="#050507">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%239b84ff'/%3E%3Cstop offset='1' stop-color='%234527d6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='9' fill='url(%23g)'/%3E%3Cpath d='M19.6 7.6a9 9 0 1 0 4.9 15.8A10 10 0 0 1 19.6 7.6z' fill='%23fff'/%3E%3C/svg%3E">
@@ -239,6 +239,8 @@
   .rg-btns .btn-primary, .rg-btns .btn-ghost{ width:100%; min-height:50px; }
   .rg-btns small{ font-weight:500; opacity:.82; }
   .rg-note{ color:var(--tx-3); font-size:.82rem; margin-top:14px; line-height:1.7; }
+  .rg-sum{ margin:2px 0 8px; }
+  .rg-sum .rm-list{ display:inline-block; text-align:right; margin:0; }
   .rg-done{ display:inline-flex; align-items:center; gap:8px; font-weight:700; color:#d1fae5; background:var(--ok-soft); border:1px solid var(--ok-line); border-radius:999px; padding:6px 14px; font-size:.86rem; margin-bottom:8px; }
   .rg-plan{ display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; margin:0 auto 14px; padding:9px 14px; border-radius:14px;
     background:var(--v-soft); border:1px solid var(--v-line); color:#e4ddff; font-size:.86rem; font-weight:600; max-width:520px; }
@@ -1041,6 +1043,165 @@
   .reveal{ opacity:0; transform:translateY(24px); transition:opacity .8s var(--ease), transform .8s var(--ease); }
   .reveal.in{ opacity:1; transform:none; }
   @media (prefers-reduced-motion: reduce){ .reveal{ opacity:1; transform:none; } .st-float, .mq-track{ animation:none; } }
+  /* ===== طريق المليون ===== */
+  :root{ --million:#facc15; --million-bright:#fef08a; }
+  .ml-wrap{ max-width:1180px; margin:0 auto; }
+  .ml-stage{ display:grid; grid-template-columns:minmax(0, 1fr) 248px; gap:18px; align-items:start; }
+  .ml-stage.one{ grid-template-columns:minmax(0, 1fr); max-width:980px; margin:0 auto; }
+  .ml-main{ min-width:0; display:flex; flex-direction:column; gap:14px; }
+  .ml-top{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+  .ml-team{ display:inline-flex; align-items:center; gap:8px; padding:7px 15px; border-radius:999px; font-weight:800;
+    background:color-mix(in srgb, var(--c) 18%, transparent); border:1px solid color-mix(in srgb, var(--c) 55%, transparent); }
+  .ml-team i{ width:10px; height:10px; border-radius:50%; background:var(--c); box-shadow:0 0 10px var(--c); }
+  .ml-now{ color:var(--tx-2); font-weight:600; font-size:.95rem; }
+  .ml-now b, .ml-mini b, .ml-big, .ml-meta .for{ direction:ltr; unicode-bidi:isolate; }
+  .ml-now b{ color:var(--million-bright); font-family:var(--f-mono); font-size:1.05rem; }
+  .ml-lifes{ display:flex; gap:8px; flex-wrap:wrap; }
+  .ml-life{ display:inline-flex; align-items:center; gap:8px; padding:8px 14px 8px 12px; border-radius:999px; cursor:pointer;
+    border:1px solid rgba(250,204,21,.35); background:rgba(250,204,21,.07); color:var(--tx); font:inherit; font-weight:700; font-size:.88rem; transition:border-color .2s, background .2s, opacity .2s; }
+  .ml-life .ic-w{ display:inline-grid; place-items:center; min-width:26px; height:26px; padding:0 4px; border-radius:999px; background:rgba(250,204,21,.18); color:var(--million-bright); font-family:var(--f-mono); font-size:.72rem; font-weight:800; }
+  .ml-life .ic-w .ic{ width:15px; height:15px; }
+  .ml-life:hover:not(:disabled){ border-color:var(--million); background:rgba(250,204,21,.14); }
+  .ml-life:disabled{ cursor:default; opacity:.45; }
+  .ml-life.used{ opacity:.3; text-decoration:line-through; }
+  .ml-qcard{ position:relative; padding:22px 24px 22px; border-radius:var(--r-xl); text-align:center; overflow:hidden;
+    background:radial-gradient(120% 140% at 50% -30%, rgba(250,204,21,.16), transparent 55%), linear-gradient(180deg, rgba(124,92,255,.12), rgba(255,255,255,.02));
+    border:1px solid rgba(250,204,21,.3); box-shadow:var(--sh-2); }
+  .ml-meta{ display:flex; gap:6px; justify-content:center; flex-wrap:wrap; margin-bottom:12px; font-size:.8rem; color:var(--tx-2); font-weight:600; }
+  .ml-meta span{ padding:3px 11px; border-radius:999px; background:var(--glass-2); border:1px solid var(--line); }
+  .ml-meta .lv1{ color:#86efac; } .ml-meta .lv2{ color:#fde68a; } .ml-meta .lv3{ color:#fca5a5; }
+  .ml-meta .for{ color:var(--million-bright); border-color:rgba(250,204,21,.35); }
+  .ml-q{ font-family:var(--f-display); font-weight:700; font-size:clamp(1.2rem, 2.5vw, 2.05rem); line-height:1.6; margin:0; text-wrap:balance; }
+  .ml-opts{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .ml-opt{ position:relative; display:flex; align-items:center; gap:12px; min-height:66px; padding:12px 16px; border-radius:20px; text-align:right; cursor:pointer;
+    background:linear-gradient(180deg, rgba(255,255,255,.065), rgba(255,255,255,.025)); border:1.5px solid var(--line-2); color:var(--tx);
+    font:inherit; font-family:var(--f-display); font-weight:600; font-size:clamp(1rem, 1.55vw, 1.3rem); line-height:1.45;
+    transition:transform .15s var(--ease), border-color .2s, background .25s, box-shadow .25s, opacity .3s; }
+  .ml-opt .k{ flex:0 0 auto; width:40px; height:40px; border-radius:13px; display:grid; place-items:center; background:rgba(250,204,21,.14); color:var(--million-bright); font-weight:800; font-size:1.05rem; transition:background .25s, color .25s; }
+  .ml-opt .t{ flex:1; min-width:0; }
+  .ml-opt .who{ display:flex; gap:4px; flex-wrap:wrap; max-width:40%; justify-content:flex-end; }
+  .ml-opt .who i{ width:14px; height:14px; border-radius:50%; background:var(--c); box-shadow:0 0 0 2px rgba(0,0,0,.35); }
+  .ml-opt:hover:not(:disabled){ border-color:rgba(250,204,21,.65); transform:translateY(-1px); }
+  .ml-opt:disabled{ cursor:default; }
+  .ml-opt.sel{ border-color:var(--million); background:linear-gradient(180deg, rgba(250,204,21,.3), rgba(250,204,21,.12)); box-shadow:0 0 0 3px rgba(250,204,21,.18), 0 0 30px -6px rgba(250,204,21,.6); }
+  .ml-opt.sel .k{ background:var(--million); color:#1c1604; }
+  .ml-opt.lock{ animation:mlPulse .9s ease-in-out infinite; }
+  .ml-opt.ok{ border-color:#22c55e; background:linear-gradient(180deg, rgba(34,197,94,.45), rgba(34,197,94,.18)); box-shadow:0 0 36px -6px rgba(34,197,94,.75); animation:mlPop .5s var(--ease); }
+  .ml-opt.ok .k{ background:#22c55e; color:#03140a; }
+  .ml-opt.no{ border-color:#ef4444; background:linear-gradient(180deg, rgba(239,68,68,.42), rgba(239,68,68,.16)); }
+  .ml-opt.no .k{ background:#ef4444; color:#fff; }
+  .ml-opt.dim{ opacity:.45; }
+  .ml-opt{ overflow:hidden; }
+  .ml-opt .pct{ position:relative; flex:0 0 auto; font-family:var(--f-mono); font-weight:800; font-size:.86rem; color:var(--million-bright); padding:3px 10px; border-radius:999px; background:rgba(250,204,21,.13); border:1px solid rgba(250,204,21,.32); direction:ltr; }
+  .ml-opt .af{ position:absolute; inset-inline-start:0; bottom:0; height:4px; background:linear-gradient(90deg, #f59e0b, var(--million)); opacity:.85; pointer-events:none; }
+  .ml-opt.rm .af, .ml-opt.rm .pct{ display:none; }
+  .ml-voting .ml-timer{ width:46px; height:46px; }
+  .ml-voting .ml-timer b{ font-size:1.05rem; }
+  .ml-opt.rm{ opacity:.14; }
+  .ml-opt.rm .t{ visibility:hidden; }
+  @keyframes mlPulse{ 0%,100%{ box-shadow:0 0 0 3px rgba(250,204,21,.18), 0 0 18px -6px rgba(250,204,21,.5); } 50%{ box-shadow:0 0 0 7px rgba(250,204,21,.28), 0 0 46px -4px rgba(250,204,21,.9); } }
+  @keyframes mlPop{ 0%{ transform:scale(.97); } 60%{ transform:scale(1.025); } 100%{ transform:none; } }
+  .ml-bar{ display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; padding:12px 14px; border-radius:18px; background:var(--glass); border:1px solid var(--line); text-align:center; }
+  .ml-bar .msg{ font-weight:800; font-size:1.02rem; }
+  .ml-bar.sel{ border-color:rgba(250,204,21,.45); background:rgba(250,204,21,.07); }
+  .ml-bar.ok{ border-color:rgba(34,197,94,.5); background:rgba(34,197,94,.1); }
+  .ml-bar.no{ border-color:rgba(239,68,68,.5); background:rgba(239,68,68,.1); }
+  .ml-dots::after{ content:"…"; display:inline-block; width:1.2em; text-align:right; animation:mlDots 1.2s steps(4, end) infinite; overflow:hidden; vertical-align:bottom; }
+  @keyframes mlDots{ 0%{ width:0; } 100%{ width:1.2em; } }
+  /* السلّم */
+  .ml-ladder{ position:sticky; top:110px; padding:10px; border-radius:var(--r-lg); background:linear-gradient(180deg, rgba(250,204,21,.05), var(--s1) 30%); border:1px solid var(--line); display:flex; flex-direction:column; gap:2px; }
+  .ml-step{ display:flex; align-items:center; gap:8px; padding:5px 10px; border-radius:10px; font-size:.88rem; color:var(--tx-3); transition:background .3s; }
+  .ml-step .no{ width:22px; text-align:center; font-family:var(--f-mono); font-size:.76rem; opacity:.8; }
+  .ml-step .amt{ flex:1; text-align:left; font-family:var(--f-mono); font-weight:700; }
+  .ml-step .sf{ width:18px; font-size:.78rem; text-align:center; }
+  .ml-step.safe{ color:var(--tx); }
+  .ml-step.done{ color:var(--million-bright); }
+  .ml-step.top .amt{ font-family:var(--f-display); color:var(--million-bright); }
+  .ml-step.cur{ background:linear-gradient(90deg, rgba(250,204,21,.38), rgba(250,204,21,.12)); color:#fff; box-shadow:inset 0 0 0 1px rgba(250,204,21,.65); }
+  .ml-mini{ display:none; align-items:center; gap:10px; flex-wrap:wrap; font-size:.86rem; color:var(--tx-2); }
+  .ml-mini .bar{ flex:1 1 100%; height:6px; border-radius:999px; background:var(--glass-3); overflow:hidden; }
+  .ml-mini .bar i{ display:block; height:100%; border-radius:999px; background:linear-gradient(90deg, var(--million), #f59e0b); }
+  .ml-mini b{ color:var(--million-bright); font-family:var(--f-mono); }
+  /* رأي الجمهور */
+  .ml-aud{ padding:14px 16px; border-radius:18px; background:var(--glass); border:1px solid rgba(250,204,21,.25); }
+  .ml-aud h4{ margin:0 0 12px; font-size:.95rem; display:flex; gap:8px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+  .ml-aud h4 small{ color:var(--tx-3); font-weight:600; }
+  .ml-vote-row{ display:flex; align-items:center; justify-content:center; gap:14px; }
+  .ml-bars{ display:grid; grid-template-columns:repeat(4, 1fr); gap:14px; align-items:end; height:160px; max-width:520px; margin:0 auto; }
+  .ml-bars .b{ display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:6px; height:100%; }
+  .ml-bars .b i{ display:block; width:100%; max-width:58px; border-radius:10px 10px 4px 4px; background:linear-gradient(180deg, var(--million-bright), var(--million) 40%, #ca8a04); min-height:3px; transition:height .9s var(--ease); }
+  .ml-bars .b span{ font-family:var(--f-mono); font-weight:700; font-size:.9rem; direction:ltr; }
+  .ml-bars .b b{ font-family:var(--f-display); color:var(--million-bright); }
+  .ml-bars .b.off{ opacity:.35; }
+  /* المؤقت الدائري */
+  .ml-timer{ --p:100; position:relative; display:inline-grid; place-items:center; width:58px; height:58px; border-radius:50%; flex:0 0 auto;
+    background:conic-gradient(var(--million) calc(var(--p) * 1%), rgba(255,255,255,.08) 0); transition:background .25s; }
+  .ml-timer::before{ content:""; position:absolute; inset:5px; border-radius:50%; background:var(--s2); }
+  .ml-timer b{ position:relative; font-family:var(--f-mono); font-size:1.25rem; font-weight:800; }
+  .ml-timer.warn{ background:conic-gradient(#ef4444 calc(var(--p) * 1%), rgba(255,255,255,.08) 0); }
+  .ml-timer.warn b{ color:#fca5a5; }
+  .ml-timer.xl{ display:grid; width:180px; height:180px; margin:14px auto; }
+  .ml-timer.xl::before{ inset:12px; }
+  .ml-timer.xl b{ font-size:3.4rem; }
+  /* اتصل بصديق */
+  .ml-friend{ position:fixed; inset:0; z-index:60; display:grid; place-items:center; padding:16px; background:rgba(5,5,7,.8); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); animation:mlFade .25s ease; }
+  .ml-friend .box{ text-align:center; padding:26px 24px; border-radius:var(--r-xl); background:var(--s2); border:1px solid rgba(250,204,21,.35); width:min(100%, 420px); box-shadow:var(--sh-2); }
+  .ml-friend .ic.big{ width:44px; height:44px; color:var(--million-bright); }
+  .ml-friend h3{ font-family:var(--f-display); margin:6px 0 4px; font-size:1.5rem; }
+  .ml-friend p{ color:var(--tx-2); margin:0; }
+  @keyframes mlFade{ from{ opacity:0; } to{ opacity:1; } }
+  /* بطاقات البداية والنهاية */
+  .ml-card{ max-width:640px; margin:0 auto; padding:30px 26px; border-radius:var(--r-xl); text-align:center; box-shadow:var(--sh-2);
+    background:radial-gradient(110% 90% at 50% 0%, color-mix(in srgb, var(--c, var(--million)) 22%, transparent), transparent 60%), var(--s1);
+    border:1px solid color-mix(in srgb, var(--c, var(--million)) 40%, transparent); }
+  .ml-card h3{ font-family:var(--f-display); font-size:clamp(1.35rem, 3vw, 1.9rem); margin:6px 0 10px; line-height:1.5; }
+  .ml-card h3 b{ color:var(--c, var(--million-bright)); }
+  .ml-card p{ color:var(--tx-2); margin:0 0 10px; line-height:1.8; }
+  .ml-card .btn-lg{ margin-top:12px; }
+  .ml-kicker{ display:inline-block; font-size:.8rem; font-weight:700; color:var(--million-bright); background:rgba(250,204,21,.1); border:1px solid rgba(250,204,21,.3); padding:3px 12px; border-radius:999px; }
+  .ml-chair{ font-size:3.6rem; line-height:1; margin:6px 0 12px; filter:drop-shadow(0 10px 24px rgba(250,204,21,.35)); }
+  .ml-sub{ font-size:.9rem; }
+  .ml-big{ font-family:var(--f-display); font-weight:800; font-size:clamp(2.4rem, 7vw, 4rem); line-height:1.1; margin:6px 0 4px; color:var(--million-bright); text-shadow:0 10px 40px rgba(250,204,21,.35); }
+  .ml-gain{ font-weight:700; color:var(--tx) !important; }
+  .ml-board{ display:flex; flex-direction:column; gap:6px; margin:16px auto 6px; max-width:440px; }
+  .ml-row{ display:flex; align-items:center; gap:10px; padding:9px 14px; border-radius:14px; background:var(--glass-2); border:1px solid var(--line); text-align:right; }
+  .ml-row i{ width:10px; height:10px; border-radius:50%; background:var(--c); flex:0 0 auto; }
+  .ml-row b{ flex:1; }
+  .ml-row span{ color:var(--tx-2); font-size:.9rem; }
+  .ml-row em{ font-style:normal; font-family:var(--f-mono); font-weight:800; color:var(--million-bright); min-width:36px; text-align:left; direction:ltr; }
+  .ml-row.wait{ opacity:.55; }
+  /* الكل يجاوب */
+  .ml-teams{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+  .ml-tchip{ display:inline-flex; align-items:center; gap:7px; padding:7px 13px; border-radius:999px; border:1px solid var(--line-2); background:var(--glass); font-weight:700; font-size:.9rem; transition:background .25s, border-color .25s; }
+  .ml-tchip i{ width:9px; height:9px; border-radius:50%; background:var(--c); }
+  .ml-tchip.done{ border-color:color-mix(in srgb, var(--c) 70%, transparent); background:color-mix(in srgb, var(--c) 18%, transparent); }
+  .ml-tchip .ck{ color:var(--ok); } .ml-tchip .x{ color:var(--tx-3); } .ml-tchip .w{ opacity:.7; }
+  .ml-manual{ display:flex; flex-direction:column; gap:6px; padding:12px; border-radius:16px; background:var(--glass); border:1px dashed var(--line-2); }
+  .mm-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+  .mm-row b{ display:inline-flex; align-items:center; gap:8px; }
+  .mm-row b i{ width:9px; height:9px; border-radius:50%; background:var(--c); }
+  .mm-row span{ display:flex; gap:6px; }
+  .mm-row button{ width:42px; height:38px; border-radius:11px; border:1px solid var(--line-2); background:var(--glass-2); color:var(--tx); font:inherit; font-weight:800; cursor:pointer; }
+  .mm-row button:hover{ border-color:rgba(250,204,21,.6); }
+  .mm-row b em{ font-style:normal; font-weight:600; font-size:.78rem; color:var(--tx-3); margin-inline-start:4px; }
+  .mm-row.done b em{ color:var(--ok); }
+  .mm-hint{ margin:0 0 2px; font-size:.8rem; color:var(--tx-3); }
+  .ml-note{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:10px 14px; border-radius:14px; background:var(--warn-soft); border:1px solid var(--warn-line); font-size:.9rem; color:#fde68a; }
+  .ml-note .ic{ width:18px; height:18px; flex:0 0 auto; }
+  .ml-note span{ flex:1; min-width:200px; }
+  @media (max-width: 860px){
+    .ml-stage{ grid-template-columns:minmax(0, 1fr); }
+    .ml-ladder{ display:none; }
+    .ml-mini{ display:flex; }
+  }
+  @media (max-width: 560px){
+    .ml-opts{ grid-template-columns:1fr; gap:9px; }
+    .ml-opt{ min-height:56px; }
+    .ml-qcard{ padding:18px 16px; }
+    .ml-card{ padding:24px 16px; }
+    .ml-life{ padding:7px 11px 7px 9px; font-size:.82rem; }
+  }
+  @media (prefers-reduced-motion: reduce){ .ml-opt.lock, .ml-opt.ok, .ml-dots::after{ animation:none; } }
 </style>
 </head>
 
@@ -1079,6 +1240,8 @@
   <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
   <symbol id="i-next" viewBox="0 0 24 24"><path d="M17.5 6.2v11.6L8.8 12z" fill="currentColor" stroke="none"/><path d="M6.5 6v12"/></symbol>
   <symbol id="i-wand" viewBox="0 0 24 24"><path d="m4 20 10.5-10.5"/><path d="M14.8 4.2v2.6M18.6 8.8h2.6M17.4 6l1.9-1.9M8.8 3.6l.8 1.7 1.8.3-1.3 1.3.3 1.8-1.6-.9-1.6.9.3-1.8L6 5.6l1.8-.3z"/></symbol>
+  <symbol id="i-million" viewBox="0 0 24 24"><path d="M3.5 20.5h4v-4h4v-4h4v-4h4"/><path d="m18.3 2.4.85 1.75 1.9.28-1.38 1.34.33 1.9-1.7-.9-1.7.9.33-1.9-1.38-1.34 1.9-.28z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M6.6 3.5h2.6l1.3 4.1-1.9 1.3a12 12 0 0 0 6.5 6.5l1.3-1.9 4.1 1.3v2.6a2 2 0 0 1-2.2 2A16.5 16.5 0 0 1 4.6 5.7a2 2 0 0 1 2-2.2z"/></symbol>
   <symbol id="i-volume" viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4.5 4.5 0 0 1 0 6M18.3 6.5a8 8 0 0 1 0 11"/></symbol>
 </svg>
 <div class="page-bg" aria-hidden="true"></div>
@@ -1102,7 +1265,7 @@
     <section class="ld-hero" id="top">
       <a class="ld-chip" href="#ldFeatures"><span class="new">جديد</span>مخطط السهرة يرتّب لكم الجولات<svg class="ic"><use href="#i-arrow"/></svg></a>
       <h1 class="ld-h1">سهرتكم، <span class="grad">بمستوى ثاني.</span></h1>
-      <p class="ld-sub">سبع ألعاب جماعية بالعربي على شاشة وحدة، والجوالات تصير أزرار. بدون تطبيقات، وبدون تجهيز — اختاروا وقتكم وفرقكم، والطاولة ترتّب الباقي.</p>
+      <p class="ld-sub">ثمان ألعاب جماعية بالعربي على شاشة وحدة، والجوالات تصير أزرار. بدون تطبيقات، وبدون تجهيز — اختاروا وقتكم وفرقكم، والطاولة ترتّب الباقي.</p>
       <div class="ld-cta">
         <button class="btn-primary btn-lg" id="ldTrialBtn" type="button">ابدأ مجانًا<svg class="ic"><use href="#i-arrow"/></svg></button>
         <a class="btn-ghost btn-lg" href="#ldGamesSec">شوف الألعاب</a>
@@ -1217,7 +1380,7 @@
     <section class="ld-section" id="ldGamesSec">
       <div class="ld-head reveal">
         <span class="eyebrow"><span class="dot"></span>الألعاب</span>
-        <h2 class="ld-h2">سبع ألعاب، سهرة وحدة</h2>
+        <h2 class="ld-h2">ثمان ألعاب، سهرة وحدة</h2>
         <p class="ld-lead">كل لعبة معها وش تشمل الجولة، ووش تجرّبون منها مجانًا.</p>
       </div>
       <div class="ld-games" id="ldGames"></div>
@@ -1300,6 +1463,7 @@
     <button data-view="flags" type="button"><svg class="ic"><use href="#i-flags"/></svg>الأعلام</button>
     <button data-view="heads" type="button"><svg class="ic"><use href="#i-heads"/></svg>على راسك</button>
     <button data-view="charades" type="button"><svg class="ic"><use href="#i-charades"/></svg>التمثيل</button>
+    <button data-view="million" type="button"><svg class="ic"><use href="#i-million"/></svg>المليون</button>
     <button data-view="mafia" type="button"><svg class="ic"><use href="#i-mafia"/></svg>المافيا</button>
   </nav>
   <div class="top-actions" id="topActions">
@@ -1371,6 +1535,12 @@
         <span class="g-tile"><svg class="ic"><use href="#i-charades"/></svg></span><span class="mc-badge" data-badge="charades"></span>
         <h3>التمثيل الصامت</h3>
         <p>مثّل الفيلم أو المسلسل بدون كلام، وفريقك يحاول يخمّن قبل الوقت.</p>
+        <span class="mc-cta">ابدأ اللعبة<svg class="ic"><use href="#i-arrow"/></svg></span>
+      </button>
+      <button class="mode-card" data-view="million" type="button" style="--accent:var(--million);--accent-bright:var(--million-bright)">
+        <span class="g-tile"><svg class="ic"><use href="#i-million"/></svg></span><span class="mc-badge" data-badge="million"></span>
+        <h3>طريق المليون</h3>
+        <p>أسئلة بأربع خيارات تصعب درجة درجة — على الكرسي الحار بالمساعدات، أو كل الفرق تجاوب من جوالاتها.</p>
         <span class="mc-cta">ابدأ اللعبة<svg class="ic"><use href="#i-arrow"/></svg></span>
       </button>
       <button class="mode-card" data-view="mafia" type="button" style="--accent:var(--mafia);--accent-bright:var(--mafia-bright)">
@@ -1517,6 +1687,17 @@
       <div class="timer-widget" id="charTimerWidget"></div>
       <div class="challenge-award" id="charAward"></div>
     </div>
+  </section>
+
+  <!-- MILLION -->
+  <section id="view-million" class="view" hidden>
+    <div class="back-row"><button class="back-btn" data-view="home" type="button">→ الرئيسية</button></div>
+    <div class="mode-header" style="--accent:var(--million);--accent-bright:var(--million-bright)">
+      <div class="mh-main"><span class="g-tile"><svg class="ic"><use href="#i-million"/></svg></span><div><h2>طريق المليون <span class="round-tag" data-rtag="million"></span></h2><p>سؤال وأربع خيارات، والأسئلة تصعب كل ما طلعتوا — وصلوا للمليون!</p></div></div>
+      <button id="mlEndBtn" class="btn-ghost game-only" type="button">🏁 إنهاء الجولة</button>
+    </div>
+    <div class="round-gate" data-gate="million" hidden></div>
+    <div class="game-body"><div class="ml-wrap" id="mlBody"></div></div>
   </section>
 
   <!-- MAFIA -->
@@ -1785,9 +1966,10 @@
     flags:    { name:"حزر العلم", ic:"i-flags", accent:"flags", desc:"يطلع علم وأول فريق يعرف الدولة ياخذ النقطة — فيه سهل ومتوسط وصعب." },
     heads:    { name:"حطها على راسك", ic:"i-heads", accent:"heads", desc:"الجوال على الجبهة وفريقك يعطيك تلميحات — اقلبه لتحت إذا عرفتها ولفوق إذا بتعدّيها." },
     charades: { name:"التمثيل الصامت", ic:"i-charades", accent:"char", desc:"مثّل الفيلم أو المسلسل بدون كلام، وفريقك يحاول يخمّن قبل الوقت." },
+    million:  { name:"طريق المليون", ic:"i-million", accent:"million", desc:"سؤال وأربع خيارات تصعب درجة درجة — على الكرسي الحار بالمساعدات، أو الكل يجاوب من جواله." },
     mafia:    { name:"المافيا", ic:"i-mafia", accent:"mafia", desc:"وزّع أدوار المافيا والمحقق والطبيب سرًا، وابعث لكل لاعب دوره بالواتساب." }
   };
-  var GAME_ORDER = ["trivia","emoji","letters","flags","heads","charades","mafia"];
+  var GAME_ORDER = ["trivia","emoji","letters","flags","heads","charades","million","mafia"];
   var HEADS_DURS = [30, 45, 60, 90, 120];
   function icon(id, cls){ return '<svg class="ic' + (cls ? " " + cls : "") + '" aria-hidden="true"><use href="#' + id + '"/></svg>'; }
   function accentStyle(g){ var a = GAME_INFO[g].accent; return "--accent:var(--" + a + ");--accent-bright:var(--" + a + "-bright)"; }
@@ -1795,9 +1977,11 @@
 
   /* ===== حجم الجولة + إعدادات اللعب (يتحكم فيها الأدمن، توصل مع catalog) ===== */
   var SIZE_DEFAULTS = { trivia:{def:6,min:4,max:8,trial:6}, emoji:{def:10,min:5,max:20,trial:10}, letters:{def:5,min:4,max:6,trial:10},
-                        flags:{def:10,min:5,max:25,trial:5}, heads:{def:10,min:5,max:15,trial:5}, charades:{def:10,min:5,max:20,trial:5} };
+                        flags:{def:10,min:5,max:25,trial:5}, heads:{def:10,min:5,max:15,trial:5}, charades:{def:10,min:5,max:20,trial:5},
+                        million:{def:10,min:5,max:15,trial:5} };
   var PLAY_DEFAULTS = { trivia_pts:[1,2,3,4], pts:{ emoji:1, flags:1, charades:1, heads:1, letters:1 }, win_target:0, emoji_secs:20, char_secs:60, heads_dur:60,
-                        buzz_pen_timeout:1, buzz_pen_wrong:1 };   /* خصم «أسرع إصبع»: إذا خلص وقت الجواب (تلقائي) + زر «غلط وخصم» (0 = بدون) */
+                        buzz_pen_timeout:1, buzz_pen_wrong:1,
+                        million:{ step_pts:1, lv_pts:[1,2,3], speed_bonus:1, all_secs:20, vote_secs:15, friend_secs:30, life:{ fifty:true, aud:true, friend:true, swap:true } } };   /* خصم «أسرع إصبع»: إذا خلص وقت الجواب (تلقائي) + زر «غلط وخصم» (0 = بدون) */
   function clampInt(v, lo, hi, def){ v = Math.round(+v); if(!isFinite(v)) v = def; return Math.max(lo, Math.min(hi, v)); }
   function cfgSize(g){
     var d = SIZE_DEFAULTS[g]; if(!d) return null;
@@ -1819,6 +2003,18 @@
     if(HEADS_DURS.indexOf(out.heads_dur) === -1) out.heads_dur = HEADS_DURS.reduce(function(b, x){ return Math.abs(x - out.heads_dur) < Math.abs(b - out.heads_dur) ? x : b; }, 60);
     out.buzz_pen_timeout = clampInt(p.buzz_pen_timeout, 0, 999, PLAY_DEFAULTS.buzz_pen_timeout);
     out.buzz_pen_wrong = clampInt(p.buzz_pen_wrong, 0, 999, PLAY_DEFAULTS.buzz_pen_wrong);
+    /* طريق المليون */
+    var m = isObj(p.million) ? p.million : {}, md = PLAY_DEFAULTS.million, lf = isObj(m.life) ? m.life : {};
+    var lp = Array.isArray(m.lv_pts) && m.lv_pts.length === 3 ? m.lv_pts : md.lv_pts;
+    out.million = {
+      step_pts: clampInt(m.step_pts, 0, 999, md.step_pts),
+      lv_pts: lp.map(function(v, i){ return clampInt(v, 0, 999, md.lv_pts[i]); }),
+      speed_bonus: clampInt(m.speed_bonus, 0, 999, md.speed_bonus),
+      all_secs: clampInt(m.all_secs, 5, 300, md.all_secs),
+      vote_secs: clampInt(m.vote_secs, 5, 120, md.vote_secs),
+      friend_secs: clampInt(m.friend_secs, 10, 180, md.friend_secs),
+      life: { fifty: lf.fifty !== false, aud: lf.aud !== false, friend: lf.friend !== false, swap: lf.swap !== false }
+    };
     return out;
   }
   /* الحجم اللي اختاره المقدّم (لو طلع برا حدود الأدمن يرجع للافتراضي) */
@@ -1844,6 +2040,7 @@
       case "flags": return Math.max(2, Math.round(n * 0.6));
       case "heads": return Math.max(3, Math.round(teams * ((store.heads.dur || 60) / 60 + 1.2) * Math.max(1, n / 10)));
       case "charades": return Math.max(3, Math.round(n * 1.4));
+      case "million": return (store.million && store.million.pref === "all") ? Math.max(3, Math.round(n * 0.7)) : Math.max(4, Math.round(teams * (n * 0.55 + 1)));
       case "mafia": return 20;
     }
     return 10;
@@ -1856,6 +2053,7 @@
       case "flags": return arN(n, "علم واحد", "علمين", "أعلام", "علم");
       case "heads": return arN(n, "كلمة وحدة", "كلمتين", "كلمات", "كلمة");
       case "charades": return arN(n, "عنوان واحد", "عنوانين", "عناوين", "عنوان");
+      case "million": return arN(n, "سؤال واحد", "سؤالين", "أسئلة", "سؤال");
     }
     return "";
   }
@@ -1863,6 +2061,7 @@
     if(g === "trivia") return arN(n * 4, "سؤال واحد", "سؤالين", "أسئلة", "سؤال");
     if(g === "letters") return arN(n * n, "خلية وحدة", "خليتين", "خلايا", "خلية");
     if(g === "heads") return "لكل فريق";
+    if(g === "million" && !(store.million && store.million.pref === "all")) return "لكل فريق";
     return "≈ " + estMinutes(g, n) + " د";
   }
   function roundDesc(g, n){
@@ -1874,6 +2073,7 @@
       case "flags": return arN(n, "علم واحد", "علمين", "أعلام", "علم") + " مخلوطة (سهل ومتوسط وصعب)";
       case "heads": return arN(n, "كلمة وحدة", "كلمتين", "كلمات", "كلمة") + " لكل فريق";
       case "charades": return arN(n, "عنوان واحد", "عنوانين", "عناوين", "عنوان");
+      case "million": return (store.million && store.million.pref === "all") ? arN(n, "سؤال واحد", "سؤالين", "أسئلة", "سؤال") + " للكل" : "سلّم " + arN(n, "سؤال واحد", "سؤالين", "أسئلة", "سؤال") + " لكل فريق";
       case "mafia": return "توزيع أدوار لجولة وحدة";
     }
     return "";
@@ -1887,6 +2087,7 @@
       case "flags": return arN(n, "علم واحد", "علمين", "أعلام", "علم");
       case "heads": return arN(n, "كلمة وحدة", "كلمتين", "كلمات", "كلمة") + (short ? "" : " لفريق واحد");
       case "charades": return arN(n, "عنوان واحد", "عنوانين", "عناوين", "عنوان");
+      case "million": return arN(n, "سؤال واحد", "سؤالين", "أسئلة", "سؤال") + (short ? "" : ((store.million || {}).pref === "all" ? " للكل" : " لكل فريق"));
       case "mafia": return "جولة وحدة";
     }
     return "";
@@ -1901,6 +2102,7 @@
     mafia: { caseId:null, round:0, players:[], counts:{mafia:0,detective:0,doctor:0} },
     letters: { round:null, board: [], qmap: {}, qpos: {}, owners: {}, history: [], wins: {}, lastWin: null },
     flags: { round:null, items: [], idx: 0 },
+    million: { pref:"seat", round:null, items:[] },   /* طريق المليون */
     buzz: { room: "", enabled: false, auto: true },
     heads: { round:null, deck:"all", dur:60, turns:{}, done: [], last: {} },
     win: { target: 0, shown: "" },
@@ -1974,6 +2176,14 @@
       if(isObj(F) && validRound(F.round) && validItems(F.items, function(x){ return typeof x.n === "string" && typeof x.sp === "string"; })){
         store.flags = { round:F.round, items:F.items, idx:Math.max(0, Math.min(F.items.length, F.idx | 0)) };
       }
+      var ML0 = saved.million;
+      if(isObj(ML0)){
+        store.million.pref = ML0.pref === "all" ? "all" : "seat";
+        var mlOk = validRound(ML0.round) && validItems(ML0.items, function(x){ return typeof x.q === "string" && typeof x.a === "string" && Array.isArray(x.w) && x.w.length >= 3; })
+          && (ML0.mode === "seat" ? (Array.isArray(ML0.order) && isObj(ML0.ladders) && typeof ML0.n === "number") : ML0.mode === "all");
+        if(mlOk) store.million = ML0;
+        store.million.pref = ML0.pref === "all" ? "all" : "seat";
+      }
       var H = saved.heads;
       if(isObj(H)){
         store.heads.done = Array.isArray(H.done) ? H.done.filter(function(x){ return typeof x === "string"; }).slice(-60) : [];
@@ -2003,7 +2213,7 @@
   }
 
   /* ============ view router ============ */
-  var views = ["home","plan","trivia","emoji","letters","flags","heads","charades","mafia"];
+  var views = ["home","plan","trivia","emoji","letters","flags","heads","charades","million","mafia"];
   var curView = "home";
   function showView(name){
     if(GAME_ORDER.indexOf(name) !== -1 && HIDDEN_GAMES.indexOf(name) !== -1 && !ACCT.admin){ toast("هذي اللعبة مقفلة حاليًا 🔒"); name = "home"; }
@@ -2027,6 +2237,7 @@
     if(name === "letters") lettersOpen();
     if(name === "flags") flagsOpen();
     if(name === "heads") headsOpen();
+    if(name === "million") mlOpen();
     if(name === "mafia") mRender();
     renderPlanBar();
     window.scrollTo({top:0, behavior:"instant" in window ? "instant" : "auto"});
@@ -2436,6 +2647,7 @@
       if(!document.getElementById("scoreModal").hidden) document.getElementById("scoreModal").hidden = true;
       if(!document.getElementById("planModal").hidden) closePlanModal();
       if(!trivEls.modal.hidden) closeTrivia();
+      if(store.million && store.million.q && store.million.q.friend && curView === "million") mlEndFriend();
       if(!emojiState.awarding && !els.teamsPanel.hidden) closeTeams();
     }
   });
@@ -3137,7 +3349,8 @@
         q: buzz.q,                                                        /* السؤال (بدون الإجابة) يطلع بالجوالات */
         left: buzz.state === "locked" && buzz.endAt ? Math.max(0, (buzz.endAt - Date.now()) / 1000) : 0,   /* الوقت الباقي للجواب */
         tmax: buzzTimerSecs(), tout: buzz.tout,
-        pens: buzzPensOut()                                               /* الخصم بهالسؤال: {فريق: {n, kind, ago}} */
+        pens: buzzPensOut(),                                              /* الخصم بهالسؤال: {فريق: {n, kind, ago}} */
+        mq: mlPhone()                                                     /* «طريق المليون»: السؤال والخيارات للجوالات */
       }});
     }catch(e){}
   }
@@ -3187,6 +3400,8 @@
       if(p.role === "heads" && typeof p.team === "string") headsSendTurn(p.team);
     });
     ch.on("broadcast", { event:"heads" }, function(m){ onHeads((m && m.payload) || {}); });
+    ch.on("broadcast", { event:"mpick" }, function(m){ onMillionPick((m && m.payload) || {}); });
+    ch.on("broadcast", { event:"mvote" }, function(m){ onMillionVote((m && m.payload) || {}); });
     ch.on("presence", { event:"sync" }, function(){
       var st = ch.presenceState(), per = {};
       Object.keys(st).forEach(function(k){
@@ -3380,6 +3595,8 @@
         bar.classList.add("armed");
         html = '<span class="bb-dot"></span><span>الأزرار مفتوحة — مين أسرع؟</span>' + conn
           + '<button type="button" data-bb="idle">🔒 قفل</button>';
+      } else if(curView === "million" && mlActive()){
+        html = '<span class="bb-dot"></span><span>📱 الجوالات تتابع طريق المليون</span>' + conn;
       } else {
         html = '<span class="bb-dot"></span><span>📱 الأزرار جاهزة</span>' + conn
           + '<button type="button" data-bb="arm">🔓 افتح الأزرار</button>';
@@ -3834,7 +4051,7 @@
       if(!tu || !tu.words || !tu.words.length) return "";
       return '<li>' + escapeHtml(t.name) + ': ' + (tu.st === "done" ? "✅ " + (tu.c | 0) + " · ⏭️ " + (tu.p | 0) : "ما لعبوا") + '</li>';
     }).join("");
-    return rows ? '<ul class="rm-list" style="text-align:right;display:inline-block;margin:0 0 6px">' + rows + '</ul>' : "";
+    return rows ? '<div class="rg-sum"><ul class="rm-list">' + rows + '</ul></div>' : "";
   }
   function headsGate(done){
     var decks = [{ id:"all", name:"كل الفئات", icon:"🎲" }].concat((CATALOG && CATALOG.decks) || []);
@@ -4078,6 +4295,7 @@
     store.charades = { round:null, items:[], idx:0, turn:0 };
     store.letters = { round:null, board:[], qmap:{}, qpos:{}, owners:{}, history:[], wins:{}, lastWin:null };
     store.flags = { round:null, items:[], idx:0 };
+    store.million = { pref: store.million.pref === "all" ? "all" : "seat", round:null, items:[] }; clearInterval(ML.tick); clearTimeout(ML.revealT);
     store.heads = { round:null, deck: store.heads.deck || "all", dur: store.heads.dur || 60, turns:{}, done:[], last:{} };
     HD.live = null;
     store.mafia = { caseId:null, round:0, players:[], counts:{ mafia:0, detective:0, doctor:0 } };
@@ -4094,11 +4312,697 @@
   }
 
   /* ======================================================================
+     طريق المليون — أسئلة بأربع خيارات، وطريقتين للعب:
+       🪑 الكرسي الحار: فريق فريق يطلع السلّم (سهل ← متوسط ← صعب)، فيه محطات أمان
+          ومساعدات (حذف إجابتين، اسأل الجمهور، اتصل بصديق، تبديل السؤال) وينسحب متى ما بغى
+       👥 الكل يجاوب: السؤال يطلع للكل، وكل فريق يختار من جواله (أو المقدّم يدخل جوابه)،
+          والصح ياخذ نقاط المستوى + بونص لأسرع فريق صح
+     store.million = { pref, round, mode, items, ... } — كل شي ينحفظ عشان التحديث ما يضيّع الجولة
+     ====================================================================== */
+  var ML_MONEY = [100, 200, 300, 500, 1000, 2000, 4000, 8000, 16000, 32000, 64000, 125000, 250000, 500000, 1000000];
+  var ML_KEYS = ["أ", "ب", "ج", "د"];
+  var ML_LV = { 1:"سهل", 2:"متوسط", 3:"صعب" };
+  var ML = { tick:null, revealT:null, lastTick:-1 };
+  var mlEls = { body: document.getElementById("mlBody"), endBtn: document.getElementById("mlEndBtn") };
+
+  function mlActive(){ var M = store.million; return !!M.round && !M.round.done && Array.isArray(M.items) && M.items.length > 0; }
+  function mlCfg(){ return cfgPlay().million; }
+  function mlMoney(n){ var out = []; for(var i = 0; i < n; i++) out.push(ML_MONEY[n <= 1 ? 14 : Math.round(i * 14 / (n - 1))]); return out; }
+  function mlFmt(v){ return v >= 1000000 ? "المليون" : (Number(v) || 0).toLocaleString("en-US"); }
+  function mlAmt(n, k){ return k <= 0 ? "0" : mlFmt(mlMoney(n)[k - 1]); }
+  function mlSafe(n){ var a = Math.floor(n / 3), b = Math.floor(2 * n / 3), out = []; [a, b].forEach(function(x){ if(x > 0 && x < n && out.indexOf(x) === -1) out.push(x); }); return out; }
+  function mlKept(n, step){ var s = mlSafe(n).filter(function(x){ return x <= step; }); return s.length ? s[s.length - 1] : 0; }
+  function mlPtsWord(n){ return arN(n, "نقطة وحدة", "نقطتين", "نقاط", "نقطة"); }
+  function mlQn(){ var M = store.million; return M.phase === "right" ? M.step : M.step + 1; }  /* رقم السؤال المعروض (بعد «صح» الدرجة زادت) */
+  function mlQWord(n){ return arN(n, "سؤال واحد", "سؤالين", "أسئلة", "سؤال"); }
+  function mlTeam(id){ return store.teams.find(function(t){ return t.id === id; }) || null; }
+  function mlShuffleOpts(it){
+    var opts = shuffle([it.a].concat(it.w.slice(0, 3)));
+    return { opts: opts, c: opts.indexOf(it.a) };
+  }
+
+  /* ---------- بدء الجولة ---------- */
+  function mlSetup(d, mode){
+    var M = store.million, items = d.items.filter(function(x){ return x && typeof x.q === "string" && typeof x.a === "string" && Array.isArray(x.w) && x.w.length >= 3; });
+    var teams = store.teams.slice(0, 6);
+    M.round = { id: d.round, kind: d.kind };
+    M.mode = d.mode === "all" ? "all" : "seat";
+    M.items = items;
+    M.res = {};
+    if(M.mode === "seat"){
+      var n = d.size || chosenSize("million") || 10;
+      var pools = { 1:[], 2:[], 3:[] };
+      items.forEach(function(x, i){ (pools[x.lv] || pools[2]).push(i); });
+      var ne = Math.ceil(n / 3), nm = Math.ceil((n - ne) / 2), nh = n - ne - nm;
+      var take = function(lv, k){
+        var order = lv === 1 ? [1, 2, 3] : lv === 2 ? [2, 1, 3] : [3, 2, 1], got = [];
+        while(got.length < k){
+          var src = order.filter(function(l){ return pools[l].length; })[0];
+          if(!src) break;
+          got.push(pools[src].shift());
+        }
+        return got;
+      };
+      var ladders = {};
+      teams.forEach(function(t){ ladders[t.id] = take(1, ne).concat(take(2, nm), take(3, nh)); });
+      /* كل الفرق نفس طول السلّم (عدل) — الزايد يرجع احتياط */
+      var len = Math.min.apply(null, teams.map(function(t){ return ladders[t.id].length; }));
+      teams.forEach(function(t){ ladders[t.id].splice(len).forEach(function(i){ pools[items[i].lv].push(i); }); });
+      M.n = len; M.ladders = ladders; M.spares = pools;
+      M.order = teams.map(function(t){ return t.id; }); M.ti = 0;
+      M.phase = "intro"; M.q = null; M.step = 0;
+      M.used = { fifty:false, aud:false, friend:false, swap:false };
+    } else {
+      M.n = items.length; M.qi = 0; M.aq = null; M.gain = {};
+      teams.forEach(function(t){ M.gain[t.id] = 0; });
+      M.phase = "ready";
+    }
+    persist();
+  }
+
+  /* ---------- الكرسي الحار ---------- */
+  function mlSeatTeam(){ var M = store.million; return M.order ? mlTeam(M.order[M.ti]) : null; }
+  function mlNewQ(i){
+    var M = store.million, o = mlShuffleOpts(M.items[i]);
+    M.q = { i: i, opts: o.opts, c: o.c, rm: [], pick: null, aud: null, friend: null };
+  }
+  function mlBeginTurn(){
+    var M = store.million;
+    /* لو انحذف فريق وسط الجولة نتخطاه */
+    while(M.ti < M.order.length && !mlTeam(M.order[M.ti])) M.ti += 1;
+    if(M.ti >= M.order.length){ M.phase = "final"; mlSync(); mlRender(); return; }
+    M.step = 0; M.used = { fifty:false, aud:false, friend:false, swap:false };
+    mlNewQ(M.ladders[M.order[M.ti]][0]);
+    M.phase = "q";
+    mlSync(); mlRender();
+  }
+  function mlPick(k){
+    var M = store.million;
+    if(!M.q || (M.phase !== "q" && M.phase !== "confirm") || M.q.rm.indexOf(k) !== -1) return;
+    if(M.q.aud && M.q.aud.phase === "vote") return;
+    M.q.pick = k; M.phase = "confirm";
+    mlSound("blip"); mlSync(); mlRender();
+  }
+  function mlLock(){
+    var M = store.million;
+    if(M.phase !== "confirm" || M.q.pick == null) return;
+    M.phase = "lock";
+    mlSound("lock"); mlSync(); mlRender();
+    clearTimeout(ML.revealT);
+    ML.revealT = setTimeout(mlReveal, Math.min(3200, 1300 + M.step * 220));
+  }
+  function mlReveal(){
+    var M = store.million;
+    clearTimeout(ML.revealT);
+    if(M.phase !== "lock" || !M.q) return;
+    if(M.q.pick === M.q.c){
+      M.step += 1; M.phase = "right";
+      if(M.step >= M.n){ mlSound("top"); confetti(); } else mlSound("right");
+    } else {
+      M.phase = "wrong"; mlSound("wrong");
+    }
+    mlSync(); mlRender();
+  }
+  function mlNext(){
+    var M = store.million;
+    if(M.phase !== "right" || M.step >= M.n) return;
+    mlNewQ(M.ladders[M.order[M.ti]][M.step]);
+    M.phase = "q";
+    mlSync(); mlRender();
+  }
+  function mlEndTurn(out){
+    var M = store.million, team = mlSeatTeam();
+    if(!team) return;
+    clearTimeout(ML.revealT);
+    var kept = out === "walk" ? M.step : out === "wrong" ? mlKept(M.n, M.step) : M.n;
+    var pts = kept * mlCfg().step_pts;
+    M.res[team.id] = { reached: M.step, kept: kept, pts: pts, out: out };
+    if(pts){ team.score += pts; renderTeams(); }
+    M.q = null; M.phase = "turn";
+    mlSync(); mlRender();
+  }
+  function mlNextTeam(){
+    var M = store.million;
+    if(M.phase !== "turn") return;
+    M.ti += 1;
+    while(M.ti < M.order.length && !mlTeam(M.order[M.ti])) M.ti += 1;
+    M.phase = M.ti >= M.order.length ? "final" : "intro";
+    mlSync(); mlRender();
+  }
+  /* المساعدات */
+  function mlFifty(){
+    var M = store.million;
+    if(!M.q || M.used.fifty || !mlCfg().life.fifty || ["q", "confirm"].indexOf(M.phase) === -1) return;
+    var wrong = [0, 1, 2, 3].filter(function(k){ return k !== M.q.c && M.q.rm.indexOf(k) === -1; });
+    M.q.rm = M.q.rm.concat(shuffle(wrong).slice(0, Math.max(0, wrong.length - 1)).slice(0, 2));
+    if(M.q.pick != null && M.q.rm.indexOf(M.q.pick) !== -1){ M.q.pick = null; M.phase = "q"; }
+    M.used.fifty = true;
+    mlSound("blip"); mlSync(); mlRender();
+  }
+  function mlPhonesFor(exceptTeam){
+    if(buzz.status !== "on") return 0;
+    var n = 0;
+    Object.keys(buzz.presence || {}).forEach(function(tid){ if(tid !== exceptTeam && mlTeam(tid)) n += (buzz.presence[tid] || []).length; });
+    return n;
+  }
+  function mlAudience(){
+    var M = store.million, team = mlSeatTeam();
+    if(!M.q || M.used.aud || !mlCfg().life.aud || ["q", "confirm"].indexOf(M.phase) === -1) return;
+    M.used.aud = true; M.q.pick = null; M.phase = "q";
+    if(mlPhonesFor(team && team.id) > 0){
+      M.q.aud = { phase: "vote", votes: {}, endsAt: Date.now() + mlCfg().vote_secs * 1000 };
+      mlStartTick();
+    } else {
+      M.q.aud = { phase: "done", counts: mlSimAudience(M.items[M.q.i].lv, M.q.c, M.q.rm), src: "sim" };
+    }
+    mlSound("blip"); mlSync(); mlRender();
+  }
+  function mlSimAudience(lv, c, rm){
+    var r = ({ 1:[0.55, 0.8], 2:[0.4, 0.62], 3:[0.27, 0.48] })[lv] || [0.4, 0.6];
+    var counts = [0, 0, 0, 0], others = [0, 1, 2, 3].filter(function(k){ return k !== c && rm.indexOf(k) === -1; });
+    counts[c] = Math.round((r[0] + Math.random() * (r[1] - r[0])) * 100);
+    var rest = 100 - counts[c], w = others.map(function(){ return Math.random() + 0.25; }), ws = w.reduce(function(a, b){ return a + b; }, 0);
+    others.forEach(function(k, i){ counts[k] = Math.round(rest * w[i] / ws); });
+    counts[c] += 100 - counts.reduce(function(a, b){ return a + b; }, 0);
+    return counts;
+  }
+  function mlEndVote(){
+    var M = store.million;
+    if(!M.q || !M.q.aud || M.q.aud.phase !== "vote") return;
+    var counts = [0, 0, 0, 0], total = 0;
+    Object.keys(M.q.aud.votes).forEach(function(pid){ var c = M.q.aud.votes[pid]; if(c >= 0 && c < 4 && M.q.rm.indexOf(c) === -1){ counts[c] += 1; total += 1; } });
+    M.q.aud = total
+      ? { phase: "done", counts: counts.map(function(n){ return Math.round(n * 100 / total); }), src: "phones", total: total }
+      : { phase: "done", counts: mlSimAudience(M.items[M.q.i].lv, M.q.c, M.q.rm), src: "sim", none: true };
+    mlSound("blip"); mlSync(); mlRender();
+  }
+  function mlFriend(){
+    var M = store.million;
+    if(!M.q || M.used.friend || !mlCfg().life.friend || ["q", "confirm"].indexOf(M.phase) === -1) return;
+    M.used.friend = true;
+    M.q.friend = { endsAt: Date.now() + mlCfg().friend_secs * 1000, secs: mlCfg().friend_secs }; ML.lastTick = -1;
+    mlStartTick(); mlSound("blip"); mlSync(); mlRender();
+  }
+  function mlEndFriend(){
+    var M = store.million;
+    if(!M.q || !M.q.friend) return;
+    M.q.friend = null;
+    mlSync(); mlRender();
+  }
+  function mlSwap(){
+    var M = store.million, team = mlSeatTeam();
+    if(!M.q || !team || M.used.swap || !mlCfg().life.swap || ["q", "confirm"].indexOf(M.phase) === -1) return;
+    var lv = M.items[M.q.i].lv, order = lv === 1 ? [1, 2, 3] : lv === 2 ? [2, 1, 3] : [3, 2, 1];
+    var src = order.filter(function(l){ return M.spares[l] && M.spares[l].length; })[0];
+    if(!src){ toast("ما فيه سؤال بديل بهالجولة"); return; }
+    var ni = M.spares[src].shift();
+    M.ladders[team.id][M.step] = ni;
+    M.used.swap = true;
+    mlNewQ(ni); M.phase = "q";
+    toast("🔄 تبدّل السؤال");
+    mlSound("blip"); mlSync(); mlRender();
+  }
+  function mlWalk(){
+    var M = store.million;
+    if(["q", "confirm"].indexOf(M.phase) === -1 || M.step < 1) return;
+    var pts = M.step * mlCfg().step_pts;
+    ask("تنسحبون؟", "تطلعون بـ " + mlAmt(M.n, M.step) + " (" + mlPtsWord(pts) + ") وينتهي دوركم.", "🏳️ إيه، ننسحب").then(function(ok){ if(ok) mlEndTurn("walk"); });
+  }
+
+  /* ---------- الكل يجاوب ---------- */
+  function mlAllOpen(){
+    var M = store.million, it = M.items[M.qi], o = mlShuffleOpts(it), now = Date.now();
+    M.aq = { opts: o.opts, c: o.c, picks: {}, openedAt: now, endsAt: now + mlCfg().all_secs * 1000, gain: null, manual: M.aq ? !!M.aq.manual : !mlPhoneTeams().length };
+    M.phase = "open"; ML.lastTick = -1;
+    mlStartTick(); mlSync(); mlRender();
+  }
+  function mlAllTeams(){ return store.teams.slice(0, 6); }
+  function mlAllPicked(){ var M = store.million; return mlAllTeams().every(function(t){ return !!M.aq.picks[t.id]; }); }
+  function mlAllLock(){
+    var M = store.million;
+    if(M.phase !== "open") return;
+    M.phase = "locked"; M.aq.endsAt = 0;
+    mlSound("lock"); mlSync(); mlRender();
+  }
+  function mlAllPickSet(teamId, c, src, name){
+    var M = store.million;
+    if(!M.aq || (M.phase !== "open" && M.phase !== "locked") || !(c >= 0 && c < 4)) return false;
+    if(src === "phone" && (M.phase !== "open" || M.aq.picks[teamId])) return false;
+    M.aq.picks[teamId] = { c: c, ms: src === "phone" ? Date.now() - M.aq.openedAt : null, src: src, by: name || "" };
+    if(M.phase === "open" && mlAllPicked()) mlAllLock();
+    return true;
+  }
+  function mlAllReveal(){
+    var M = store.million;
+    if(M.phase !== "open" && M.phase !== "locked") return;
+    var it = M.items[M.qi], cfg = mlCfg(), base = cfg.lv_pts[(it.lv || 2) - 1], gain = {};
+    var fast = null;
+    mlAllTeams().forEach(function(t){
+      var p = M.aq.picks[t.id];
+      if(p && p.c === M.aq.c){
+        gain[t.id] = base;
+        if(p.src === "phone" && typeof p.ms === "number" && (!fast || p.ms < fast.ms)) fast = { id: t.id, ms: p.ms };
+      }
+    });
+    /* بونص الأسرع: بس لو فيه منافسة بالجوالات (فريقين أو أكثر جاوبوا من الجوال) */
+    var phonePicks = Object.keys(M.aq.picks).filter(function(id){ return M.aq.picks[id].src === "phone"; }).length;
+    if(!(fast && cfg.speed_bonus > 0 && phonePicks >= 2)) fast = null;
+    if(fast) gain[fast.id] += cfg.speed_bonus;
+    M.aq.gain = gain; M.aq.fast = fast ? fast.id : null;
+    Object.keys(gain).forEach(function(id){ var t = mlTeam(id); if(t && gain[id]){ t.score += gain[id]; M.gain[id] = (M.gain[id] || 0) + gain[id]; } });
+    renderTeams();
+    M.phase = "reveal";
+    mlSound(Object.keys(gain).length ? "right" : "wrong");
+    mlSync(); mlRender();
+  }
+  function mlAllNext(){
+    var M = store.million;
+    if(M.phase !== "reveal") return;
+    M.qi += 1;
+    if(M.qi >= M.items.length){ M.aq = null; M.phase = "final"; mlSync(); mlRender(); }
+    else mlAllOpen();
+  }
+
+  /* ---------- المؤقت (الكل يجاوب + تصويت الجمهور + اتصل بصديق) ---------- */
+  function mlLeft(endsAt){ return endsAt ? Math.max(0, Math.ceil((endsAt - Date.now()) / 1000)) : 0; }
+  function mlStartTick(){ clearInterval(ML.tick); ML.tick = setInterval(mlTickFn, 250); }
+  function mlTickFn(){
+    var M = store.million, live = false;
+    if(!mlActive()){ clearInterval(ML.tick); ML.tick = null; return; }
+    if(M.mode === "all" && M.phase === "open" && M.aq && M.aq.endsAt){
+      live = true;
+      var l = mlLeft(M.aq.endsAt); mlSetTimer("mlAllTimer", l, mlCfg().all_secs);
+      if(l <= 5 && l > 0 && ML.lastTick !== l){ ML.lastTick = l; mlSound("tick"); }
+      if(l <= 0) mlAllLock();
+    }
+    if(M.mode === "seat" && M.q && M.q.aud && M.q.aud.phase === "vote"){
+      live = true;
+      var lv = mlLeft(M.q.aud.endsAt); mlSetTimer("mlVoteTimer", lv, mlCfg().vote_secs);
+      var vc = document.getElementById("mlVoteN"); if(vc) vc.textContent = Object.keys(M.q.aud.votes).length;
+      if(lv <= 0) mlEndVote();
+    }
+    if(M.mode === "seat" && M.q && M.q.friend){
+      live = true;
+      var lf = mlLeft(M.q.friend.endsAt); mlSetTimer("mlFriendTimer", lf, M.q.friend.secs || 30);
+      if(lf <= 5 && lf > 0 && ML.lastTick !== lf){ ML.lastTick = lf; mlSound("tick"); }
+      if(lf <= 0){ mlSound("wrong"); mlEndFriend(); }
+    }
+    if(!live){ clearInterval(ML.tick); ML.tick = null; }
+  }
+  function mlSetTimer(id, left, total){
+    var el = document.getElementById(id); if(!el) return;
+    var b = el.querySelector("b"); if(b) b.textContent = left;
+    el.style.setProperty("--p", total ? Math.max(0, Math.min(100, left / total * 100)) : 0);
+    el.classList.toggle("warn", left <= 5);
+  }
+
+  /* ---------- الجوالات ---------- */
+  function mlQid(){
+    var M = store.million;
+    if(!mlActive()) return "";
+    if(M.mode === "seat") return M.q ? "s" + M.round.id + ":" + M.order[M.ti] + ":" + M.q.i : "";
+    return M.aq ? "a" + M.round.id + ":" + M.qi : "";
+  }
+  function mlPhone(){
+    var M = store.million;
+    if(!mlActive() || curView !== "million") return null;
+    var base = { v: 1, mode: M.mode, total: M.n };
+    if(M.mode === "seat"){
+      var team = mlSeatTeam();
+      base.seat = team ? team.id : null; base.seatName = team ? team.name : "";
+      if(!M.q || ["q", "confirm", "lock", "right", "wrong"].indexOf(M.phase) === -1) return Object.assign(base, { phase: "wait" });
+      var it = M.items[M.q.i], rev = M.phase === "right" || M.phase === "wrong", vote = M.q.aud && M.q.aud.phase === "vote";
+      return Object.assign(base, {
+        qid: mlQid(), n: mlQn(), text: it.q, cat: it.cat, lv: it.lv, amt: mlAmt(M.n, mlQn()),
+        opts: M.q.opts.map(function(o, k){ return M.q.rm.indexOf(k) !== -1 ? null : o; }),
+        phase: rev ? "reveal" : vote ? "vote" : "show",
+        sel: (M.phase === "confirm" || M.phase === "lock" || rev) ? M.q.pick : null,
+        left: vote ? mlLeft(M.q.aud.endsAt) : 0,
+        reveal: rev ? { c: M.q.c, chosen: M.q.pick } : null,
+        aud: M.q.aud && M.q.aud.phase === "done" ? { counts: M.q.aud.counts } : null
+      });
+    }
+    if(!M.aq || ["open", "locked", "reveal"].indexOf(M.phase) === -1) return Object.assign(base, { phase: "wait" });
+    var it2 = M.items[M.qi], picks = {};
+    Object.keys(M.aq.picks).forEach(function(id){ picks[id] = M.aq.picks[id].c; });
+    return Object.assign(base, {
+      qid: mlQid(), n: M.qi + 1, text: it2.q, cat: it2.cat, lv: it2.lv, pts: mlCfg().lv_pts[(it2.lv || 2) - 1],
+      opts: M.aq.opts, phase: M.phase === "reveal" ? "reveal" : M.phase === "open" ? "pick" : "lock",
+      left: M.phase === "open" ? mlLeft(M.aq.endsAt) : 0,
+      picked: Object.keys(M.aq.picks),
+      reveal: M.phase === "reveal" ? { c: M.aq.c, picks: picks, gain: M.aq.gain || {}, fast: M.aq.fast || null } : null
+    });
+  }
+  function onMillionPick(p){
+    var M = store.million;
+    if(!mlActive() || M.mode !== "all" || typeof p.qid !== "string" || p.qid !== mlQid()) return;
+    var t = mlTeam(p.team); if(!t) return;
+    if(mlAllPickSet(t.id, +p.c, "phone", buzzCleanName(p.name))){ mlSound("blip"); mlSync(); mlRender(); }
+  }
+  function onMillionVote(p){
+    var M = store.million, seat = mlSeatTeam();
+    if(!mlActive() || M.mode !== "seat" || !M.q || !M.q.aud || M.q.aud.phase !== "vote") return;
+    if(typeof p.qid !== "string" || p.qid !== mlQid() || (seat && p.team === seat.id)) return;
+    var c = +p.c, pid = typeof p.pid === "string" ? p.pid.slice(0, 40) : "";
+    if(!pid || !(c >= 0 && c < 4) || M.q.rm.indexOf(c) !== -1) return;
+    M.q.aud.votes[pid] = c;
+    persist(); buzzSend();
+    var vc = document.getElementById("mlVoteN"); if(vc) vc.textContent = Object.keys(M.q.aud.votes).length;
+  }
+  function mlSync(){ persist(); buzzSend(); renderBuzzUI(); }
+
+  /* ---------- الأصوات ---------- */
+  function mlTone(notes, type, gain){
+    try{
+      buzzUnlockAudio(); if(!buzz.audio) return;
+      var a = buzz.audio, t0 = a.currentTime;
+      notes.forEach(function(n){
+        var o = a.createOscillator(), g = a.createGain();
+        o.type = type || "triangle"; o.frequency.setValueAtTime(n[0], t0 + n[1]);
+        g.gain.setValueAtTime(0.0001, t0 + n[1]);
+        g.gain.exponentialRampToValueAtTime(gain || 0.18, t0 + n[1] + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + n[1] + n[2]);
+        o.connect(g); g.connect(a.destination); o.start(t0 + n[1]); o.stop(t0 + n[1] + n[2] + 0.03);
+      });
+    }catch(e){}
+  }
+  function mlSound(k){
+    if(k === "blip") mlTone([[740, 0, 0.12]], "sine", 0.1);
+    else if(k === "lock") mlTone([[196, 0, 0.4], [196, 0.5, 0.4], [247, 1, 0.55]], "sine", 0.16);
+    else if(k === "right") mlTone([[523, 0, 0.18], [659, 0.14, 0.18], [784, 0.28, 0.28], [1047, 0.44, 0.45]], "triangle", 0.2);
+    else if(k === "wrong") mlTone([[311, 0, 0.32], [233, 0.26, 0.6]], "sawtooth", 0.11);
+    else if(k === "top") mlTone([[523, 0, 0.2], [659, 0.18, 0.2], [784, 0.36, 0.2], [1047, 0.54, 0.35], [784, 0.88, 0.18], [1047, 1.04, 0.75]], "triangle", 0.22);
+    else if(k === "tick") mlTone([[880, 0, 0.06]], "square", 0.04);
+  }
+
+  /* ---------- الشاشة ---------- */
+  function mlOpen(){
+    var M = store.million;
+    if(mlActive()){
+      setGated("million", false); renderRoundTag("million", M.round);
+      if(M.phase === "lock"){ clearTimeout(ML.revealT); ML.revealT = setTimeout(mlReveal, 700); }
+      if((M.mode === "all" && M.phase === "open") || (M.q && ((M.q.aud && M.q.aud.phase === "vote") || M.q.friend))) mlStartTick();
+      mlRender();
+      buzzSend();
+    } else mlGate(!!M.round);
+  }
+  function mlSummaryHtml(){
+    var M = store.million, rows;
+    if(M.mode === "seat"){
+      rows = (M.order || []).map(function(id){
+        var t = mlTeam(id), r = M.res && M.res[id]; if(!t) return "";
+        return '<li>' + escapeHtml(t.name) + ': ' + (r ? (r.out === "top" ? "🏆 المليون" : mlAmt(M.n, r.kept)) + " (" + mlPtsWord(r.pts) + ")" : "ما لعبوا") + '</li>';
+      }).join("");
+    } else {
+      rows = store.teams.map(function(t){ var g = (M.gain || {})[t.id]; return g == null ? "" : '<li>' + escapeHtml(t.name) + ': +' + mlPtsWord(g) + '</li>'; }).join("");
+    }
+    return rows ? '<div class="rg-sum"><ul class="rm-list">' + rows + '</ul></div>' : "";
+  }
+  function mlGate(done){
+    var pref = store.million.pref === "all" ? "all" : "seat";
+    var modes = [["seat", "🪑 الكرسي الحار", "فريق فريق على السلّم"], ["all", "👥 الكل يجاوب", "كل فريق من جواله"]];
+    renderGate("million", {
+      done: done,
+      summary: done ? mlSummaryHtml() : "",
+      extra: '<div class="lbl">طريقة اللعب</div><div class="rg-chips">' + modes.map(function(m){
+          return '<button type="button" data-mlmode="' + m[0] + '"' + (pref === m[0] ? ' class="on"' : '') + '>' + m[1] + '<small>' + m[2] + '</small></button>';
+        }).join("") + '</div>'
+        + (pref === "all" ? '<p class="rg-note">كل فريق يمسح باركوده من «📱 أسرع إصبع» ويجاوب من جواله. والفريق اللي ما عنده جوال، تدخل جوابه أنت.</p>'
+                          : '<p class="rg-note">فيه 4 مساعدات لكل فريق، ومحطتين أمان. والفرق الثانية يصيرون الجمهور ويصوّتون من جوالاتهم.</p>')
+        + (store.teams.length < 2 ? '<p class="rg-note">أضف فريقين على الأقل من «👥 الفرق والنقاط».</p>' : ''),
+      bind: function(gate){
+        gate.querySelectorAll("[data-mlmode]").forEach(function(b){
+          b.addEventListener("click", function(){ store.million.pref = b.getAttribute("data-mlmode"); persist(); mlGate(done); });
+        });
+      },
+      begin: function(trial){
+        var teams = store.teams.slice(0, 6);
+        if(!teams.length) return Promise.reject(new Error("أضف الفرق أول"));
+        return startRound("million", trial, { mode: pref, teams: teams.length }).then(function(d){ mlSetup(d, pref); mlOpen(); });
+      }
+    });
+  }
+  function mlRender(){
+    var M = store.million;
+    if(!mlActive()){ mlGate(!!M.round); return; }
+    mlEls.body.innerHTML = M.mode === "seat" ? mlSeatHtml() : mlAllHtml();
+    var bars = mlEls.body.querySelectorAll(".ml-bars .b i");
+    if(bars.length) requestAnimationFrame(function(){ bars.forEach(function(i){ i.style.height = i.getAttribute("data-h") + "%"; }); });
+  }
+  function mlLadderHtml(cur){
+    var M = store.million, money = mlMoney(M.n), safe = mlSafe(M.n), rows = [];
+    for(var k = M.n; k >= 1; k--){
+      var cls = "ml-step" + (safe.indexOf(k) !== -1 ? " safe" : "") + (k <= M.step ? " done" : "") + (k === cur ? " cur" : "") + (k === M.n ? " top" : "");
+      rows.push('<div class="' + cls + '"><span class="no">' + k + '</span><span class="amt">' + (k === M.n ? "🏆 " + mlFmt(money[k - 1]) : mlFmt(money[k - 1])) + '</span>' + (safe.indexOf(k) !== -1 ? '<span class="sf" title="محطة أمان">🛡️</span>' : '<span class="sf"></span>') + '</div>');
+    }
+    return '<aside class="ml-ladder" aria-label="السلّم">' + rows.join("") + '</aside>';
+  }
+  function mlMiniHtml(cur){
+    var M = store.million;
+    return '<div class="ml-mini"><div class="bar"><i style="width:' + Math.round(M.step / M.n * 100) + '%"></i></div>'
+      + '<span>سؤال ' + Math.min(cur, M.n) + ' من ' + M.n + ' · على <b>' + mlAmt(M.n, Math.min(cur, M.n)) + '</b> · 🛡️ ' + mlSafe(M.n).join(" و") + '</span></div>';
+  }
+  function mlLifesHtml(){
+    var M = store.million, L = mlCfg().life, can = ["q", "confirm"].indexOf(M.phase) !== -1 && !(M.q && M.q.aud && M.q.aud.phase === "vote");
+    var defs = [["fifty", "50:50", "حذف إجابتين", ""], ["aud", icon("i-users"), "اسأل الجمهور", ""], ["friend", icon("i-phone"), "اتصل بصديق", ""], ["swap", icon("i-refresh"), "تبديل السؤال", ""]];
+    return '<div class="ml-lifes">' + defs.filter(function(d){ return L[d[0]]; }).map(function(d){
+      var used = M.used[d[0]];
+      return '<button type="button" class="ml-life' + (used ? " used" : "") + '" data-ml="life-' + d[0] + '"' + (used || !can ? " disabled" : "") + ' aria-label="' + d[2] + '">'
+        + '<span class="ic-w">' + d[1] + '</span>' + d[2] + '</button>';
+    }).join("") + '</div>';
+  }
+  function mlOptsHtml(opts, state){
+    /* state(k) → { cls, dis, extra } */
+    return '<div class="ml-opts">' + opts.map(function(o, k){
+      var s = state(k);
+      return '<button type="button" class="ml-opt' + (s.cls ? " " + s.cls : "") + '" data-mlopt="' + k + '"' + (s.dis ? " disabled" : "") + '>'
+        + '<span class="k">' + ML_KEYS[k] + '</span><span class="t">' + escapeHtml(o) + '</span>' + (s.extra || "") + '</button>';
+    }).join("") + '</div>';
+  }
+  function mlAudHtml(){
+    var M = store.million, A = M.q && M.q.aud;
+    if(!A) return "";
+    if(A.phase === "vote") return "";  /* العدّاد وزر «خلّص التصويت» بالشريط تحت الخيارات */
+    var max = Math.max.apply(null, A.counts.concat([1]));
+    return '<div class="ml-aud"><h4><span>📊 رأي الجمهور</span><small>' + (A.src === "phones" ? "من " + arN(A.total, "صوت واحد", "صوتين", "أصوات", "صوت") : A.none ? "ما وصل تصويت — نسب افتراضية" : "جمهور افتراضي") + '</small></h4>'
+      + '<div class="ml-bars">' + A.counts.map(function(n, k){
+        var off = M.q.rm.indexOf(k) !== -1;
+        return '<div class="b' + (off ? " off" : "") + '"><span>' + (off ? "—" : n + "%") + '</span><i data-h="' + (off ? 0 : Math.round(n / max * 100)) + '" style="height:0"></i><b>' + ML_KEYS[k] + '</b></div>';
+      }).join("") + '</div></div>';
+  }
+  function mlFriendHtml(){
+    var M = store.million, F = M.q && M.q.friend;
+    if(!F) return "";
+    return '<div class="ml-friend" role="dialog" aria-modal="true"><div class="box">' + icon("i-phone", "big") + '<h3>اتصل بصديق</h3>'
+      + '<p>عندكم ' + F.secs + ' ثانية تسألون أي أحد — بالمجلس أو بالجوال.</p>'
+      + '<div class="ml-timer xl" id="mlFriendTimer" style="--p:100"><b>' + mlLeft(F.endsAt) + '</b></div>'
+      + '<button class="btn-primary" type="button" data-ml="end-friend">خلّصنا</button></div></div>';
+  }
+  function mlSeatHtml(){
+    var M = store.million, team = mlSeatTeam(), cfg = mlCfg();
+    if(M.phase === "final" || !team) return mlFinalHtml();
+    var tstyle = "--c:" + team.color, nTeams = M.order.length;
+    if(M.phase === "intro"){
+      var L = cfg.life, lifes = [L.fifty ? "حذف إجابتين" : "", L.aud ? "اسأل الجمهور" : "", L.friend ? "اتصل بصديق" : "", L.swap ? "تبديل السؤال" : ""].filter(Boolean);
+      return '<div class="ml-card ml-intro" style="' + tstyle + '"><span class="ml-kicker">الدور ' + (M.ti + 1) + ' من ' + nTeams + '</span>'
+        + '<h3>دور <b>' + escapeHtml(team.name) + '</b> على الكرسي الحار</h3>'
+        + '<div class="ml-chair">🪑</div>'
+        + '<p>' + mlQWord(M.n) + ' تصعب درجة درجة، والأخير على <b>المليون</b>. محطات الأمان عند السؤال ' + mlSafe(M.n).join(" و") + ': إذا غلطتوا ترجعون لآخر محطة وصلتوها.</p>'
+        + (lifes.length ? '<p class="ml-sub">المساعدات (كل وحدة مرة): ' + lifes.join("، ") + '. وتقدرون تنسحبون قبل أي سؤال بنقاطكم.</p>' : '')
+        + '<p class="ml-sub">كل درجة = ' + mlPtsWord(cfg.step_pts) + ' للفريق.</p>'
+        + '<button class="btn-primary btn-lg" type="button" data-ml="go">' + icon("i-play") + ' يلا نبدأ</button></div>';
+    }
+    if(M.phase === "turn") return mlTurnHtml(team);
+    var it = M.items[M.q.i], cur = mlQn(), rev = M.phase === "right" || M.phase === "wrong";
+    var A = M.q.aud, voting = !!(A && A.phase === "vote"), audDone = !!(A && A.phase === "done");
+    var top = '<div class="ml-top"><span class="ml-team" style="' + tstyle + '"><i></i>' + escapeHtml(team.name) + ' · على الكرسي</span>'
+      + '<span class="ml-now">معكم: <b>' + mlAmt(M.n, M.step) + '</b>' + (M.step ? ' · ' + mlPtsWord(M.step * cfg.step_pts) : '') + '</span></div>';
+    var qcard = '<div class="ml-qcard"><div class="ml-meta"><span>سؤال ' + cur + ' من ' + M.n + '</span><span class="lv' + it.lv + '">' + (ML_LV[it.lv] || "") + '</span>'
+      + (it.cat ? '<span>' + escapeHtml(it.cat) + '</span>' : '') + '<span class="for">على ' + mlAmt(M.n, cur) + '</span></div>'
+      + '<p class="ml-q">' + escapeHtml(it.q) + '</p></div>';
+    var opts = mlOptsHtml(M.q.opts, function(k){
+      var rm = M.q.rm.indexOf(k) !== -1;
+      var pct = audDone && !rm ? '<span class="pct" title="رأي الجمهور">' + (A.counts[k] | 0) + '%</span><i class="af" style="width:' + (A.counts[k] | 0) + '%"></i>' : '';
+      if(rev){
+        return { cls: k === M.q.c ? "ok" : (k === M.q.pick ? "no" : (rm ? "rm" : "dim")), dis: true, extra: pct };
+      }
+      return { cls: rm ? "rm" : (k === M.q.pick ? ("sel" + (M.phase === "lock" ? " lock" : "")) : ""), dis: rm || M.phase === "lock" || voting, extra: pct };
+    });
+    var bar = "";
+    if(M.phase === "q" && voting){
+      bar = '<div class="ml-bar sel ml-voting"><span class="ml-timer" id="mlVoteTimer" style="--p:100"><b>' + mlLeft(A.endsAt) + '</b></span>'
+        + '<span class="msg">🗳️ الجمهور يصوّت من جوالاته… الأصوات: <b id="mlVoteN">' + Object.keys(A.votes).length + '</b></span>'
+        + '<button class="btn-ghost" type="button" data-ml="end-vote">خلّص التصويت</button></div>';
+    } else if(M.phase === "q"){
+      bar = '<div class="ml-bar"><span class="msg">اختاروا جوابكم — والمقدّم يضغطه</span>'
+        + (M.step >= 1 ? '<button class="btn-ghost" type="button" data-ml="walk">🏳️ انسحبوا بـ ' + mlAmt(M.n, M.step) + '</button>' : '') + '</div>';
+    } else if(M.phase === "confirm"){
+      bar = '<div class="ml-bar sel"><span class="msg">إجابتكم النهائية: «' + ML_KEYS[M.q.pick] + '»؟</span>'
+        + '<button class="btn-primary" type="button" data-ml="lock">' + icon("i-check") + ' إيه، نهائية</button>'
+        + '<button class="btn-ghost" type="button" data-ml="unpick">↩️ غيّروا</button></div>';
+    } else if(M.phase === "lock"){
+      bar = '<div class="ml-bar sel"><span class="msg ml-dots">ننتظر الإجابة الصحيحة</span></div>';
+    } else if(M.phase === "right"){
+      bar = M.step >= M.n
+        ? '<div class="ml-bar ok"><span class="msg">🏆 صح! وصلتوا المليون!</span><button class="btn-primary" type="button" data-ml="end-top">' + icon("i-trophy") + ' النتيجة</button></div>'
+        : '<div class="ml-bar ok"><span class="msg">✅ صح! طلعتوا لـ ' + mlAmt(M.n, M.step) + '</span>'
+          + '<button class="btn-primary" type="button" data-ml="next">السؤال الجاي على ' + mlAmt(M.n, M.step + 1) + ' ' + icon("i-arrow") + '</button></div>';
+    } else if(M.phase === "wrong"){
+      var kept = mlKept(M.n, M.step);
+      bar = '<div class="ml-bar no"><span class="msg">❌ غلط! الصح «' + ML_KEYS[M.q.c] + '» — ' + (kept ? "ترجعون لـ " + mlAmt(M.n, kept) : "ترجعون للصفر") + '</span>'
+        + '<button class="btn-primary" type="button" data-ml="end-wrong">خلّصوا الدور</button></div>';
+    }
+    return '<div class="ml-stage"><div class="ml-main">' + top + mlMiniHtml(cur) + (rev ? "" : mlLifesHtml()) + qcard + opts + bar + mlAudHtml() + '</div>'
+      + mlLadderHtml(cur) + '</div>' + mlFriendHtml();
+  }
+  function mlTurnHtml(team){
+    var M = store.million, r = M.res[team.id] || { kept: 0, pts: 0, out: "walk", reached: 0 };
+    var head = r.out === "top" ? "🏆 " + escapeHtml(team.name) + " وصلوا المليون!" : r.out === "walk" ? "🏳️ " + escapeHtml(team.name) + " انسحبوا" : "❌ " + escapeHtml(team.name) + " غلطوا بالسؤال " + (r.reached + 1);
+    var last = M.ti >= M.order.length - 1 || !M.order.slice(M.ti + 1).some(function(id){ return mlTeam(id); });
+    var nextTeam = last ? null : mlTeam(M.order.slice(M.ti + 1).filter(function(id){ return mlTeam(id); })[0]);
+    return '<div class="ml-card ml-turn" style="--c:' + team.color + '"><span class="ml-kicker">خلص الدور</span><h3>' + head + '</h3>'
+      + '<div class="ml-big">' + (r.kept ? mlAmt(M.n, r.kept) : "0") + '</div>'
+      + '<p class="ml-gain">' + (r.pts ? "+" + mlPtsWord(r.pts) + " لـ " + escapeHtml(team.name) : "ما أخذوا نقاط هالمرة") + '</p>'
+      + mlBoardHtml()
+      + (nextTeam ? '<button class="btn-primary btn-lg" type="button" data-ml="next-team">دور ' + escapeHtml(nextTeam.name) + ' ' + icon("i-arrow") + '</button>'
+                  : '<button class="btn-primary btn-lg" type="button" data-ml="next-team">' + icon("i-trophy") + ' النتيجة النهائية</button>') + '</div>';
+  }
+  function mlBoardHtml(){
+    var M = store.million;
+    if(M.mode === "seat"){
+      var rows = (M.order || []).map(function(id){ return mlTeam(id); }).filter(Boolean).map(function(t){
+        var r = M.res[t.id];
+        return '<div class="ml-row' + (r ? "" : " wait") + '" style="--c:' + t.color + '"><i></i><b>' + escapeHtml(t.name) + '</b><span>' + (r ? (r.out === "top" ? "🏆 المليون" : mlAmt(M.n, r.kept)) : "ما لعبوا للحين") + '</span><em>' + (r ? (r.pts ? "+" + r.pts : "0") : "") + '</em></div>';
+      });
+      return '<div class="ml-board">' + rows.join("") + '</div>';
+    }
+    var ranked = store.teams.slice(0, 6).slice().sort(function(a, b){ return (M.gain[b.id] || 0) - (M.gain[a.id] || 0); });
+    return '<div class="ml-board">' + ranked.map(function(t){
+      return '<div class="ml-row" style="--c:' + t.color + '"><i></i><b>' + escapeHtml(t.name) + '</b><span>' + mlPtsWord(M.gain[t.id] || 0) + '</span><em>' + t.score + '</em></div>';
+    }).join("") + '</div>';
+  }
+  function mlFinalHtml(){
+    var M = store.million, best = null;
+    if(M.mode === "seat"){
+      (M.order || []).forEach(function(id){ var r = M.res[id], t = mlTeam(id); if(t && r && (!best || r.kept > best.kept)) best = { t: t, kept: r.kept }; });
+    } else {
+      store.teams.slice(0, 6).forEach(function(t){ var g = M.gain[t.id] || 0; if(!best || g > best.kept) best = { t: t, kept: g }; });
+    }
+    var title = best && best.kept > 0 ? (M.mode === "seat" ? "أبعد واحد بالطريق: " : "الأكثر نقاط: ") + escapeHtml(best.t.name) : "خلصت الجولة";
+    return '<div class="ml-card ml-final"><span class="ml-kicker">🏁 خلصت جولة طريق المليون</span><h3>' + title + '</h3>' + mlBoardHtml()
+      + '<button class="btn-primary btn-lg" type="button" data-ml="finish">' + icon("i-check") + ' إنهاء الجولة</button></div>';
+  }
+  function mlAllHtml(){
+    var M = store.million, cfg = mlCfg();
+    if(M.phase === "final") return mlFinalHtml();
+    if(M.phase === "ready" || !M.aq){
+      return '<div class="ml-card ml-intro"><span class="ml-kicker">👥 الكل يجاوب</span><h3>' + mlQWord(M.items.length) + ' للكل</h3><div class="ml-chair">📱</div>'
+        + '<p>السؤال يطلع على الشاشة والجوالات، وكل فريق يختار جوابه من جواله قبل ما يخلص الوقت (' + cfg.all_secs + ' ثانية).</p>'
+        + '<p class="ml-sub">الصح ياخذ: سهل ' + mlPtsWord(cfg.lv_pts[0]) + '، متوسط ' + mlPtsWord(cfg.lv_pts[1]) + '، صعب ' + mlPtsWord(cfg.lv_pts[2])
+        + (cfg.speed_bonus ? '، وأسرع فريق جاوب صح ياخذ ' + mlPtsWord(cfg.speed_bonus) + ' زيادة' : '') + '.</p>'
+        + mlPhonesNote()
+        + '<button class="btn-primary btn-lg" type="button" data-ml="all-go">' + icon("i-play") + ' أول سؤال</button></div>';
+    }
+    var it = M.items[M.qi], rev = M.phase === "reveal", pts = cfg.lv_pts[(it.lv || 2) - 1];
+    var byOpt = [[], [], [], []];
+    if(rev) mlAllTeams().forEach(function(t){ var p = M.aq.picks[t.id]; if(p) byOpt[p.c].push(t); });
+    var qcard = '<div class="ml-qcard"><div class="ml-meta"><span>سؤال ' + (M.qi + 1) + ' من ' + M.items.length + '</span><span class="lv' + it.lv + '">' + (ML_LV[it.lv] || "") + '</span>'
+      + (it.cat ? '<span>' + escapeHtml(it.cat) + '</span>' : '') + '<span class="for">الصح بـ ' + mlPtsWord(pts) + '</span></div><p class="ml-q">' + escapeHtml(it.q) + '</p></div>';
+    var opts = mlOptsHtml(M.aq.opts, function(k){
+      if(!rev) return { cls: "", dis: true };
+      return { cls: k === M.aq.c ? "ok" : (byOpt[k].length ? "no" : "dim"), dis: true,
+               extra: byOpt[k].length ? '<span class="who">' + byOpt[k].map(function(t){ return '<i style="--c:' + t.color + '" title="' + escapeHtml(t.name) + '"></i>'; }).join("") + '</span>' : '' };
+    });
+    var chips = '<div class="ml-teams">' + mlAllTeams().map(function(t){
+      var p = M.aq.picks[t.id], g = rev && M.aq.gain ? M.aq.gain[t.id] : null;
+      var st = rev ? (p ? (p.c === M.aq.c ? '<span class="ck">✅ +' + g + (M.aq.fast === t.id ? " ⚡" : "") + '</span>' : '<span class="x">❌ ' + ML_KEYS[p.c] + '</span>') : '<span class="x">ما جاوبوا</span>')
+                   : (p ? '<span class="ck">✅ جاوبوا</span>' : '<span class="w">⏳</span>');
+      return '<span class="ml-tchip' + (p ? " done" : "") + '" style="--c:' + t.color + '"><i></i>' + escapeHtml(t.name) + st + '</span>';
+    }).join("") + '</div>';
+    /* الإدخال اليدوي: الأجوبة ما تنعرض (الشاشة قدام الكل) — بس «تسجّل» */
+    var manual = !rev && M.aq.manual ? '<div class="ml-manual"><p class="mm-hint">اضغط حرف جواب الفريق اللي يقوله لك. الأجوبة ما تنعرض على الشاشة عشان ما تنكشف.</p>' + mlAllTeams().map(function(t){
+      var p = M.aq.picks[t.id];
+      var st = p ? (p.src === "phone" ? "📱 جاوبوا من الجوال" : "✅ تسجّل جوابهم") : "⏳ ما جاوبوا";
+      return '<div class="mm-row' + (p ? " done" : "") + '" style="--c:' + t.color + '"><b><i></i>' + escapeHtml(t.name) + '<em>' + st + '</em></b><span>' + [0, 1, 2, 3].map(function(k){
+        return '<button type="button" data-mlman="' + t.id + '" data-k="' + k + '" aria-label="' + escapeHtml(t.name) + ': ' + ML_KEYS[k] + '">' + ML_KEYS[k] + '</button>';
+      }).join("") + '</span></div>';
+    }).join("") + '</div>' : '';
+    var bar;
+    if(rev){
+      var any = Object.keys(M.aq.gain || {}).length;
+      bar = '<div class="ml-bar ' + (any ? "ok" : "no") + '"><span class="msg">' + (any ? "✅ الجواب الصح «" + ML_KEYS[M.aq.c] + "»" : "❌ محد جاوب صح — الجواب «" + ML_KEYS[M.aq.c] + "»") + '</span>'
+        + '<button class="btn-primary" type="button" data-ml="all-next">' + (M.qi + 1 >= M.items.length ? icon("i-trophy") + " النتيجة" : "السؤال الجاي " + icon("i-arrow")) + '</button></div>';
+    } else {
+      bar = '<div class="ml-bar">' + (M.phase === "open" ? '<span class="ml-timer" id="mlAllTimer" style="--p:100"><b>' + mlLeft(M.aq.endsAt) + '</b></span>' : '<span class="msg">انقفلت الأجوبة</span>')
+        + '<button class="btn-primary" type="button" data-ml="all-reveal">' + icon("i-check") + ' اكشف الجواب</button>'
+        + '<button class="btn-ghost" type="button" data-ml="all-manual">' + (M.aq.manual ? "إخفاء الإدخال اليدوي" : "✍️ أدخل أجوبة الفرق") + '</button></div>';
+    }
+    return '<div class="ml-stage one"><div class="ml-main">' + (rev ? "" : mlPhonesNote(true)) + qcard + opts + chips + manual + bar + (rev ? mlBoardHtml() : "") + '</div></div>';
+  }
+  function mlPhoneTeams(){
+    var on = buzz.status === "on";
+    return mlAllTeams().filter(function(t){ return on && ((buzz.presence || {})[t.id] || []).length > 0; });
+  }
+  function mlNames(list){
+    var a = list.map(function(t){ return escapeHtml(t.name); });
+    return a.length <= 1 ? (a[0] || "") : a.slice(0, -1).join("، ") + " و" + a[a.length - 1];
+  }
+  function mlPhonesNote(compact){
+    var teams = mlAllTeams(), have = mlPhoneTeams();
+    if(have.length === teams.length) return compact ? "" : '<p class="ml-sub">📱 كل الفرق متصلة بجوالاتها.</p>';
+    if(compact && have.length) return "";
+    var miss = teams.filter(function(t){ return have.indexOf(t) === -1; });
+    var txt = have.length
+      ? "📱 " + mlNames(miss) + " ما عندهم جوال متصل: يمسحون الباركود، أو تدخل جوابهم أنت من «✍️ أدخل أجوبة الفرق»."
+      : (buzz.status === "on" ? "ولا فريق وصّل جواله." : "الجوالات مو متصلة.") + " امسحوا الباركود من «📱 أسرع إصبع»، أو أدخل أجوبة الفرق بنفسك.";
+    return '<div class="ml-note">' + icon("i-buzz") + '<span>' + txt + '</span>'
+      + '<button class="btn-soft btn-sm" type="button" data-ml="phones">📱 الباركود</button></div>';
+  }
+  mlEls.body.addEventListener("click", function(e){
+    var b = e.target.closest("[data-ml],[data-mlopt],[data-mlman]"); if(!b || b.disabled) return;
+    buzzUnlockAudio();
+    var M = store.million;
+    if(b.hasAttribute("data-mlopt")){ if(M.mode === "seat") mlPick(+b.getAttribute("data-mlopt")); return; }
+    if(b.hasAttribute("data-mlman")){
+      if(mlAllPickSet(b.getAttribute("data-mlman"), +b.getAttribute("data-k"), "host")){ mlSound("blip"); mlSync(); mlRender(); }
+      return;
+    }
+    var a = b.getAttribute("data-ml");
+    if(a === "go") mlBeginTurn();
+    else if(a === "lock") mlLock();
+    else if(a === "unpick"){ M.q.pick = null; M.phase = "q"; mlSync(); mlRender(); }
+    else if(a === "next") mlNext();
+    else if(a === "walk") mlWalk();
+    else if(a === "end-wrong") mlEndTurn("wrong");
+    else if(a === "end-top") mlEndTurn("top");
+    else if(a === "next-team") mlNextTeam();
+    else if(a === "life-fifty") mlFifty();
+    else if(a === "life-aud") mlAudience();
+    else if(a === "life-friend") mlFriend();
+    else if(a === "life-swap") mlSwap();
+    else if(a === "end-vote") mlEndVote();
+    else if(a === "end-friend") mlEndFriend();
+    else if(a === "all-go") mlAllOpen();
+    else if(a === "all-reveal") mlAllReveal();
+    else if(a === "all-next") mlAllNext();
+    else if(a === "all-manual"){ M.aq.manual = !M.aq.manual; persist(); mlRender(); }
+    else if(a === "phones") openBuzzPanel();
+    else if(a === "finish"){ M.round.done = true; clearInterval(ML.tick); persist(); buzzSend(); mlGate(true); }
+  });
+  mlEls.endBtn.addEventListener("click", function(){
+    endRoundAsk("جولة طريق المليون").then(function(ok){
+      if(!ok) return;
+      var M = store.million;
+      if(M.round){ M.round.done = true; clearTimeout(ML.revealT); clearInterval(ML.tick); persist(); buzzSend(); mlGate(true); }
+    });
+  });
+
+  /* ======================================================================
      مخطط السهرة — المقدّم يختار الفرق والوقت والألعاب، والطاولة ترتّب
      الجولات وتمشي معه جولة جولة (النتائج بين كل جولة) لين تعلن الفائز.
      store.plan = { steps:[{g,size,est,status:todo|live|done|skip,round,before,delta}], cur, started, finished }
      ====================================================================== */
-  var PLAN_ORDER = ["flags", "trivia", "charades", "emoji", "heads", "letters"];   /* تسخين → تفكير → حركة → … → الختام */
+  var PLAN_ORDER = ["flags", "trivia", "charades", "million", "emoji", "heads", "letters"];   /* تسخين → تفكير → حركة → … → الختام */
   var PLAN_MINUTES = [30, 45, 60, 90, 120, 180];
   function minutesLabel(m){ return m === 60 ? "ساعة" : m === 90 ? "ساعة ونص" : m === 120 ? "ساعتين" : m === 180 ? "3 ساعات" : m + " دقيقة"; }
   function validPlan(p){
@@ -4288,8 +5192,8 @@
   }
   /* لو اللعبة فيها جولة شغالة من قبل، نحسبها هي جولة الخطة */
   function gameRoundActive(g){
-    return ({ trivia:trivActive, emoji:emojiActive, letters:lettersActive, flags:flagsActive, heads:headsActive, charades:charActive })[g]
-      ? ({ trivia:trivActive, emoji:emojiActive, letters:lettersActive, flags:flagsActive, heads:headsActive, charades:charActive })[g]() : false;
+    var fns = { trivia:trivActive, emoji:emojiActive, letters:lettersActive, flags:flagsActive, heads:headsActive, charades:charActive, million:mlActive };
+    return fns[g] ? fns[g]() : false;
   }
   function planGo(){
     var s = planStep(); if(!s){ renderPlan(); return; }
@@ -4629,6 +5533,7 @@
       case "flags": return c.flags ? arN(c.flags, "علم واحد", "علمين", "أعلام", "علم") : "";
       case "heads": return c.heads ? arN(c.heads, "كلمة وحدة", "كلمتين", "كلمات", "كلمة") + (decks ? " في " + arN(decks, "فئة", "فئتين", "فئات", "فئة") : "") : "";
       case "charades": return c.charades ? arN(c.charades, "عنوان واحد", "عنوانين", "عناوين", "عنوان") : "";
+      case "million": return c.million ? arN(c.million, "سؤال واحد", "سؤالين", "أسئلة", "سؤال") + " بثلاث صعوبات" : "";
       case "mafia": return "من 4 لاعبين وفوق";
     }
     return "";
@@ -4636,7 +5541,7 @@
   function gameRoundsLine(g){
     var c = CATALOG && CATALOG.counts; if(!c) return "";
     var z = cfgSize(g), n = z ? z.def : 10;
-    var per = { trivia:[c.trivia, n * 4], emoji:[(c.emoji_v1 | 0) + (c.emoji_v2 | 0), n], letters:[c.letters, n * n], flags:[c.flags, n], heads:[c.heads, n * 2], charades:[c.charades, n] }[g];
+    var per = { trivia:[c.trivia, n * 4], emoji:[(c.emoji_v1 | 0) + (c.emoji_v2 | 0), n], letters:[c.letters, n * n], flags:[c.flags, n], heads:[c.heads, n * 2], charades:[c.charades, n], million:[c.million, (n + 3) * 3] }[g];
     if(!per || !per[0]) return "";
     var n = Math.floor(per[0] / per[1]);
     return n >= 2 ? "تكفي حوالي " + roundsWord(n) + " بدون تكرار" : "";
@@ -4661,7 +5566,7 @@
   }
   function contentTotal(){
     var c = CATALOG && CATALOG.counts; if(!c) return 0;
-    return (c.trivia | 0) + (c.emoji_v1 | 0) + (c.emoji_v2 | 0) + (c.letters | 0) + (c.flags | 0) + (c.heads | 0) + (c.charades | 0);
+    return (c.trivia | 0) + (c.emoji_v1 | 0) + (c.emoji_v2 | 0) + (c.letters | 0) + (c.flags | 0) + (c.heads | 0) + (c.charades | 0) + (c.million | 0);
   }
   function renderLanding(){
     var hidden = HIDDEN_GAMES, games = GAME_ORDER.filter(function(g){ return hidden.indexOf(g) === -1; });

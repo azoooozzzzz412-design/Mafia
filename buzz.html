@@ -153,6 +153,29 @@
   .pen b{ font-family:var(--f-display); direction:ltr; unicode-bidi:isolate; background:#e5484d; color:#fff; border-radius:999px; padding:2px 12px; font-size:1.25rem; line-height:1.3; }
   .pen.in{ animation: penIn .45s cubic-bezier(.2, 1.4, .4, 1); }
   @keyframes penIn{ from{ transform:scale(.6); opacity:0; } to{ transform:none; opacity:1; } }
+  /* ===== طريق المليون على الجوال ===== */
+  .mq{ width:100%; max-width:540px; display:flex; flex-direction:column; gap:10px; }
+  .mq .q-chip b{ font-family:var(--f-mono); direction:ltr; unicode-bidi:isolate; }
+  .mq .mq-card{ background:linear-gradient(180deg, rgba(250,204,21,.1), rgba(255,255,255,.04)); border:1px solid rgba(250,204,21,.3); border-radius:18px; padding:12px 14px; text-align:center; display:flex; flex-direction:column; gap:8px; }
+  .mq .lv1{ color:#86efac; } .mq .lv2{ color:#fde68a; } .mq .lv3{ color:#fca5a5; }
+  .mq-opts{ display:flex; flex-direction:column; gap:8px; }
+  .mq-opt{ display:flex; align-items:center; gap:10px; width:100%; min-height:54px; padding:10px 12px; border-radius:16px; text-align:right;
+    background:rgba(255,255,255,.06); border:1.5px solid rgba(255,255,255,.16); color:var(--text); font-family:var(--f-display); font-weight:700; font-size:1.02rem; line-height:1.4; }
+  button.mq-opt{ cursor:pointer; }
+  button.mq-opt:active{ transform:scale(.98); }
+  .mq-opt .k{ flex:0 0 auto; width:34px; height:34px; border-radius:11px; display:grid; place-items:center; background:rgba(250,204,21,.16); color:#fef08a; font-weight:800; }
+  .mq-opt.rm{ opacity:.15; } .mq-opt.rm .t{ visibility:hidden; }
+  .mq-opt.sel{ border-color:#facc15; background:rgba(250,204,21,.22); box-shadow:0 0 22px -6px rgba(250,204,21,.7); }
+  .mq-opt.sel .k{ background:#facc15; color:#1c1604; }
+  .mq-opt.ok{ border-color:#22c55e; background:rgba(34,197,94,.3); } .mq-opt.ok .k{ background:#22c55e; color:#03140a; }
+  .mq-opt.no{ border-color:#ef4444; background:rgba(239,68,68,.28); } .mq-opt.no .k{ background:#ef4444; color:#fff; }
+  .mq-opt.dim{ opacity:.45; }
+  .mq-opt .pc{ margin-inline-start:auto; font-family:var(--f-mono); font-size:.85rem; color:#fde68a; direction:ltr; }
+  .mq-left{ display:inline-flex; align-items:center; gap:6px; align-self:center; padding:4px 14px; border-radius:999px; background:rgba(0,0,0,.3); border:1px solid rgba(255,255,255,.2); font-weight:800; }
+  .mq-left b{ font-family:ui-monospace, monospace; min-width:1.6em; text-align:center; direction:ltr; }
+  .mq-left.warn{ background:#fff; color:#c0271d; }
+  body.st-mq .center{ justify-content:flex-start; gap:12px; padding-top:4px; overflow-y:auto; }
+  body.st-mq{ overflow-y:auto; }
   .foot{ font-size:.72rem; color:var(--faint); text-align:center; }
   .foot b{ font-family:ui-monospace, monospace; direction:ltr; unicode-bidi:isolate; }
   @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
@@ -174,6 +197,7 @@
       <button type="submit">يلا 👍</button>
     </form>
     <div class="qcard" id="qcard" hidden></div>
+    <div class="mq" id="mq" data-nopress hidden></div>
     <button class="btn" id="btn" type="button" aria-label="زر الضغط">…</button>
     <div class="clock" id="clock" hidden aria-live="off"><span>⏱️</span><b id="clockN">0</b><small id="clockW">ثانية</small></div>
     <div class="pen" id="pen" hidden role="status"><b id="penN"></b><span id="penT"></span></div>
@@ -195,7 +219,7 @@
               btn:$("btn"), msg:$("msg"), sub:$("sub"), reload:$("reload"), big:$("bigEmoji"), foot:$("foot"),
               meName:$("meName"), editIcon:$("editIcon"), nameForm:$("nameForm"), nameInput:$("nameInput"),
               qcard:$("qcard"), clock:$("clock"), clockN:$("clockN"), clockW:$("clockW"),
-              pen:$("pen"), penN:$("penN"), penT:$("penT") };
+              pen:$("pen"), penN:$("penN"), penT:$("penT"), mq:$("mq") };
 
   var pid;
   try{
@@ -213,7 +237,8 @@
   /* الحالة: الشاشة (المضيف) هي الحَكَم — هنا بس نعرض اللي توصلنا منها ونرسل الضغطة */
   var S = { conn:"connecting", connSince:Date.now(), host:null, lastSeen:0,
             pressedQid:null, pressedAt:0, celebrated:null, wakeLock:null, audio:null,
-            endAt:0, clockT:null, toutKey:null, penKey:null, penT:null };
+            endAt:0, clockT:null, toutKey:null, penKey:null, penT:null,
+            mqSent:null, mqEnd:0, mqT:null, mqLastQ:null, mqHtml:null };
   var client = null, ch = null;
 
   els.reload.addEventListener("click", function(){ location.reload(); });
@@ -322,6 +347,17 @@
     if(p.state === "armed" && p.tout){
       var tk = p.qid + "|" + p.tout + "|" + (p.excluded || []).join(",");
       if(S.toutKey !== tk){ S.toutKey = tk; if(p.tout === teamId){ vibrate([200, 80, 200]); timeUpSound(); } else { vibrate(60); } }
+    }
+    /* «طريق المليون»: عدّاد الجواب/التصويت يمشي هنا لحاله ويتزامن مع كل رسالة */
+    var mqv = p.mq && typeof p.mq === "object" ? p.mq : null;
+    var mqLeft = mqv ? +mqv.left : 0;
+    S.mqEnd = (mqv && isFinite(mqLeft) && mqLeft > 0) ? Date.now() + Math.min(mqLeft, 600) * 1000 : 0;
+    clearInterval(S.mqT); S.mqT = S.mqEnd ? setInterval(mqTick, 250) : null;
+    if(mqv && mqv.qid && S.mqLastQ !== mqv.qid){ S.mqLastQ = mqv.qid; if(mqv.phase === "pick" || mqv.phase === "show") vibrate(50); }
+    if(mqv && mqv.phase === "reveal" && mqv.qid && S.mqRevealed !== mqv.qid){
+      S.mqRevealed = mqv.qid;
+      var mine = mqMine(mqv);
+      if(mine != null && mqv.reveal){ if(mine === mqv.reveal.c){ vibrate([80, 50, 120]); winSound(); } else vibrate([200, 80, 200]); }
     }
     /* انخصم على فريقنا (خلص الوقت أو جواب غلط) — نبيّنها مرة وحدة، وبس لو صارت قبل شوي. سؤال جديد = تختفي */
     if(prev && prev.qid !== p.qid){ clearTimeout(S.penT); els.pen.hidden = true; }
@@ -456,6 +492,7 @@
   function viewFromHost(){
     var h = S.host;
     if(!myTeam()) return "noteam";
+    if(h.mq && typeof h.mq === "object") return "mq";
     if(h.state === "locked"){
       if(h.winner === teamId) return "win";
       if((h.excluded || []).indexOf(teamId) !== -1) return "excluded";   /* جاوبوا وغلطوا (أو خلص وقتهم) — ما تنفتح لهم مرة ثانية */
@@ -508,6 +545,8 @@
         var w = teamById(S.host.winner);
         btn = "⛔"; msg = "سبقكم " + (w ? w.name : "فريق ثاني");
         sub = (S.host.winnerName ? "اللي ضغط: " + S.host.winnerName + " — " : "") + (S.endAt ? "لو غلطوا أو خلص وقتهم تنفتح لكم." : "لو غلطوا تنفتح لكم."); break;
+      case "mq":
+        var mt = mqTexts(S.host.mq); btn = ""; msg = mt.msg; sub = mt.sub; break;
       case "excluded":
         var mp = myPen();
         if(S.host.tout === teamId){
@@ -521,7 +560,8 @@
     }
     els.reload.hidden = !(v === "error" && Date.now() - S.connSince > 8000);
     LASTV = v;
-    var hasQ = renderQ(v);
+    renderMq(v);
+    var hasQ = v === "mq" ? false : renderQ(v);
     renderClock();
     var key = v + "|" + btn + "|" + msg + "|" + sub + "|" + color + "|" + els.teamName.textContent + "|" + myName + "|" + hasQ;
     if(key === LAST) return;
@@ -529,8 +569,100 @@
     document.body.className = "st-" + v + (hasQ ? " has-q" : "");
     els.nameForm.hidden = v !== "name";
     els.btn.hidden = els.msg.hidden = els.sub.hidden = (v === "name");
+    if(v === "mq") els.btn.hidden = true;
     els.btn.textContent = btn; els.msg.textContent = msg; els.sub.textContent = sub;
   }
+
+  /* ===== «طريق المليون» على الجوال: يشوف السؤال، ويختار الجواب (الكل يجاوب) أو يصوّت (اسأل الجمهور) ===== */
+  var MQ_KEYS = ["أ", "ب", "ج", "د"], MQ_LV = { 1:"سهل", 2:"متوسط", 3:"صعب" };
+  function mqMine(m){
+    if(!m) return null;
+    if(m.mode === "all"){ var r = m.reveal && m.reveal.picks; if(r && typeof r[teamId] === "number") return r[teamId]; return S.mqSent && S.mqSent.qid === m.qid ? S.mqSent.c : null; }
+    if(m.seat === teamId) return typeof m.sel === "number" ? m.sel : null;
+    return null;
+  }
+  function mqCanAct(m){
+    if(!m || !m.qid) return false;
+    if(m.phase === "pick") return m.mode === "all" && (m.picked || []).indexOf(teamId) === -1 && !(S.mqSent && S.mqSent.qid === m.qid);
+    if(m.phase === "vote") return m.mode === "seat" && m.seat !== teamId;
+    return false;
+  }
+  function mqTexts(m){
+    var seatT = m && m.seat ? teamById(m.seat) : null, seatName = seatT ? seatT.name : (m && m.seatName) || "";
+    if(!m || m.phase === "wait"){
+      if(m && m.mode === "seat" && seatName) return { msg: m.seat === teamId ? "دوركم على الكرسي! 🪑" : "دور " + seatName + " على الكرسي", sub: m.seat === teamId ? "المقدّم بيبدأ أول سؤال." : "تفرّجوا — وممكن نحتاجكم بـ«اسأل الجمهور»." };
+      return { msg: "استعدوا 💰", sub: "السؤال الجاي بيطلع هنا." };
+    }
+    var mine = mqMine(m);
+    if(m.phase === "pick"){
+      if(S.mqSent && S.mqSent.qid === m.qid) return { msg: "✅ اخترتوا «" + MQ_KEYS[S.mqSent.c] + "»", sub: "ننتظر الباقين…" };
+      if((m.picked || []).indexOf(teamId) !== -1) return { msg: "✅ فريقكم جاوب", sub: "ننتظر الباقين…" };
+      return { msg: "اختاروا الجواب!", sub: "أول اختيار من فريقكم هو اللي ينحسب." };
+    }
+    if(m.phase === "lock") return { msg: mine != null ? "انقفلت الأجوبة — اخترتوا «" + MQ_KEYS[mine] + "»" : "انقفلت الأجوبة", sub: "ننتظر المقدّم يكشف الجواب." };
+    if(m.phase === "vote"){
+      if(m.seat === teamId) return { msg: "الجمهور يصوّت لكم…", sub: "انتظروا النتيجة على الشاشة." };
+      return { msg: "🗳️ اسأل الجمهور!", sub: S.mqVote && S.mqVote.qid === m.qid ? "صوتك: «" + MQ_KEYS[S.mqVote.c] + "» — تقدر تغيّره قبل ما يخلص الوقت." : "ساعدوا " + seatName + ": وش الجواب برأيك؟" };
+    }
+    if(m.phase === "reveal" && m.reveal){
+      var c = m.reveal.c;
+      if(m.mode === "all"){
+        var g = m.reveal.gain && m.reveal.gain[teamId];
+        if(mine == null) return { msg: "الجواب الصح «" + MQ_KEYS[c] + "»", sub: "ما جاوبتوا هالمرة." };
+        return mine === c ? { msg: "✅ صح! +" + (g || 0), sub: m.reveal.fast === teamId ? "⚡ كنتوا أسرع فريق!" : "كفو عليكم." } : { msg: "❌ غلط", sub: "الجواب الصح «" + MQ_KEYS[c] + "»." };
+      }
+      if(m.seat === teamId) return m.reveal.chosen === c ? { msg: "✅ صح!", sub: "كمّلوا الطريق للمليون." } : { msg: "❌ غلط", sub: "الجواب الصح «" + MQ_KEYS[c] + "»." };
+      return { msg: "الجواب الصح «" + MQ_KEYS[c] + "»", sub: seatName ? (m.reveal.chosen === c ? seatName + " جاوبوا صح." : seatName + " غلطوا.") : "" };
+    }
+    if(m.seat === teamId) return { msg: "دوركم! قولوا جوابكم للمقدّم", sub: typeof m.sel === "number" ? "اخترتوا «" + MQ_KEYS[m.sel] + "» — ننتظر التأكيد." : "السؤال على " + (m.amt || "") + "." };
+    return { msg: "دور " + seatName + " على الكرسي", sub: typeof m.sel === "number" ? "اختاروا «" + MQ_KEYS[m.sel] + "»… صح ولا غلط؟" : "تفرّجوا وخلّكم جاهزين." };
+  }
+  function renderMq(v){
+    if(v !== "mq"){ if(!els.mq.hidden){ els.mq.hidden = true; els.mq.innerHTML = ""; S.mqHtml = null; } return; }
+    var m = S.host.mq, html = "";
+    if(m.phase !== "wait" && Array.isArray(m.opts)){
+      var act = mqCanAct(m), mine = mqMine(m), vote = S.mqVote && S.mqVote.qid === m.qid ? S.mqVote.c : null;
+      var counts = m.aud && Array.isArray(m.aud.counts) ? m.aud.counts : null;
+      html = '<div class="mq-card"><div class="q-meta"><span class="q-chip">💰 سؤال <b>' + (num(m.n, 1, 99) | 0) + '</b> من <b>' + (num(m.total, 1, 99) | 0) + '</b></span>'
+        + (MQ_LV[m.lv] ? '<span class="q-chip lv' + (m.lv | 0) + '">' + MQ_LV[m.lv] + '</span>' : '')
+        + (m.mode === "all" && m.pts ? '<span class="q-pts">' + ptsText(num(m.pts, 0, 99) | 0) + '</span>' : '') + '</div>'
+        + '<p class="q-text' + (String(m.text || "").length > 110 ? " long" : "") + '">' + esc(String(m.text || "").slice(0, 300)) + '</p></div>'
+        + (S.mqEnd ? '<div class="mq-left" id="mqLeft">⏱️ <b></b></div>' : '')   /* الرقم يتحدّث بـ mqTick — عشان الأزرار ما تنعاد رسمتها كل ثانية وتضيع الضغطة */
+        + '<div class="mq-opts">' + m.opts.slice(0, 4).map(function(o, k){
+          if(o == null) return '<div class="mq-opt rm"><span class="k">' + MQ_KEYS[k] + '</span><span class="t">—</span></div>';
+          var cls = "";
+          if(m.phase === "reveal" && m.reveal){ cls = k === m.reveal.c ? "ok" : (k === mine || (m.mode === "seat" && k === m.reveal.chosen) ? "no" : "dim"); }
+          else if(k === mine || k === vote) cls = "sel";
+          var tag = act ? "button" : "div";
+          return '<' + tag + (act ? ' type="button" data-mqk="' + k + '"' : '') + ' class="mq-opt' + (cls ? " " + cls : "") + '"><span class="k">' + MQ_KEYS[k] + '</span><span class="t">' + esc(String(o).slice(0, 80)) + '</span>'
+            + (counts && typeof counts[k] === "number" ? '<span class="pc">' + (counts[k] | 0) + '%</span>' : '') + '</' + tag + '>';
+        }).join("") + '</div>';
+    }
+    if(html !== S.mqHtml){ S.mqHtml = html; els.mq.innerHTML = html; }
+    els.mq.hidden = !html;
+    if(html) mqTick();
+  }
+  function mqLeftN(){ return S.mqEnd ? Math.max(0, Math.ceil((S.mqEnd - Date.now()) / 1000)) : 0; }
+  function mqTick(){
+    var el = document.getElementById("mqLeft"), n = mqLeftN();
+    if(el){ var b = el.querySelector("b"); if(b) b.textContent = n; el.classList.toggle("warn", n <= 5); }
+    if(n <= 0){ clearInterval(S.mqT); S.mqT = null; }
+  }
+  els.mq.addEventListener("click", function(e){
+    var b = e.target.closest("[data-mqk]"); if(!b || !S.host || !S.host.mq) return;
+    var m = S.host.mq, c = +b.getAttribute("data-mqk");
+    unlockAudio(); keepAwake();
+    if(!mqCanAct(m)) return;
+    if(m.phase === "pick"){
+      if(!send("mpick", { team:teamId, pid:pid, name:myName, qid:m.qid, c:c })) return;
+      S.mqSent = { qid:m.qid, c:c };
+    } else if(m.phase === "vote"){
+      if(!send("mvote", { team:teamId, pid:pid, qid:m.qid, c:c })) return;
+      S.mqVote = { qid:m.qid, c:c };
+    }
+    vibrate(30); clickSound();
+    S.mqHtml = null; render();
+  });
 
   /* الضغط: أي مكان بالشاشة (الشاشة كلها زر) */
   function press(e){

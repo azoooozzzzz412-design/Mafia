@@ -131,6 +131,9 @@
   .pill{ display:inline-block; font-size:.72rem; font-weight:700; background:rgba(255,255,255,.06); border:1px solid var(--line); color:var(--tx-2); border-radius:999px; padding:1px 9px; margin-inline-end:5px; white-space:nowrap; }
   .pill.pts{ font-family:var(--f-mono); direction:ltr; }
   .pill.hid{ background:var(--warn-soft); color:#fde68a; border-color:var(--warn-line); }
+  .pill.lv1{ color:#86efac; border-color:rgba(134,239,172,.35); } .pill.lv2{ color:#fde68a; border-color:rgba(253,230,138,.35); } .pill.lv3{ color:#fca5a5; border-color:rgba(252,165,165,.35); }
+  .mcq{ display:flex; flex-wrap:wrap; gap:2px 14px; margin-top:3px; font-size:.86rem; }
+  .mcq .wr{ color:var(--tx-3); }
   .matrix-wrap{ overflow-x:auto; margin-bottom:14px; }
   .matrix{ width:100%; border-collapse:collapse; font-size:.84rem; }
   .matrix th, .matrix td{ border:1px solid var(--line); padding:7px 9px; text-align:center; }
@@ -195,6 +198,9 @@
   .pts4 .input, .num-in{ width:100%; text-align:center; font-family:var(--f-mono); }
   .kv{ display:grid; grid-template-columns:minmax(0, 1fr) 96px; gap:8px 12px; align-items:center; font-size:.9rem; }
   .kv span{ color:var(--tx-2); }
+  .lbl-s{ margin:14px 0 8px; font-size:.82rem; font-weight:700; color:var(--tx-2); }
+  .lf-grid{ display:grid; grid-template-columns:minmax(0, 1fr); gap:6px; }
+  .lf-t{ display:flex; align-items:center; gap:10px; padding:9px 11px; border-radius:12px; background:rgba(255,255,255,.03); border:1px solid var(--line); cursor:pointer; font-size:.86rem; font-weight:600; }
   .save-bar{ position:sticky; bottom:12px; z-index:5; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-top:14px; padding:12px 14px 12px 18px; border-radius:18px;
     background:rgba(21,19,31,.92); border:1px solid var(--v-line); box-shadow:0 20px 50px -20px rgba(0,0,0,.9); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); }
   .save-bar span{ color:var(--tx-2); font-size:.88rem; }
@@ -316,6 +322,7 @@
         <button class="chip" type="button" data-sub="flags">🚩 الأعلام</button>
         <button class="chip" type="button" data-sub="heads">🤳 على راسك</button>
         <button class="chip" type="button" data-sub="charades">🎬 التمثيل</button>
+        <button class="chip" type="button" data-sub="million">💰 طريق المليون</button>
       </div>
       <div id="cErr"></div>
       <div id="cBody"></div>
@@ -408,7 +415,7 @@
     { id:"trivia", icon:"🎯", name:"سين جيم" }, { id:"emoji", icon:"📸", name:"تحدي الصور" },
     { id:"letters", icon:"🔤", name:"الحروف" }, { id:"flags", icon:"🚩", name:"حزر العلم" },
     { id:"heads", icon:"🤳", name:"حطها على راسك" }, { id:"charades", icon:"🎬", name:"التمثيل الصامت" },
-    { id:"mafia", icon:"🕵️", name:"المافيا" }
+    { id:"million", icon:"💰", name:"طريق المليون" }, { id:"mafia", icon:"🕵️", name:"المافيا" }
   ];
   function gameName(id){ for(var i=0;i<GAMES.length;i++) if(GAMES[i].id === id) return GAMES[i].icon + " " + GAMES[i].name; return id; }
   function ago(ts){
@@ -1031,6 +1038,109 @@
     $("chExp").addEventListener("click", function(){ downloadCsv("charades.csv", [["العنوان", "ظاهر"]].concat(CH.rows.map(function(r){ return [r.title, isOn(r) ? "نعم" : "لا"]; }))); });
   }
 
+  /* --- 💰 طريق المليون (سؤال + جواب صح + 3 غلط + صعوبة + فئة) --- */
+  var MQ = { rows:[], cat:"", lvl:"", q:"", vis:"all", shown:120 };
+  var MQ_LV = { 1:"سهل", 2:"متوسط", 3:"صعب" };
+  LOADERS.million = function(){ return fetchAll("mcq_questions", "id,level,category,question,answer,wrong,active").then(function(rows){ MQ.rows = rows; if(SUB === "million") renderMillion(); }).catch(cFail); };
+  function mqCats(){ var c = []; MQ.rows.forEach(function(r){ if(c.indexOf(r.category) === -1) c.push(r.category); }); return c.sort(function(a, b){ return a.localeCompare(b, "ar"); }); }
+  function mqNorm(x){ return String(x || "").replace(/\s+/g, " ").trim().toLowerCase(); }
+  function mqWrong(r){ return Array.isArray(r.wrong) ? r.wrong : []; }
+  /* يرجّع سبب الرفض أو "" لو السؤال سليم */
+  function mqCheck(q, a, w){
+    if(q.length < 3 || q.length > 300) return "السؤال لازم من 3 لين 300 حرف";
+    if(!a || a.length > 80) return "الجواب الصح لازم من حرف لين 80";
+    if(w.length !== 3 || w.some(function(x){ return !x || x.length > 80; })) return "لازم 3 أجوبة غلط (كل واحد لين 80 حرف)";
+    var all = [a].concat(w).map(mqNorm);
+    if(all.some(function(x, i){ return all.indexOf(x) !== i; })) return "فيه جوابين متشابهين — لازم الأربع خيارات مختلفة";
+    return "";
+  }
+  function mqLevel(x){
+    var t = String(x == null ? "" : x).trim();
+    if(!t) return 2;
+    if(/^[123]$/.test(t)) return +t;
+    return { "سهل":1, "متوسط":2, "صعب":3 }[t] || 0;
+  }
+  function renderMillion(){
+    var cats = mqCats(), act = MQ.rows.filter(isOn), cnt = { 1:0, 2:0, 3:0 };
+    act.forEach(function(r){ cnt[r.level] = (cnt[r.level] || 0) + 1; });
+    var matrix = '<div class="matrix-wrap"><table class="matrix"><tr><th>الفئة</th>' + [1, 2, 3].map(function(l){ return '<th>' + MQ_LV[l] + '</th>'; }).join("") + '<th>المجموع</th></tr>'
+      + cats.map(function(c){
+        var row = [1, 2, 3].map(function(l){ return act.filter(function(r){ return r.category === c && r.level === l; }).length; });
+        return '<tr><td class="cat">' + esc(c) + '</td>' + row.map(function(n){ return '<td class="' + (n ? "" : "zero") + '">' + n + '</td>'; }).join("") + '<td>' + (row[0] + row[1] + row[2]) + '</td></tr>';
+      }).join("")
+      + '<tr><td class="cat">الكل</td>' + [1, 2, 3].map(function(l){ return '<td class="' + (cnt[l] ? "" : "zero") + '"><b>' + cnt[l] + '</b></td>'; }).join("") + '<td><b>' + act.length + '</b></td></tr></table></div>';
+    var q = MQ.q.toLowerCase();
+    var rows = MQ.rows.filter(function(r){
+      return (!MQ.cat || r.category === MQ.cat) && (!MQ.lvl || r.level === +MQ.lvl) && visOk(r, MQ.vis)
+        && (!q || r.question.toLowerCase().indexOf(q) !== -1 || r.answer.toLowerCase().indexOf(q) !== -1 || mqWrong(r).some(function(w){ return String(w).toLowerCase().indexOf(q) !== -1; }));
+    });
+    var show = rows.slice(0, MQ.shown);
+    $("cBody").innerHTML = '<p class="hint">كل سؤال له <b>جواب صح و3 غلط</b> وصعوبة. سلّم «الكرسي الحار» يبدأ بالسهل وينتهي بالصعب (ثلث لكل مستوى)، فخلّ الأسئلة الظاهرة موزعة على المستويات — الخانات الحمرا فاضية. وكل جولة تاخذ أسئلة ما شافها الحساب قبل.</p>' + matrix
+      + '<div class="toolbar"><button class="btn-primary sm" type="button" id="mqAdd">➕ سؤال جديد</button><button class="btn-ghost sm" type="button" id="mqImp">📥 استيراد</button><button class="btn-ghost sm" type="button" id="mqExp">📤 تصدير</button></div>'
+      + '<div class="toolbar">' + visChips(MQ.vis, MQ.rows) + '</div>'
+      + '<div class="toolbar"><select class="input" id="mqCat"><option value="">كل الفئات</option>' + cats.map(function(c){ return '<option' + (MQ.cat === c ? " selected" : "") + '>' + esc(c) + '</option>'; }).join("") + '</select>'
+      + '<select class="input" id="mqLvl"><option value="">كل المستويات</option>' + [1, 2, 3].map(function(l){ return '<option value="' + l + '"' + (String(MQ.lvl) === String(l) ? " selected" : "") + '>' + MQ_LV[l] + '</option>'; }).join("") + '</select>'
+      + '<input class="input grow" id="mqQ" type="search" placeholder="🔍 ابحث بالسؤال أو الأجوبة" value="' + esc(MQ.q) + '"></div>'
+      + '<p class="hint">' + arN(rows.length, W.q) + '</p><div class="list">' + (show.length ? show.map(function(r){
+        return '<div class="item' + (isOn(r) ? '' : ' off') + '"><div class="txt"><span class="pill lv' + r.level + '">' + (MQ_LV[r.level] || r.level) + '</span><span class="pill">' + esc(r.category) + '</span>' + (isOn(r) ? '' : '<span class="pill hid">مخفي</span>') + esc(r.question)
+          + '<div class="mcq"><span class="ans">✓ ' + esc(r.answer) + '</span>' + mqWrong(r).map(function(w){ return '<span class="wr">✗ ' + esc(w) + '</span>'; }).join("") + '</div></div>'
+          + itemBtns(r.id, isOn(r)) + '</div>';
+      }).join("") : '<div class="empty">ما فيه أسئلة</div>') + '</div>'
+      + (rows.length > MQ.shown ? '<div class="more-row"><button class="btn-ghost sm" type="button" id="mqMore">عرض المزيد (' + (rows.length - MQ.shown) + ')</button></div>' : '');
+    $("mqCat").addEventListener("change", function(){ MQ.cat = this.value; MQ.shown = 120; renderMillion(); });
+    $("mqLvl").addEventListener("change", function(){ MQ.lvl = this.value; MQ.shown = 120; renderMillion(); });
+    $("mqQ").addEventListener("input", function(){ MQ.q = this.value.trim(); MQ.shown = 120; var pos = this.selectionStart; renderMillion(); var el = $("mqQ"); el.focus(); try{ el.setSelectionRange(pos, pos); }catch(e){} });
+    $("mqAdd").addEventListener("click", function(){ millionForm(null); });
+    $("mqImp").addEventListener("click", millionImport);
+    $("mqExp").addEventListener("click", function(){
+      downloadCsv("million.csv", [["السؤال", "الجواب الصح", "غلط 1", "غلط 2", "غلط 3", "الصعوبة", "الفئة", "ظاهر"]].concat(MQ.rows.map(function(r){ var w = mqWrong(r); return [r.question, r.answer, w[0], w[1], w[2], r.level, r.category, isOn(r) ? "نعم" : "لا"]; })));
+    });
+    var more = $("mqMore"); if(more) more.addEventListener("click", function(){ MQ.shown += 200; renderMillion(); });
+  }
+  function millionForm(row){
+    var w = row ? mqWrong(row) : [];
+    openModal(row ? "تعديل سؤال — طريق المليون" : "سؤال جديد — طريق المليون", [
+      { k:"category", label:"الفئة (اختار أو اكتب فئة جديدة)", list:mqCats(), req:true, max:40 },
+      { k:"level", label:"الصعوبة", type:"select", options:[{ v:1, l:"سهل" }, { v:2, l:"متوسط" }, { v:3, l:"صعب" }] },
+      { k:"question", label:"السؤال", type:"textarea", req:true },
+      { k:"answer", label:"✅ الجواب الصح", req:true, max:80 },
+      { k:"w1", label:"❌ جواب غلط 1", req:true, max:80 },
+      { k:"w2", label:"❌ جواب غلط 2", req:true, max:80 },
+      { k:"w3", label:"❌ جواب غلط 3", req:true, max:80 }
+    ], row ? { category:row.category, level:row.level, question:row.question, answer:row.answer, w1:w[0], w2:w[1], w3:w[2] } : { category: MQ.cat || "", level: MQ.lvl || 1 }, function(v){
+      var wr = [v.w1, v.w2, v.w3], bad = mqCheck(v.question, v.answer, wr);
+      if(bad) throw new Error(bad);
+      var key = mqNorm(v.question);
+      if(MQ.rows.some(function(r){ return (!row || r.id !== row.id) && mqNorm(r.question) === key; })) throw new Error("فيه سؤال بنفس النص من قبل");
+      var data = { category:v.category.slice(0, 40), level:+v.level || 2, question:v.question, answer:v.answer, wrong:wr };
+      var p = row ? SB.from("mcq_questions").update(data).eq("id", row.id) : SB.from("mcq_questions").insert(data);
+      return p.then(function(r){ must(r); toast(row ? "✏️ انحفظ التعديل" : "➕ انضاف السؤال"); return LOADERS.million(); });
+    }, row ? "حفظ" : "إضافة", { wide:true });
+  }
+  function millionImport(){
+    var have = {}; MQ.rows.forEach(function(r){ have[mqNorm(r.question)] = 1; });
+    importModal("📥 استيراد أسئلة طريق المليون", {
+      text:"كل سؤال بسطر: <b>السؤال | الجواب الصح | غلط 1 | غلط 2 | غلط 3 | الصعوبة | الفئة</b> — الصعوبة 1 أو 2 أو 3 (أو سهل/متوسط/صعب)، والصعوبة والفئة اختيارية. تقدر تنسخها من إكسل (أعمدة) وتلصقها.",
+      ph:"كم لاعب بفريق كرة القدم؟ | 11 | 9 | 10 | 12 | سهل | رياضة\nوش عاصمة أستراليا؟ | كانبرا | سيدني | ملبورن | بيرث | 2 | جغرافيا"
+    }, function(txt){
+      var ok = [], bad = [], seen = {};
+      txt.split(/\r?\n/).forEach(function(l, i){
+        if(!l.trim()) return;
+        var f = splitLine(l);
+        if(f.length < 5) return bad.push({ n:i + 1, why:"لازم 5 أجزاء على الأقل: السؤال | الصح | غلط | غلط | غلط" });
+        if(f.length > 7) return bad.push({ n:i + 1, why:"أجزاء أكثر من 7 — لا تحط | داخل السؤال" });
+        var lv = mqLevel(f[5]);
+        if(!lv) return bad.push({ n:i + 1, why:"الصعوبة لازم 1 أو 2 أو 3 (أو سهل/متوسط/صعب)" });
+        var why = mqCheck(f[0], f[1], f.slice(2, 5));
+        if(why) return bad.push({ n:i + 1, why:why });
+        var key = mqNorm(f[0]);
+        if(have[key] || seen[key]) return bad.push({ n:i + 1, why:"السؤال موجود من قبل" });
+        seen[key] = 1; ok.push({ level:lv, category:(f[6] || "عام").slice(0, 40), question:f[0], answer:f[1], wrong:f.slice(2, 5) });
+      });
+      return { ok:ok, bad:bad };
+    }, function(rows){ return insertChunks("mcq_questions", rows).then(function(){ return LOADERS.million(); }); });
+  }
+
   /* --- 🖼️ الأمثال بالصور (صورتين) --- */
   var RB = { rows:[], q:"", shown:48, vis:"all" };
   LOADERS.rebus = function(){ return fetchAll("rebus_puzzles", "id,category,answer,hint,image1_url,image2_url,active").then(function(rows){ RB.rows = rows; if(SUB === "rebus") renderRebus(); }).catch(cFail); };
@@ -1251,14 +1361,15 @@
         return SB.from("charades_titles").update({ title:v.title }).eq("id", r.id).then(function(x){ must(x); toast("✏️ انحفظ"); return LOADERS.charades(); }); }); } },
     rebus:{ t:"rebus_puzzles", key:"id", rows:function(){ return RB.rows; }, load:function(){ return LOADERS.rebus(); }, render:function(){ renderRebus(); }, what:"هذا اللغز", edit:function(r){ rebusForm(r); } },
     rebus2:{ t:"rebus2_puzzles", key:"id", rows:function(){ return R2.rows; }, load:function(){ return LOADERS.rebus2(); }, render:function(){ renderRebus2(); }, what:"هذا اللغز", edit:function(r){ rebus2Form(r); } },
-    flags:{ t:"flags", key:"code", rows:function(){ return FG.rows; }, load:function(){ return LOADERS.flags(); }, render:function(){ renderFlags(); }, what:"هذا العلم", edit:function(r){ flagForm(r); } }
+    flags:{ t:"flags", key:"code", rows:function(){ return FG.rows; }, load:function(){ return LOADERS.flags(); }, render:function(){ renderFlags(); }, what:"هذا العلم", edit:function(r){ flagForm(r); } },
+    million:{ t:"mcq_questions", key:"id", rows:function(){ return MQ.rows; }, load:function(){ return LOADERS.million(); }, render:function(){ renderMillion(); }, what:"هذا السؤال", edit:function(r){ millionForm(r); } }
   };
   function findRow(T, id){ return T.rows().find(function(r){ return String(r[T.key]) === String(id); }); }
   $("cBody").addEventListener("click", function(e){
     var t, T = TABLES[SUB];
     if((t = e.target.closest("[data-vis]"))){
       var v = t.getAttribute("data-vis");
-      ({ trivia:TV, letters:LQ, charades:CH, rebus:RB, rebus2:R2, flags:FG })[SUB].vis = v;
+      ({ trivia:TV, letters:LQ, charades:CH, rebus:RB, rebus2:R2, flags:FG, million:MQ })[SUB].vis = v;
       if(T) T.render();
       return;
     }
@@ -1285,19 +1396,23 @@
   /* ================= ⚙️ الإعدادات: الألعاب + حجم الجولة + النقاط والوقت + مؤقت أسرع إصبع ================= */
   var HIDDEN = [], BUZZ_T = 0;
   var SIZE_DEF = { trivia:{def:6,min:4,max:8,trial:6}, emoji:{def:10,min:5,max:20,trial:10}, letters:{def:5,min:4,max:6,trial:10},
-                   flags:{def:10,min:5,max:25,trial:5}, heads:{def:10,min:5,max:15,trial:5}, charades:{def:10,min:5,max:20,trial:5} };
+                   flags:{def:10,min:5,max:25,trial:5}, heads:{def:10,min:5,max:15,trial:5}, charades:{def:10,min:5,max:20,trial:5},
+                   million:{def:10,min:5,max:15,trial:5} };
   /* نفس حدود قاعدة البيانات: [أقل, أكثر, أقل تجربة, أكثر تجربة] */
-  var SIZE_HARD = { trivia:[2,10,2,10], emoji:[3,40,3,20], letters:[4,6,6,25], flags:[3,50,3,20], heads:[3,25,3,15], charades:[3,40,3,20] };
+  var SIZE_HARD = { trivia:[2,10,2,10], emoji:[3,40,3,20], letters:[4,6,6,25], flags:[3,50,3,20], heads:[3,25,3,15], charades:[3,40,3,20], million:[5,15,3,10] };
   var SIZE_INFO = {
     trivia:{ name:"🎯 سين جيم", unit:"عدد الفئات باللوحة — كل فئة فيها 4 أسئلة", lbl:function(n){ return arN(n, W.cat) + " (" + arN(n * 4, W.q) + ")"; }, tl:function(n){ return arN(n, W.cat); } },
     emoji:{ name:"📸 تحدي الصور", unit:"عدد الألغاز بالجولة", lbl:function(n){ return arN(n, W.puzzle); }, tl:function(n){ return arN(n, W.puzzle); } },
     letters:{ name:"🔤 الحروف", unit:"مقاس اللوحة: 4 = 4×4 · 5 = 5×5 · 6 = 6×6 — وبالتجربة عدد الحروف المفتوحة", lbl:function(n){ return "لوحة " + n + "×" + n; }, tl:function(n){ return arN(n, W.letter); } },
     flags:{ name:"🚩 حزر العلم", unit:"عدد الأعلام (تنخلط سهل ومتوسط وصعب)", lbl:function(n){ return arN(n, W.flag); }, tl:function(n){ return arN(n, W.flag); } },
     heads:{ name:"🤳 حطها على راسك", unit:"كلمات لكل فريق — وبالتجربة كلمات لفريق واحد", lbl:function(n){ return arN(n, W.word) + " لكل فريق"; }, tl:function(n){ return arN(n, W.word); } },
-    charades:{ name:"🎬 التمثيل الصامت", unit:"عدد العناوين بالجولة", lbl:function(n){ return arN(n, W.title); }, tl:function(n){ return arN(n, W.title); } }
+    charades:{ name:"🎬 التمثيل الصامت", unit:"عدد العناوين بالجولة", lbl:function(n){ return arN(n, W.title); }, tl:function(n){ return arN(n, W.title); } },
+    million:{ name:"💰 طريق المليون", unit:"أسئلة السلّم لكل فريق (الكرسي الحار) — وبـ«الكل يجاوب» عدد الأسئلة للكل", lbl:function(n){ return arN(n, W.q) + " لكل فريق"; }, tl:function(n){ return arN(n, W.q); } }
   };
   var PLAY_DEF = { trivia_pts:[1,2,3,4], pts:{ emoji:1, flags:1, charades:1, heads:1, letters:1 }, win_target:0, emoji_secs:20, char_secs:60, heads_dur:60,
-                   buzz_pen_timeout:1, buzz_pen_wrong:1 };
+                   buzz_pen_timeout:1, buzz_pen_wrong:1,
+                   million:{ step_pts:1, lv_pts:[1,2,3], speed_bonus:1, all_secs:20, vote_secs:15, friend_secs:30, life:{ fifty:true, aud:true, friend:true, swap:true } } };
+  var ML_LIFE = [["fifty", "50:50 حذف إجابتين"], ["aud", "👥 اسأل الجمهور"], ["friend", "📞 اتصل بصديق"], ["swap", "🔄 تبديل السؤال"]];
   var HEADS_DURS = [30, 45, 60, 90, 120];
   var SET = { sizes:{}, play:{}, saved:"" };
   function toInt(v){ if(typeof v === "number" && isFinite(v)) return Math.round(v); if(typeof v === "string" && /^\s*-?\d{1,6}\s*$/.test(v)) return parseInt(v, 10); return null; }
@@ -1324,6 +1439,13 @@
     var hd = toInt(p.heads_dur); out.heads_dur = HEADS_DURS.indexOf(hd) !== -1 ? hd : PLAY_DEF.heads_dur;
     var bt = toInt(p.buzz_pen_timeout); out.buzz_pen_timeout = bt == null ? PLAY_DEF.buzz_pen_timeout : clamp(bt, 0, 999);
     var bw = toInt(p.buzz_pen_wrong); out.buzz_pen_wrong = bw == null ? PLAY_DEF.buzz_pen_wrong : clamp(bw, 0, 999);
+    /* طريق المليون */
+    var m = p.million && typeof p.million === "object" && !Array.isArray(p.million) ? p.million : {}, md = PLAY_DEF.million;
+    var lf = m.life && typeof m.life === "object" ? m.life : {}, lp = Array.isArray(m.lv_pts) && m.lv_pts.length === 3 ? m.lv_pts : md.lv_pts;
+    var ci = function(v, lo, hi, d){ var x = toInt(v); return x == null ? d : clamp(x, lo, hi); };
+    out.million = { step_pts:ci(m.step_pts, 0, 999, md.step_pts), lv_pts:lp.map(function(v, i){ return ci(v, 0, 999, md.lv_pts[i]); }), speed_bonus:ci(m.speed_bonus, 0, 999, md.speed_bonus),
+                    all_secs:ci(m.all_secs, 5, 300, md.all_secs), vote_secs:ci(m.vote_secs, 5, 120, md.vote_secs), friend_secs:ci(m.friend_secs, 10, 180, md.friend_secs),
+                    life:{ fifty:lf.fifty !== false, aud:lf.aud !== false, friend:lf.friend !== false, swap:lf.swap !== false } };
     return out;
   }
   function loadGames(){
@@ -1437,15 +1559,30 @@
       + '<span>⏱️ مؤقت تحدي الصور (ثانية)</span>' + num("es", p.emoji_secs, 5, 600)
       + '<span>⏱️ مؤقت التمثيل (ثانية)</span>' + num("cs", p.char_secs, 5, 600)
       + '<span>🤳 وقت كل فريق بـ«على راسك»</span><select class="input" data-pl="hd">' + HEADS_DURS.map(function(n){ return '<option value="' + n + '"' + (n === p.heads_dur ? " selected" : "") + '>' + (n === 60 ? "دقيقة" : n === 120 ? "دقيقتين" : n + " ثانية") + '</option>'; }).join("") + '</select>'
-      + '</div></div>';
+      + '</div></div>'
+      + '<div class="card ml-set"><h3>💰 طريق المليون</h3><p class="hint">🪑 الكرسي الحار: كل درجة يطلعها الفريق بالسلّم = نقاط. 👥 الكل يجاوب: الصح ياخذ نقاط صعوبة السؤال، وأسرع فريق صح من الجوال ياخذ بونص.</p><div class="kv">'
+      + '<span>🪑 نقاط كل درجة بالسلّم</span>' + num("m_step", p.million.step_pts, 0, 999)
+      + '<span>👥 سؤال سهل</span>' + num("m_l0", p.million.lv_pts[0], 0, 999)
+      + '<span>👥 سؤال متوسط</span>' + num("m_l1", p.million.lv_pts[1], 0, 999)
+      + '<span>👥 سؤال صعب</span>' + num("m_l2", p.million.lv_pts[2], 0, 999)
+      + '<span>⚡ بونص أسرع فريق جاوب صح (0 = بدون)</span>' + num("m_bonus", p.million.speed_bonus, 0, 999)
+      + '<span>⏱️ وقت السؤال بـ«الكل يجاوب» (ثانية)</span>' + num("m_all", p.million.all_secs, 5, 300)
+      + '<span>🗳️ وقت تصويت الجمهور (ثانية)</span>' + num("m_vote", p.million.vote_secs, 5, 120)
+      + '<span>📞 وقت «اتصل بصديق» (ثانية)</span>' + num("m_friend", p.million.friend_secs, 10, 180)
+      + '</div><div class="lbl-s">المساعدات بالكرسي الحار (المطفية ما تطلع)</div><div class="lf-grid">' + ML_LIFE.map(function(l){
+        return '<label class="lf-t"><span class="switch"><input type="checkbox" data-pl="lf_' + l[0] + '"' + (p.million.life[l[0]] ? " checked" : "") + ' aria-label="' + esc(l[1]) + '"><span></span></span>' + esc(l[1]) + '</label>';
+      }).join("") + '</div></div>';
   }
   function readPlay(){
     var v = function(id){ var el = document.querySelector('[data-pl="' + id + '"]'); return el ? toInt(el.value) : null; };
+    var ck = function(id){ var el = document.querySelector('[data-pl="' + id + '"]'); return el ? !!el.checked : true; };
     return {
       trivia_pts:[0, 1, 2, 3].map(function(i){ return v("tp" + i); }),
       pts:{ emoji:v("p_emoji"), flags:v("p_flags"), charades:v("p_charades"), heads:v("p_heads"), letters:v("p_letters") },
       win_target:v("win"), emoji_secs:v("es"), char_secs:v("cs"), heads_dur:v("hd"),
-      buzz_pen_timeout:v("bpt"), buzz_pen_wrong:v("bpw")
+      buzz_pen_timeout:v("bpt"), buzz_pen_wrong:v("bpw"),
+      million:{ step_pts:v("m_step"), lv_pts:[v("m_l0"), v("m_l1"), v("m_l2")], speed_bonus:v("m_bonus"), all_secs:v("m_all"), vote_secs:v("m_vote"), friend_secs:v("m_friend"),
+                life:{ fifty:ck("lf_fifty"), aud:ck("lf_aud"), friend:ck("lf_friend"), swap:ck("lf_swap") } }
     };
   }
   function playErr(p){
@@ -1454,6 +1591,11 @@
     if(Object.keys(p.pts).some(function(k){ var x = p.pts[k]; return x == null || x < 0 || x > 999; })) return "نقاط الإجابة لازم من 0 لين 999";
     if(p.win_target == null || p.win_target < 0 || p.win_target > 99999) return "نقاط الفوز لازم من 0 لين 99999";
     if(p.emoji_secs == null || p.emoji_secs < 5 || p.emoji_secs > 600 || p.char_secs == null || p.char_secs < 5 || p.char_secs > 600) return "المؤقت لازم من 5 لين 600 ثانية";
+    var m = p.million;
+    if([m.step_pts, m.speed_bonus].concat(m.lv_pts).some(function(x){ return x == null || x < 0 || x > 999; })) return "نقاط طريق المليون لازم من 0 لين 999";
+    if(m.all_secs == null || m.all_secs < 5 || m.all_secs > 300) return "وقت سؤال «الكل يجاوب» لازم من 5 لين 300 ثانية";
+    if(m.vote_secs == null || m.vote_secs < 5 || m.vote_secs > 120) return "وقت تصويت الجمهور لازم من 5 لين 120 ثانية";
+    if(m.friend_secs == null || m.friend_secs < 10 || m.friend_secs > 180) return "وقت «اتصل بصديق» لازم من 10 لين 180 ثانية";
     return "";
   }
   $("playGrid").addEventListener("input", updDirty);
