@@ -8,15 +8,17 @@
 var PHYS = {
   dt: 1 / 120, g: 60, jumpV: 15, holdMul: 0.55, cutMul: 1.7, maxSpeed: 7, maxFall: 26,
   accG: 80, accA: 46, iceAcc: 9, coyote: 0.12, buffer: 0.16,
-  bounceV: 24, bounceMul: 0.8, pw: 0.78, ph: 0.92, climbV: 4.4, carry: 1
+  bounceV: 24, bounceMul: 0.8, pw: 0.78, ph: 1.3, climbV: 4.4, carry: 1
 };
+/* الصندوق (pw×ph) ثابت لكل اللاعبين: السمين/النحيف/الطويل شكل بس، ما يغيّر صعوبة اللعب.
+   الرسم أطول من الصندوق بشوي (الراس والشعر) — المولّد يخلي فوق كل منصة 1.6 فاضي على الأقل. */
+PHYS.head = 1.6;
 PHYS.bounceRise = Math.round(PHYS.bounceV * PHYS.bounceV / (2 * PHYS.g * PHYS.bounceMul) * 10) / 10;
 
 if(typeof module !== "undefined" && module.exports){ module.exports = { PHYS: PHYS }; return; }
 
 var doc = root.document;
 var COLORS = ["#f43f5e", "#3b82f6", "#22c55e", "#f59e0b", "#a855f7", "#06b6d4", "#ec4899", "#84cc16"];
-var HATS = ["none", "cap", "bow", "horns", "antenna", "crown", "band", "leaf"];
 var THEMES = {
   night:   { name:"ليل النجوم", sky:["#070514", "#1b1140", "#3b2a7a"], hills:["#150f33", "#1f1748", "#2a1f5e"], plat:"#271d4d", top:"#a78bfa", edge:"#7c5cff", deco:"#c4b5fd", fx:"stars" },
   desert:  { name:"صحراء الليل", sky:["#120a24", "#3a1d4a", "#a8566a"], hills:["#3b2147", "#5a2d4f", "#7a3d4f"], plat:"#7a4a2a", top:"#f2c27d", edge:"#d49a54", deco:"#ffe2b0", fx:"stars" },
@@ -30,6 +32,310 @@ var THEMES = {
   candy:   { name:"أرض الحلويات", sky:["#2a0a2e", "#6b1d5e", "#e0559b"], hills:["#7a2a6a", "#9b3a7a", "#c04f8a"], plat:"#c8915a", top:"#f9a8d4", edge:"#ec4899", deco:"#fde68a", fx:"sprinkles" }
 };
 var LAYOUT_NAMES = { run:"جري", climb:"تسلّق", mix:"جري وتسلّق", wave:"طلوع ونزول", descent:"نزول" };
+
+/* ======================= الشخصيات: ناس كرتون بملامح ولبس مختلف (مرسومة بالكود، بدون صور) =======================
+   look = { g:"m"|"f", b:0 نحيف|1 عادي|2 سمين, h:0 قصير|1 عادي|2 طويل, hr:0 كثيف|1 خفيف|2 أصلع, f:الملامح, o:اللبس }
+   القدمين عند (0,0) بوحدات العالم، والوجه لليمين (اليسار = انعكاس). الطول بين 1.37 و1.64 تقريبًا. */
+var CH = (function(){
+  var LOOK = {
+    g: [["m", "رجّال"], ["f", "بنت"]],
+    b: ["نحيف", "عادي", "سمين"],
+    h: ["قصير", "عادي", "طويل"],
+    hr: ["كثيف", "خفيف", "أصلع"],
+    fm: 6, ff: 4,
+    om: ["ثوب وشماغ", "هودي", "قميص وكرفتة", "رياضي", "عامل"],
+    of: ["عباية", "كاجوال", "رياضي"]
+  };
+  var SKIN = ["#f1c6a0", "#d9a375", "#c2875a", "#9d6640", "#764628", "#f6d5b5"];
+  var HAIRC = ["#1d1a17", "#2e2018", "#4a3020", "#6b3d20", "#8f8f8f"];
+  /* ملامح الرجال: [بشرة, لون الشعر, شنب, لحية (0 بدون، 1 سكسوكة، 2 كاملة), نظارة, حواجب كثيفة] */
+  var FACE_M = [[1, 0, 1, 0, 0, 1], [3, 0, 1, 1, 0, 1], [0, 2, 0, 0, 1, 0], [4, 0, 1, 0, 0, 1], [2, 1, 0, 2, 0, 1], [5, 3, 0, 0, 0, 0]];
+  var FACE_F = [[0, 0, 0, 0, 0, 0], [2, 1, 0, 0, 1, 0], [4, 0, 0, 0, 0, 0], [5, 2, 0, 0, 0, 0]];
+  var BODY = [0.84, 1, 1.3], TALL = [0.92, 1, 1.1];
+  var INK = "#1c2033";
+  function defaultLook(slot){
+    slot = Math.abs(slot | 0) % 8;
+    return { g: "m", b: [1, 0, 2, 1, 1, 2, 0, 1][slot], h: [1, 2, 0, 1, 2, 1, 1, 0][slot], hr: [0, 1, 0, 2, 0, 1, 0, 0][slot], f: slot % 6, o: [1, 0, 2, 3, 4, 2, 3, 1][slot] };
+  }
+  function normLook(l, slot){
+    var d = defaultLook(slot); l = l && typeof l === "object" ? l : {};
+    var g = l.g === "f" ? "f" : l.g === "m" ? "m" : d.g;
+    var n = function(v, max, def){ v = Math.round(+v); return isFinite(v) && v >= 0 && v <= max ? v : def; };
+    var nf = g === "f" ? LOOK.ff : LOOK.fm, no = g === "f" ? LOOK.of.length : LOOK.om.length;
+    return { g: g, b: n(l.b, 2, d.b), h: n(l.h, 2, d.h), hr: n(l.hr, 2, d.hr), f: n(l.f, nf - 1, d.f % nf), o: n(l.o, no - 1, d.o % no) };
+  }
+  function randomLook(keep){   // عشوائي (يحافظ على رجّال/بنت)
+    var g = keep && keep.g === "f" ? "f" : "m", r = function(n){ return Math.floor(Math.random() * n); };
+    return { g: g, b: r(3), h: r(3), hr: r(3), f: r(g === "f" ? LOOK.ff : LOOK.fm), o: r(g === "f" ? LOOK.of.length : LOOK.om.length) };
+  }
+  function sameLook(a, b){ return !!a && !!b && a.g === b.g && a.b === b.b && a.h === b.h && a.hr === b.hr && a.f === b.f && a.o === b.o; }
+  /* مقاسات تفيد اللعبة: الخصر (للحبل) وأعلى الراس (للاسم) */
+  function dims(look){
+    look = normLook(look, 0);
+    var B = BODY[look.b], S = TALL[look.h];
+    var hip = 0.5 * S + 0.04, shY = -hip - 0.46 * S - (B - 1) * 0.02, headR = 0.18 + (B - 1) * 0.035, headCY = shY - 0.26;
+    var extra = look.g === "f" ? 0.06 : look.o === 0 ? 0.08 : look.o === 4 ? 0.06 : look.hr === 0 ? 0.055 : 0.01;
+    return { hip: hip, top: -(headCY - headR * 1.05) + extra, headY: -headCY, headR: headR };
+  }
+  function shade(hex, k){   // k>0 أفتح، k<0 أغمق
+    var n = parseInt(hex.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+    if(k < 0){ r *= 1 + k; g *= 1 + k; b *= 1 + k; } else { r += (255 - r) * k; g += (255 - g) * k; b += (255 - b) * k; }
+    return "rgb(" + (r | 0) + "," + (g | 0) + "," + (b | 0) + ")";
+  }
+  function limb(c, pts, w, col){
+    c.lineCap = "round"; c.lineJoin = "round";
+    c.beginPath(); c.moveTo(pts[0], pts[1]); for(var i = 2; i < pts.length; i += 2) c.lineTo(pts[i], pts[i + 1]);
+    c.strokeStyle = INK; c.lineWidth = w + 0.05; c.stroke();
+    c.strokeStyle = col; c.lineWidth = w; c.stroke();
+  }
+  function seg(x, y, len, a){ return [x + Math.sin(a) * len, y + Math.cos(a) * len]; }
+  function ell(c, x, y, rx, ry, fill, stroke, rot){ c.beginPath(); c.ellipse(x, y, rx, ry, rot || 0, 0, 6.2832); if(fill){ c.fillStyle = fill; c.fill(); } if(stroke){ c.strokeStyle = INK; c.lineWidth = stroke; c.stroke(); } }
+  function stripes(c, x, y, n, x1, x2, dx){   // خطوط الشماغ (مسار واحد = أسرع)
+    c.strokeStyle = "rgba(255,255,255,.8)"; c.lineWidth = 0.012; c.beginPath();
+    for(var k = -n; k <= n; k++){ c.moveTo(x + x1 + k * 0.05, y - 0.4); c.lineTo(x + x1 + dx + k * 0.05, y + 0.4); c.moveTo(x + x2 + k * 0.05, y - 0.4); c.lineTo(x + x2 - dx + k * 0.05, y + 0.4); }
+    c.stroke();
+  }
+  /* pose = { mode: idle|walk|jump|fall|climb|hold|win, ph: مرحلة المشي, t: الوقت, blink, ca: زاوية الحبل وقت التسلّق, belt: حبل على الخصر } */
+  function drawHuman(c, look, color, pose){
+    look = normLook(look, 0); pose = pose || {};
+    var fem = look.g === "f", B = BODY[look.b], S = TALL[look.h];
+    var F = (fem ? FACE_F : FACE_M)[look.f] || FACE_M[0];
+    var skin = SKIN[F[0]], hairC = HAIRC[F[1]];
+    var o = look.o, mode = pose.mode || "idle", t = pose.t || 0, ph = pose.ph || 0;
+    var LW = 0.035;
+    var thigh = 0.25 * S, shin = 0.25 * S, upA = 0.23 * S, foA = 0.21 * S;
+    var hipY = -(thigh + shin + 0.04), shY = hipY - 0.46 * S - (B - 1) * 0.02;
+    shY += mode === "idle" ? Math.sin(t * 2.2) * 0.008 : 0;
+    var sw = 0.165 * B + 0.035, hw = 0.115 * B + 0.015;
+    var armW = 0.092 * Math.pow(B, 0.7), legW = 0.105 * Math.pow(B, 0.7);
+    var headR = 0.18 + (B - 1) * 0.035, headCY = shY - 0.06 - 0.2, headCX = 0.02;
+    // زوايا الأطراف (0 = لتحت، موجب = لقدّام)
+    var lA, lB, kA, kB, aA, aB, eA, eB, hop = 0;
+    if(mode === "walk"){
+      var s1 = Math.sin(ph), c1 = Math.cos(ph);
+      lA = 0.55 * s1; lB = -0.55 * s1; kA = lA - 0.55 * Math.max(0, -c1); kB = lB - 0.55 * Math.max(0, c1);
+      aA = -0.5 * s1; aB = 0.5 * s1; eA = aA + 0.35; eB = aB + 0.35;
+    } else if(mode === "jump"){ lA = 0.85; kA = -0.15; lB = -0.25; kB = -0.6; aA = 2.6; eA = 2.9; aB = 2.2; eB = 2.6; }
+    else if(mode === "fall"){ var w2 = Math.sin(t * 18) * 0.25; lA = 0.35; kA = 0.1; lB = -0.3; kB = -0.5; aA = 1.7 + w2; eA = 2.1 + w2; aB = 1.4 - w2; eB = 1.9 - w2; }
+    else if(mode === "climb"){ var ca = pose.ca != null ? pose.ca : 3.0, sw2 = Math.sin(t * 9) * 0.25; lA = 0.25 + sw2; kA = -0.1; lB = -0.15 - sw2; kB = -0.4; aA = ca + 0.15; eA = ca + 0.05; aB = ca - 0.2; eB = ca - 0.1; }
+    else if(mode === "hold"){ lA = 0.48; kA = 0.24; lB = -0.42; kB = -0.42; aA = 1.05; eA = 1.35; aB = 0.85; eB = 1.2; }
+    else if(mode === "win"){ hop = Math.abs(Math.sin(t * 8)); lA = 0.15 + hop * 0.2; kA = 0; lB = -0.15 - hop * 0.2; kB = -0.1; aA = 2.7 + Math.sin(t * 12) * 0.15; eA = 3.0; aB = -2.7 - Math.sin(t * 12) * 0.15; eB = -3.0; }
+    else { lA = 0.07; kA = 0.04; lB = -0.07; kB = -0.07; aA = 0.12; eA = 0.25; aB = -0.1; eB = 0.05; }
+    // ألوان اللبس
+    var top = color, topD = shade(color, -0.22), pants = "#33415c", shoe = "#151826", sleeve = color, hand = skin;
+    var robe = null, robeTrim = null, headwear = null, hijab = null;
+    if(!fem){
+      if(o === 0){ robe = "#f4f5f8"; sleeve = "#f4f5f8"; headwear = "shemagh"; }
+      else if(o === 1){ pants = "#35558a"; shoe = "#eef0f4"; }
+      else if(o === 2){ pants = "#4b5260"; shoe = "#16171d"; }
+      else if(o === 3){ pants = topD; shoe = "#eef0f4"; }
+      else { sleeve = "#f4f5f8"; pants = color; headwear = "cap"; }
+    } else {
+      hijab = o === 0 ? color : o === 1 ? shade(color, 0.55) : "#2a2f45";
+      if(o === 0){ robe = "#22252f"; robeTrim = color; sleeve = "#22252f"; }
+      else if(o === 1){ robe = color; sleeve = color; pants = "#2f3342"; }
+      else { pants = "#2a2f45"; shoe = "#eef0f4"; }
+    }
+    var tunic = fem && o === 1;
+    c.save();
+    if(hop) c.translate(0, -hop * 0.12);
+    c.rotate(mode === "hold" ? -0.13 : mode === "walk" ? 0.03 : 0);
+    var hipF = [hw * 0.45, hipY], hipB = [-hw * 0.45, hipY];
+    var shF = [sw * 0.72, shY + 0.055], shB = [-sw * 0.66, shY + 0.055];
+    function leg(hip, a, k, back){
+      var kn = seg(hip[0], hip[1], thigh, a), ft = seg(kn[0], kn[1], shin, k);
+      if(!robe || tunic) limb(c, [hip[0], hip[1], kn[0], kn[1], ft[0], ft[1]], legW * (back ? 0.96 : 1), back ? shade(pants, -0.15) : pants);
+      c.save(); c.translate(ft[0], ft[1]); c.rotate(-k * 0.3);
+      c.beginPath(); c.moveTo(-0.05, -0.06); c.quadraticCurveTo(0.17, -0.07, 0.17, 0.0); c.lineTo(-0.06, 0.012); c.closePath();
+      c.fillStyle = back ? shade(shoe, -0.12) : shoe; c.fill(); c.strokeStyle = INK; c.lineWidth = LW; c.stroke(); c.restore();
+    }
+    function arm(sh, a, e, back){
+      var el = seg(sh[0], sh[1], upA, a), hd = seg(el[0], el[1], foA, e);
+      limb(c, [sh[0], sh[1], el[0], el[1], hd[0], hd[1]], armW * (back ? 0.95 : 1), back ? shade(sleeve, -0.18) : sleeve);
+      if(!fem && o === 3){ c.strokeStyle = "rgba(255,255,255,.85)"; c.lineWidth = 0.022; c.beginPath(); c.moveTo(sh[0], sh[1]); c.lineTo(el[0], el[1]); c.lineTo(hd[0], hd[1]); c.stroke(); }
+      ell(c, hd[0], hd[1], 0.052, 0.05, back ? shade(hand, -0.1) : hand, LW);
+    }
+    // الخلف: الذراع والرجل البعيدة
+    arm(shB, aB, eB, true);
+    leg(hipB, lB, kB, true);
+    // الثوب / العباية / التونيك
+    if(robe){
+      var hemY = tunic ? hipY + 0.28 : -0.05, flare = (fem && o === 0) ? 0.07 : 0.035;
+      var ftA = seg(hipF[0], hipF[1], thigh + shin, lA * 0.5), ftB = seg(hipB[0], hipB[1], thigh + shin, lB * 0.5);
+      var hx1 = Math.min(ftA[0], ftB[0]) - 0.08 - flare, hx2 = Math.max(ftA[0], ftB[0]) + 0.08 + flare;
+      c.beginPath(); c.moveTo(-sw * 0.92, shY + 0.04); c.lineTo(sw * 0.92, shY + 0.04);
+      c.lineTo(Math.max(hw + 0.05, hx2), hemY); c.quadraticCurveTo((hx1 + hx2) / 2, hemY + 0.035, Math.min(-hw - 0.05, hx1), hemY); c.closePath();
+      c.fillStyle = robe; c.fill(); c.strokeStyle = INK; c.lineWidth = LW; c.stroke();
+      c.strokeStyle = "rgba(0,0,0,.08)"; c.lineWidth = 0.03; c.beginPath(); c.moveTo(0.02, shY + 0.15); c.lineTo(0.03, hemY - 0.02); c.stroke();
+      if(robeTrim){ c.strokeStyle = robeTrim; c.lineWidth = 0.035; c.beginPath(); c.moveTo(0.04, shY + 0.08); c.lineTo(0.06, hemY - 0.02); c.stroke(); c.fillStyle = robeTrim; c.fillRect(-hw - 0.02, hipY - 0.03, hw * 2 + 0.06, 0.05); }
+    }
+    // الجذع (السمين: كرش واضح)
+    c.beginPath();
+    c.moveTo(-sw, shY + 0.04); c.quadraticCurveTo(-sw, shY - 0.02, -sw * 0.6, shY - 0.02); c.lineTo(sw * 0.6, shY - 0.02); c.quadraticCurveTo(sw, shY - 0.02, sw, shY + 0.05);
+    if(B > 1.1) c.quadraticCurveTo(sw + 0.2, (shY + hipY) / 2 + 0.07, hw + 0.03, hipY + 0.02);
+    else c.quadraticCurveTo(sw * 0.92, (shY + hipY) / 2, hw, hipY + 0.02);
+    c.lineTo(-hw, hipY + 0.02); c.quadraticCurveTo(-sw * 0.95, (shY + hipY) / 2, -sw, shY + 0.04); c.closePath();
+    var bodyCol = robe && !tunic ? (fem ? robe : top) : top;
+    if(!fem && o === 4) bodyCol = "#f4f5f8";
+    c.fillStyle = bodyCol; c.fill(); c.strokeStyle = INK; c.lineWidth = LW; c.stroke();
+    c.save(); c.clip(); c.fillStyle = "rgba(0,0,0,.12)"; c.fillRect(-sw - 0.1, shY - 0.05, sw * 0.55, hipY - shY + 0.1); c.restore();
+    // تفاصيل اللبس
+    if(!fem && o === 0){ // سديري فوق الثوب
+      c.beginPath(); c.moveTo(-sw * 0.85, shY + 0.03); c.lineTo(-0.02, shY + 0.03); c.lineTo(-0.0, hipY + 0.06); c.lineTo(-hw - 0.01, hipY + 0.06); c.closePath();
+      c.fillStyle = color; c.fill(); c.strokeStyle = INK; c.lineWidth = LW * 0.8; c.stroke();
+      c.beginPath(); c.moveTo(sw * 0.85, shY + 0.03); c.lineTo(0.06, shY + 0.03); c.lineTo(0.07, hipY + 0.06); c.lineTo(hw + 0.01, hipY + 0.06); c.closePath();
+      c.fillStyle = shade(color, -0.1); c.fill(); c.stroke();
+      c.fillStyle = "#c9a227"; c.beginPath(); for(var bi = 0; bi < 3; bi++){ c.moveTo(0.097, shY + 0.1 + bi * 0.09); c.arc(0.085, shY + 0.1 + bi * 0.09, 0.012, 0, 6.29); } c.fill();
+    } else if(!fem && o === 1){ // هودي: جيب + حبال
+      c.fillStyle = topD; c.beginPath(); c.moveTo(-0.08, hipY - 0.12); c.lineTo(0.12, hipY - 0.12); c.lineTo(0.15, hipY - 0.02); c.lineTo(-0.1, hipY - 0.02); c.closePath(); c.fill();
+      c.strokeStyle = "#f4f5f8"; c.lineWidth = 0.014; c.beginPath(); c.moveTo(0.03, shY + 0.02); c.lineTo(0.025, shY + 0.13); c.moveTo(0.08, shY + 0.02); c.lineTo(0.085, shY + 0.12); c.stroke();
+    } else if(!fem && o === 2){ // ياقة + كرفتة + حزام
+      c.fillStyle = "#f4f5f8"; c.beginPath(); c.moveTo(-0.05, shY - 0.02); c.lineTo(0.06, shY + 0.07); c.lineTo(0.12, shY - 0.02); c.closePath(); c.fill(); c.strokeStyle = INK; c.lineWidth = LW * 0.7; c.stroke();
+      c.fillStyle = "#1f2a44"; c.beginPath(); c.moveTo(0.045, shY + 0.03); c.lineTo(0.075, shY + 0.03); c.lineTo(0.09, hipY - 0.1); c.lineTo(0.06, hipY - 0.06); c.lineTo(0.03, hipY - 0.1); c.closePath(); c.fill();
+      c.fillStyle = "#2a2118"; c.fillRect(-hw - 0.005, hipY - 0.025, hw * 2 + 0.01, 0.045); c.fillStyle = "#c9a227"; c.fillRect(0.03, hipY - 0.025, 0.04, 0.045);
+    } else if(!fem && o === 3){ // رياضي: سحاب + خط
+      c.strokeStyle = "rgba(255,255,255,.85)"; c.lineWidth = 0.02; c.beginPath(); c.moveTo(0.05, shY); c.lineTo(0.05, hipY); c.moveTo(-sw + 0.02, shY + 0.12); c.lineTo(sw - 0.02, shY + 0.12); c.stroke();
+    } else if(!fem && o === 4){ // عامل: مريول بحمّالات
+      c.beginPath(); c.moveTo(-hw * 0.85, hipY + 0.02); c.lineTo(-hw * 0.75, shY + 0.16); c.lineTo(hw * 0.85, shY + 0.16); c.lineTo(hw * 0.95, hipY + 0.02); c.closePath();
+      c.fillStyle = color; c.fill(); c.strokeStyle = INK; c.lineWidth = LW * 0.8; c.stroke();
+      c.strokeStyle = color; c.lineWidth = 0.035; c.beginPath(); c.moveTo(-hw * 0.6, shY + 0.18); c.lineTo(-sw * 0.5, shY); c.moveTo(hw * 0.7, shY + 0.18); c.lineTo(sw * 0.55, shY); c.stroke();
+      c.fillStyle = "#e5e7eb"; c.beginPath(); c.arc(-hw * 0.6, shY + 0.19, 0.016, 0, 6.29); c.moveTo(hw * 0.7 + 0.016, shY + 0.19); c.arc(hw * 0.7, shY + 0.19, 0.016, 0, 6.29); c.fill();
+      c.fillStyle = shade(color, -0.15); c.fillRect(-0.04, shY + 0.22, 0.1, 0.07);
+    } else if(fem && o === 2){
+      c.strokeStyle = "rgba(255,255,255,.85)"; c.lineWidth = 0.02; c.beginPath(); c.moveTo(-sw + 0.02, shY + 0.14); c.lineTo(sw - 0.02, shY + 0.14); c.stroke();
+    }
+    if(B > 1.1){ c.save(); c.globalAlpha = 0.2; ell(c, sw * 0.75, (shY + hipY) / 2 + 0.02, 0.06, 0.1, "#fff"); c.restore(); }
+    // الرجل القريبة
+    leg(hipF, lA, kA, false);
+    // حبل على الخصر (مربوطين!)
+    if(pose.belt){
+      var by = hipY - 0.005, bx1 = -(B > 1.1 ? hw + 0.05 : hw + 0.02), bx2 = B > 1.1 ? hw + 0.06 : hw + 0.03;
+      c.lineCap = "round"; c.beginPath(); c.moveTo(bx1, by + 0.01); c.quadraticCurveTo(0, by + 0.04, bx2, by);
+      c.strokeStyle = "rgba(40,24,10,.85)"; c.lineWidth = 0.07; c.stroke(); c.strokeStyle = "#d6a96a"; c.lineWidth = 0.042; c.stroke();
+      ell(c, bx2 - 0.05, by + 0.02, 0.042, 0.036, "#e3b77c", LW * 0.6);
+    }
+    // الرقبة + الراس + الذراع القريبة
+    limb(c, [0.01, shY + 0.02, 0.02, shY - 0.07], 0.08 + (B - 1) * 0.03, hijab ? hijab : skin);
+    drawHead(c, look, F, headCX, headCY, headR, skin, hairC, color, headwear, hijab, pose, LW);
+    arm(shF, aA, eA, false);
+    c.restore();
+  }
+  function drawHead(c, look, F, x, y, r, skin, hairC, color, headwear, hijab, pose, LW){
+    var mode = pose.mode || "idle", fem = look.g === "f";
+    var rx = r * 0.86, ry = r * 1.05;
+    if(hijab){   // الحجاب يغطي الراس والرقبة
+      c.beginPath(); c.ellipse(x - 0.015, y + 0.01, rx + 0.055, ry + 0.06, 0, 0, 6.2832);
+      c.moveTo(x - rx - 0.04, y + 0.08); c.quadraticCurveTo(x - rx - 0.02, y + ry + 0.16, x + 0.02, y + ry + 0.15); c.quadraticCurveTo(x + rx, y + ry + 0.12, x + rx + 0.02, y + 0.1);
+      c.fillStyle = hijab; c.fill(); c.strokeStyle = INK; c.lineWidth = LW; c.stroke();
+    }
+    if(headwear === "shemagh"){   // الشماغ من ورا (يطيح على الكتف)
+      c.beginPath(); c.moveTo(x - rx - 0.04, y - 0.05); c.quadraticCurveTo(x - rx - 0.12, y + 0.18, x - rx - 0.02, y + ry + 0.16); c.lineTo(x - 0.02, y + ry + 0.05); c.lineTo(x - 0.03, y - 0.05); c.closePath();
+      c.fillStyle = "#d63a3a"; c.fill(); c.strokeStyle = INK; c.lineWidth = LW; c.stroke();
+      c.save(); c.clip(); stripes(c, x, y, 6, -0.4, 0.2, 0.4); c.restore();
+    }
+    if(!hijab) ell(c, x - rx * 0.78, y + 0.02, 0.045, 0.06, skin, LW);   // الأذن
+    c.beginPath(); c.ellipse(x, y, rx, ry, 0, 0, 6.2832);
+    if(hijab){ c.save(); c.beginPath(); c.ellipse(x + 0.025, y + 0.015, rx * 0.86, ry * 0.88, 0, 0, 6.2832); }
+    c.fillStyle = skin; c.fill(); c.strokeStyle = INK; c.lineWidth = LW; c.stroke();
+    if(hijab) c.restore();
+    c.save(); c.beginPath(); c.ellipse(x, y, rx, ry, 0, 0, 6.2832); c.clip(); c.fillStyle = "rgba(0,0,0,.07)"; c.fillRect(x - rx, y - ry, rx * 0.55, ry * 2); c.restore();
+    if(!hijab && headwear !== "shemagh") drawHair(c, look, x, y, rx, ry, hairC, LW);
+    // العيون
+    var blink = pose.blink, eyY = y - 0.02, e1 = x + 0.01, e2 = x + 0.1, ery = blink ? 0.008 : 0.055;
+    var lk = mode === "fall" ? -0.004 : 0.014, ly = mode === "fall" ? -0.014 : 0.006;
+    ell(c, e1, eyY, 0.04, ery, "#fff", LW * 0.8);
+    ell(c, e2, eyY, 0.036, ery * 0.95, "#fff", LW * 0.8);
+    if(!blink){
+      c.fillStyle = "#151826"; c.beginPath(); c.arc(e1 + lk, eyY + ly, 0.02, 0, 6.29); c.moveTo(e2 + lk + 0.019, eyY + ly); c.arc(e2 + lk, eyY + ly, 0.019, 0, 6.29); c.fill();
+      c.fillStyle = "#fff"; c.beginPath(); c.arc(e1 + lk + 0.007, eyY - 0.004, 0.006, 0, 6.29); c.moveTo(e2 + lk + 0.013, eyY - 0.004); c.arc(e2 + lk + 0.007, eyY - 0.004, 0.006, 0, 6.29); c.fill();
+    }
+    if(fem){ c.strokeStyle = INK; c.lineWidth = 0.012; c.beginPath(); c.moveTo(e1 - 0.03, eyY - 0.035); c.lineTo(e1 - 0.045, eyY - 0.05); c.moveTo(e2 + 0.028, eyY - 0.035); c.lineTo(e2 + 0.042, eyY - 0.05); c.stroke(); }
+    // الحواجب (تتغيّر مع الحالة)
+    var thick = F[5] ? 0.03 : 0.019, bY = eyY - 0.078, ang = mode === "hold" ? 0.35 : mode === "fall" || mode === "climb" ? -0.35 : mode === "win" ? -0.15 : 0.12;
+    c.strokeStyle = F[1] === 4 ? "#6b6b6b" : HAIRC[F[1]] || "#1d1a17"; c.lineCap = "round"; c.lineWidth = thick;
+    c.beginPath(); c.moveTo(e1 - 0.035, bY - ang * 0.02); c.lineTo(e1 + 0.03, bY + ang * 0.03); c.moveTo(e2 - 0.025, bY + ang * 0.03); c.lineTo(e2 + 0.035, bY - ang * 0.02); c.stroke();
+    if(F[4]){ c.strokeStyle = "#2b2b2b"; c.lineWidth = 0.014; c.beginPath(); c.arc(e1, eyY, 0.045, 0, 6.29); c.moveTo(e2 + 0.042, eyY); c.arc(e2, eyY, 0.042, 0, 6.29); c.moveTo(e1 + 0.045, eyY); c.lineTo(e2 - 0.042, eyY); c.moveTo(e1 - 0.045, eyY); c.lineTo(x - rx * 0.7, eyY - 0.01); c.stroke(); }
+    // الخشم
+    c.beginPath(); c.moveTo(x + 0.11, y + 0.0); c.quadraticCurveTo(x + rx + 0.06, y + 0.045, x + rx + 0.02, y + 0.075); c.quadraticCurveTo(x + rx - 0.04, y + 0.09, x + 0.1, y + 0.07);
+    c.fillStyle = shade(skin, -0.06); c.fill(); c.strokeStyle = INK; c.lineWidth = LW * 0.85; c.stroke();
+    if(F[3]){   // اللحية
+      c.beginPath();
+      if(F[3] === 2){ c.moveTo(x - rx * 0.75, y + 0.02); c.quadraticCurveTo(x - rx * 0.5, y + ry + 0.06, x + 0.06, y + ry + 0.05); c.quadraticCurveTo(x + rx * 0.9, y + ry - 0.02, x + rx * 0.85, y + 0.08); c.quadraticCurveTo(x + 0.06, y + 0.16, x - rx * 0.75, y + 0.02); }
+      else { c.moveTo(x + 0.0, y + 0.13); c.quadraticCurveTo(x + 0.05, y + ry + 0.05, x + 0.12, y + ry - 0.0); c.quadraticCurveTo(x + 0.15, y + 0.15, x + 0.0, y + 0.13); }
+      c.fillStyle = HAIRC[F[1]]; c.fill(); c.strokeStyle = INK; c.lineWidth = LW * 0.7; c.stroke();
+    }
+    // الفم
+    c.strokeStyle = INK; c.lineWidth = 0.016; c.beginPath();
+    if(mode === "win"){ c.arc(x + 0.09, y + 0.115, 0.035, 0.15, Math.PI - 0.15); c.fillStyle = "#7a2230"; c.fill(); }
+    else if(mode === "fall" || mode === "climb"){ c.ellipse(x + 0.1, y + 0.125, 0.018, 0.024, 0, 0, 6.29); c.fillStyle = "#7a2230"; c.fill(); }
+    else if(mode === "hold"){ c.moveTo(x + 0.06, y + 0.125); c.lineTo(x + 0.13, y + 0.12); }
+    else { c.moveTo(x + 0.06, y + 0.118); c.quadraticCurveTo(x + 0.1, y + 0.135, x + 0.135, y + 0.112); }
+    c.stroke();
+    if(F[2]){   // الشنب
+      c.beginPath(); c.moveTo(x + 0.035, y + 0.105); c.quadraticCurveTo(x + 0.09, y + 0.065, x + 0.145, y + 0.085); c.quadraticCurveTo(x + 0.17, y + 0.105, x + 0.15, y + 0.112); c.quadraticCurveTo(x + 0.1, y + 0.095, x + 0.035, y + 0.118); c.closePath();
+      c.fillStyle = HAIRC[F[1]]; c.fill(); c.strokeStyle = INK; c.lineWidth = LW * 0.6; c.stroke();
+    }
+    if(headwear === "shemagh"){   // الشماغ والعقال فوق
+      c.beginPath(); c.moveTo(x - rx - 0.05, y + 0.02); c.quadraticCurveTo(x - rx - 0.04, y - ry - 0.08, x + 0.02, y - ry - 0.07); c.quadraticCurveTo(x + rx + 0.07, y - ry - 0.05, x + rx + 0.04, y - 0.06);
+      c.quadraticCurveTo(x + 0.02, y - ry + 0.05, x - rx * 0.55, y - 0.02); c.closePath();
+      c.fillStyle = "#d63a3a"; c.fill(); c.strokeStyle = INK; c.lineWidth = LW; c.stroke();
+      c.save(); c.clip(); stripes(c, x, y, 8, -0.3, 0.3, 0.4); c.restore();
+      c.strokeStyle = "#111"; c.lineWidth = 0.035; c.beginPath(); c.ellipse(x - 0.01, y - ry + 0.01, rx * 0.9, 0.045, -0.08, 0, 6.29); c.stroke();
+      c.strokeStyle = "#333"; c.lineWidth = 0.02; c.beginPath(); c.ellipse(x - 0.01, y - ry + 0.04, rx * 0.88, 0.04, -0.08, 0.2, 3.0); c.stroke();
+    } else if(headwear === "cap"){
+      c.beginPath(); c.moveTo(x - rx - 0.01, y - 0.07); c.quadraticCurveTo(x - rx, y - ry - 0.06, x + 0.02, y - ry - 0.05); c.quadraticCurveTo(x + rx + 0.02, y - ry - 0.03, x + rx + 0.02, y - 0.07); c.closePath();
+      c.fillStyle = color; c.fill(); c.strokeStyle = INK; c.lineWidth = LW; c.stroke();
+      c.beginPath(); c.moveTo(x + rx * 0.4, y - 0.08); c.quadraticCurveTo(x + rx + 0.14, y - 0.09, x + rx + 0.17, y - 0.055); c.lineTo(x + rx - 0.02, y - 0.05); c.closePath();
+      c.fillStyle = shade(color, -0.2); c.fill(); c.stroke();
+    }
+  }
+  function drawHair(c, look, x, y, rx, ry, col, LW){
+    var hr = look.hr;
+    if(hr === 2){ // أصلع: شوي جنب + لمعة
+      c.fillStyle = col; c.beginPath(); c.ellipse(x - rx * 0.62, y - 0.02, 0.05, 0.075, 0.2, 0, 6.29); c.fill();
+      c.save(); c.globalAlpha = 0.45; ell(c, x - 0.02, y - ry * 0.72, 0.05, 0.022, "#fff", 0, -0.2); c.restore();
+      return;
+    }
+    if(hr === 1){ // خفيف: جوانب + خصلات قليلة
+      c.fillStyle = col; c.beginPath(); c.ellipse(x - rx * 0.6, y - 0.03, 0.065, 0.09, 0.25, 0, 6.29); c.fill();
+      c.strokeStyle = col; c.lineWidth = 0.014; c.lineCap = "round"; c.beginPath();
+      for(var i = 0; i < 4; i++){ var px = x - 0.07 + i * 0.045; c.moveTo(px, y - ry + 0.02); c.quadraticCurveTo(px + 0.02, y - ry - 0.035, px + 0.05, y - ry - 0.01); }
+      c.stroke();
+      c.save(); c.globalAlpha = 0.35; ell(c, x - 0.0, y - ry * 0.7, 0.05, 0.02, "#fff", 0, -0.2); c.restore();
+      return;
+    }
+    // كثيف: غطاء شعر + خصلة قدّام
+    c.beginPath();
+    c.moveTo(x - rx - 0.015, y + 0.04);
+    c.quadraticCurveTo(x - rx - 0.04, y - ry - 0.02, x - 0.02, y - ry - 0.055);
+    c.quadraticCurveTo(x + rx + 0.06, y - ry - 0.04, x + rx + 0.03, y - ry * 0.35);
+    c.quadraticCurveTo(x + rx * 0.4, y - ry * 0.62, x + 0.03, y - ry * 0.55);
+    c.quadraticCurveTo(x - rx * 0.4, y - ry * 0.5, x - rx * 0.55, y - 0.0);
+    c.quadraticCurveTo(x - rx * 0.75, y + 0.05, x - rx - 0.015, y + 0.04);
+    c.closePath();
+    c.fillStyle = col; c.fill(); c.strokeStyle = INK; c.lineWidth = LW; c.stroke();
+    c.save(); c.globalAlpha = 0.18; c.strokeStyle = "#fff"; c.lineWidth = 0.014; c.beginPath(); c.moveTo(x - 0.06, y - ry - 0.02); c.quadraticCurveTo(x + 0.04, y - ry - 0.03, x + 0.1, y - ry * 0.7); c.stroke(); c.restore();
+  }
+  /* رسم الشخصية داخل كانفس (للّوبي والمحرّر): كامل الجسم أو الراس والأكتاف */
+  function fit(cv, look, color, opts){
+    opts = opts || {};
+    var c = cv.getContext("2d"), dpr = Math.min(2, root.devicePixelRatio || 1);
+    var w = cv.clientWidth || cv.width, h = cv.clientHeight || cv.height;
+    var W = Math.max(1, Math.round(w * dpr)), H = Math.max(1, Math.round(h * dpr));
+    if(cv.width !== W || cv.height !== H){ cv.width = W; cv.height = H; }
+    c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, W, H);
+    var D = dims(look), s, ox, oy;
+    if(opts.bust){ s = H / 0.78; ox = W / 2 - 0.03 * s; oy = H * 0.5 + D.headY * s + 0.06 * s; }
+    else { var tall = (opts.room || 1.78); s = Math.min(H / tall, W / 1.05); ox = W / 2; oy = H - (opts.floor != null ? opts.floor : 0.06) * s; }
+    c.setTransform(s, 0, 0, s, ox, oy);
+    if(!opts.bust && opts.shadow !== false){ c.fillStyle = "rgba(0,0,0,.28)"; c.beginPath(); c.ellipse(0, 0.015, 0.36, 0.06, 0, 0, 6.29); c.fill(); }
+    if(opts.flip) c.scale(-1, 1);
+    drawHuman(c, look, color, opts.pose || { mode: "idle" });
+    c.setTransform(1, 0, 0, 1, 0, 0);
+  }
+  return { LOOK: LOOK, normLook: normLook, defaultLook: defaultLook, randomLook: randomLook, sameLook: sameLook, dims: dims, draw: drawHuman, fit: fit };
+})();
+
 
 function clamp(v, a, b){ return v < a ? a : v > b ? b : v; }
 function hash(n){ n = (n ^ 61) ^ (n >>> 16); n = n + (n << 3); n = n ^ (n >>> 4); n = Math.imul(n, 0x27d4eb2d); n = n ^ (n >>> 15); return (n >>> 0) / 4294967296; }
@@ -104,15 +410,16 @@ function Game(canvas, opts){
 Game.prototype.setPlayers = function(list){
   var self = this;
   this.players = list.map(function(p, i){
-    return { id: p.id, name: p.name || ("لاعب " + (i + 1)), color: p.color || COLORS[i % 8], hat: HATS[(p.slot != null ? p.slot : i) % 8], slot: p.slot != null ? p.slot : i,
+    var slot = p.slot != null ? p.slot : i, look = CH.normLook(p.look, slot), dm = CH.dims(look);
+    return { id: p.id, name: p.name || ("لاعب " + (i + 1)), color: p.color || COLORS[i % 8], slot: slot, look: look, hip: dm.hip, top: dm.top,
              x: 0, y: 0, vx: 0, vy: 0, ground: false, gref: null, coy: 0, buf: 0, jPrev: false, anchor: false, breakT: 0,
-             face: 1, squash: 0, blinkT: 1 + Math.random() * 3, inp: { l:false, r:false, j:false, h:false }, off: false, dead: false, bounce: false, climbing: false, tw: 0 };
+             face: 1, squash: 0, blinkT: 1 + Math.random() * 3, wph: Math.random() * 6, airT: 0, inp: { l:false, r:false, j:false, h:false }, off: false, dead: false, bounce: false, climbing: false, tw: 0 };
   });
   this.respawn(true);
 };
 Game.prototype.respawn = function(first){
   var lv = this.lv, at = this.cp >= 0 ? lv.cps[this.cp] : lv.spawn, n = this.players.length;
-  var spread = Math.min(0.55, 3 / Math.max(1, n));
+  var spread = Math.min(0.7, 3.4 / Math.max(1, n));
   this.players.forEach(function(p, i){
     p.x = at[0] + (i - (n - 1) / 2) * spread; p.y = at[1]; p.vx = 0; p.vy = 0; p.ground = true; p.gref = null; p.anchor = false; p.dead = false; p.bounce = false; p.buf = 0; p.coy = 0; p.squash = 0.4;
   });
@@ -335,7 +642,7 @@ Game.prototype.hits = function(p){
 Game.prototype.die = function(p){
   this.state = "dead"; this.deadT = 0; this.falls++;
   p.dead = true;
-  this.burst(p.x, p.y - 0.5, p.color);
+  this.burst(p.x, p.y - 0.75, p.color);
   this.onEvent("fall", { id: p.id, name: p.name, falls: this.falls });
 };
 
@@ -406,7 +713,7 @@ function rrect(c, x, y, w, h, r){
 Game.prototype.updCam = function(dt){
   var ps = this.players, lv = this.lv; if(!ps.length) return;
   var x1 = 1e9, x2 = -1e9, y1 = 1e9, y2 = -1e9;
-  ps.forEach(function(p){ x1 = Math.min(x1, p.x); x2 = Math.max(x2, p.x); y1 = Math.min(y1, p.y - 1); y2 = Math.max(y2, p.y); });
+  ps.forEach(function(p){ x1 = Math.min(x1, p.x); x2 = Math.max(x2, p.x); y1 = Math.min(y1, p.y - 2.2); y2 = Math.max(y2, p.y); });
   var aspect = this.W / Math.max(1, this.H);
   var need = Math.max(x2 - x1 + 12, (y2 - y1 + 8) * aspect, 24), vw = clamp(need, 24, 46);
   var k = 1 - Math.pow(0.0025, dt);
@@ -652,7 +959,7 @@ Game.prototype.drawGoal = function(c, t){
 Game.prototype.ropePts = function(i){
   var A = this.players[i], B = this.players[i + 1], N = 9, Lr = this.lv.rope;
   var R = this._ropes || (this._ropes = []);
-  var ax = A.x, ay = A.y - PHYS.ph * 0.45, bx = B.x, by = B.y - PHYS.ph * 0.45;
+  var ax = A.x, ay = A.y - (A.hip || PHYS.ph * 0.45), bx = B.x, by = B.y - (B.hip || PHYS.ph * 0.45);   // الحبل مربوط على الخصر
   var r = R[i];
   if(!r || r.reset){
     r = R[i] = { pts: [] };
@@ -696,32 +1003,41 @@ Game.prototype.drawRopes = function(c){
     c.strokeStyle = "rgba(255,240,210,.55)"; c.lineWidth = 0.05; c.setLineDash([0.16, 0.16]); path(); c.stroke(); c.setLineDash([]);
   }
 };
+Game.prototype.pullDir = function(i){   // الحبل يسحب هاللاعب لأي جهة؟ (عشان يميل عكسها وهو ماسك)
+  var ps = this.players, p = ps[i], best = 0, dir = 0;
+  for(var k = -1; k <= 1; k += 2){
+    var q = ps[i + k]; if(!q) continue;
+    var d = Math.sqrt((q.x - p.x) * (q.x - p.x) + (q.y - p.y) * (q.y - p.y));
+    if(d > best){ best = d; dir = q.x > p.x ? 1 : -1; }
+  }
+  return best > this.lv.rope * 0.75 ? dir : 0;
+};
 Game.prototype.drawPlayers = function(c, t){
-  var ps = this.players;
+  var ps = this.players, dt = Math.min(0.05, this._fdt || 1 / 60), win = this.state === "win", live = this.state === "play";
   for(var i = 0; i < ps.length; i++){
     var p = ps[i]; if(p.dead && this.state === "dead") continue;
-    var sq = p.squash, sx = 1 + sq * 0.35 - (p.ground ? 0 : Math.min(0.1, Math.abs(p.vy) / 140)), sy = 1 - sq * 0.35 + (p.ground ? 0 : Math.min(0.12, Math.abs(p.vy) / 120));
-    var w = PHYS.pw * sx * 1.06, h = PHYS.ph * sy * 1.04, x = p.x - w / 2, y = p.y - h;
-    // ظل
-    c.fillStyle = "rgba(0,0,0,.18)"; c.beginPath(); c.ellipse(p.x, p.y + 0.02, w * 0.45, 0.07, 0, 0, 6.29); c.fill();
-    // الجسم
-    c.fillStyle = p.color; rrect(c, x, y, w, h, 0.34); c.fill();
-    c.fillStyle = "rgba(0,0,0,.18)"; rrect(c, x, y + h * 0.62, w, h * 0.38, 0.3); c.fill();
-    c.fillStyle = "rgba(255,255,255,.22)"; c.beginPath(); c.ellipse(p.x - w * 0.18, y + h * 0.22, w * 0.16, h * 0.1, -0.4, 0, 6.29); c.fill();
-    c.strokeStyle = "rgba(0,0,0,.35)"; c.lineWidth = 0.05; rrect(c, x, y, w, h, 0.34); c.stroke();
-    // العيون
-    p.blinkT -= 1 / 60; var blink = p.blinkT < 0.12; if(p.blinkT < 0) p.blinkT = 2 + Math.random() * 3;
-    var ex = p.x + p.face * 0.1, ey = y + h * 0.38, look = p.face * 0.05 + clamp(p.vx / 60, -0.03, 0.03), lookY = clamp(p.vy / 90, -0.04, 0.05);
-    for(var e = -1; e <= 1; e += 2){
-      var exx = ex + e * 0.15;
-      c.fillStyle = "#fff"; c.beginPath(); c.ellipse(exx, ey, 0.11, blink ? 0.02 : 0.14, 0, 0, 6.29); c.fill();
-      if(!blink){ c.fillStyle = "#111827"; c.beginPath(); c.arc(exx + look, ey + 0.02 + lookY, 0.06, 0, 6.29); c.fill(); }
+    // الوضعية من حالة الفيزياء
+    var mode = "idle", face = p.face || 1, ca = null;
+    if(win) mode = "win";
+    else if(p.climbing && p.climbQ){
+      mode = "climb";
+      var dx = p.climbQ.x - p.x, dy = (p.climbQ.y - (p.climbQ.hip || 0.55)) - (p.y - (p.hip || 0.55));
+      if(Math.abs(dx) > 0.12) face = dx > 0 ? 1 : -1;
+      ca = Math.atan2(dx * face, dy);   // الإيدين على الحبل
     }
-    if(this.state === "win"){ c.strokeStyle = "#111827"; c.lineWidth = 0.04; c.beginPath(); c.arc(p.x + p.face * 0.1, y + h * 0.6, 0.12, 0.2, Math.PI - 0.2); c.stroke(); }
-    else if(p.climbing || p.anchor){ c.strokeStyle = "#111827"; c.lineWidth = 0.04; c.beginPath(); c.moveTo(p.x + p.face * 0.1 - 0.08, y + h * 0.64); c.lineTo(p.x + p.face * 0.1 + 0.08, y + h * 0.64); c.stroke(); }
-    // الإكسسوار (يفرّق بين اللاعبين حتى لو الألوان قريبة)
-    this.drawHat(c, p, x, y, w, h);
-    if(p.anchor){ c.fillStyle = "#fde047"; c.fillRect(p.x - w / 2 - 0.08, p.y - 0.12, 0.16, 0.12); c.fillRect(p.x + w / 2 - 0.08, p.y - 0.12, 0.16, 0.12); }
+    else if(p.anchor){ mode = "hold"; var pd = this.pullDir(i); if(pd) face = pd; }
+    else if(!p.ground){ if(live) p.airT += dt; mode = p.vy > 9 || (p.airT > 0.75 && p.vy > 3) ? "fall" : "jump"; }
+    else if(Math.abs(p.vx) > 0.6) mode = "walk";
+    if(p.ground) p.airT = 0;
+    if(live) p.wph += Math.abs(p.vx) * dt * 2.3;
+    p.blinkT -= dt; var blink = p.blinkT < 0.12; if(p.blinkT < 0) p.blinkT = 2 + Math.random() * 3;
+    // ظل (ولو ماسك: دائرة صفرا تحت رجوله)
+    c.fillStyle = p.anchor ? "rgba(253,224,71,.5)" : "rgba(0,0,0,.22)";
+    c.beginPath(); c.ellipse(p.x, p.y + 0.02, p.anchor ? 0.52 : 0.34, p.anchor ? 0.11 : 0.07, 0, 0, 6.29); c.fill();
+    var sq = p.squash, sx = 1 + sq * 0.22, sy = 1 - sq * 0.22;
+    c.save(); c.translate(p.x, p.y); c.scale(face * sx, sy);
+    CH.draw(c, p.look, p.color, { mode: mode, ph: p.wph, t: t + i * 0.37, blink: blink, ca: ca, belt: true });
+    c.restore();
   }
   this.drawNames(c);
 };
@@ -732,7 +1048,7 @@ Game.prototype.drawNames = function(c){
     var p = ps[i]; if(p.dead && this.state === "dead") continue;
     var label = p.off ? "📵 " + p.name : p.name;
     if(!p._lw || p._ll !== label){ p._lw = c.measureText(label).width; p._ll = label; }
-    var lw = p._lw + 0.36, y = p.y - PHYS.ph - 0.75 - (p.hat === "antenna" || p.hat === "horns" || p.hat === "crown" ? 0.2 : 0);
+    var lw = p._lw + 0.36, y = p.y - (p.top || 1.5) * (1 - p.squash * 0.22) - 0.3;
     tags.push({ x: p.x, y: y, w: lw, label: label, color: p.color });
   }
   // نرتّبها ونرفع اللي يتراكب على اللي قبله
@@ -749,19 +1065,6 @@ Game.prototype.drawNames = function(c){
     c.fillStyle = "rgba(10,8,20,.66)"; rrect(c, tg.x - tg.w / 2, tg.y - 0.36, tg.w, 0.5, 0.22); c.fill();
     c.fillStyle = tg.color; c.fillRect(tg.x - tg.w / 2 + 0.12, tg.y - 0.15, 0.08, 0.08);
     c.fillStyle = "#fff"; c.fillText(tg.label, tg.x + 0.05, tg.y - 0.1);
-  }
-};
-Game.prototype.drawHat = function(c, p, x, y, w, h){
-  var cx = p.x, top = y;
-  c.lineWidth = 0.05; c.strokeStyle = "rgba(0,0,0,.35)";
-  switch(p.hat){
-    case "cap": c.fillStyle = "#1f2937"; c.beginPath(); c.ellipse(cx, top + 0.05, w * 0.42, 0.16, 0, Math.PI, 0); c.fill(); c.fillRect(cx + p.face * 0.05, top - 0.02, p.face * 0.32, 0.07); break;
-    case "bow": c.fillStyle = "#fde047"; c.beginPath(); c.moveTo(cx + 0.15, top + 0.05); c.lineTo(cx - 0.05, top - 0.12); c.lineTo(cx - 0.05, top + 0.18); c.closePath(); c.moveTo(cx + 0.15, top + 0.05); c.lineTo(cx + 0.35, top - 0.12); c.lineTo(cx + 0.35, top + 0.18); c.closePath(); c.fill(); break;
-    case "horns": c.fillStyle = "#f8fafc"; c.beginPath(); c.moveTo(cx - 0.25, top + 0.08); c.quadraticCurveTo(cx - 0.4, top - 0.2, cx - 0.22, top - 0.32); c.lineTo(cx - 0.12, top + 0.06); c.closePath(); c.moveTo(cx + 0.25, top + 0.08); c.quadraticCurveTo(cx + 0.4, top - 0.2, cx + 0.22, top - 0.32); c.lineTo(cx + 0.12, top + 0.06); c.closePath(); c.fill(); c.stroke(); break;
-    case "antenna": c.strokeStyle = "#e5e7eb"; c.beginPath(); c.moveTo(cx, top + 0.02); c.lineTo(cx + 0.05, top - 0.32); c.stroke(); c.fillStyle = "#fde047"; c.beginPath(); c.arc(cx + 0.05, top - 0.36, 0.09, 0, 6.29); c.fill(); break;
-    case "crown": c.fillStyle = "#facc15"; c.beginPath(); c.moveTo(cx - 0.24, top + 0.06); c.lineTo(cx - 0.24, top - 0.2); c.lineTo(cx - 0.12, top - 0.06); c.lineTo(cx, top - 0.26); c.lineTo(cx + 0.12, top - 0.06); c.lineTo(cx + 0.24, top - 0.2); c.lineTo(cx + 0.24, top + 0.06); c.closePath(); c.fill(); c.stroke(); break;
-    case "band": c.fillStyle = "#f8fafc"; c.fillRect(x + 0.02, top + h * 0.14, w - 0.04, 0.1); c.fillStyle = "#ef4444"; c.fillRect(cx - 0.06, top + h * 0.14, 0.12, 0.1); break;
-    case "leaf": c.fillStyle = "#4ade80"; c.beginPath(); c.ellipse(cx + 0.12, top - 0.1, 0.2, 0.09, -0.6, 0, 6.29); c.fill(); c.strokeStyle = "#166534"; c.beginPath(); c.moveTo(cx, top + 0.04); c.lineTo(cx + 0.1, top - 0.1); c.stroke(); break;
   }
 };
 Game.prototype.drawParts = function(c){
@@ -783,6 +1086,86 @@ Game.prototype.drawLava = function(c, x1, x2, y2, t){
   c.fillStyle = "rgba(249,115,22,.18)"; c.fillRect(x1 - 1, y - 1.6, x2 - x1 + 2, 1.6);
 };
 
+/* ======================= محرّر الشكل (نفس الكود للشاشة والجوال) ======================= */
+function lkIdx(arr){ return arr.map(function(n, i){ return [i, n]; }); }
+var LK_SWAP = { m2f: [0, 1, 1, 2, 1], f2m: [0, 1, 3] };   // لما يتغيّر رجّال/بنت: أقرب لبس
+function LookEditor(el, o){
+  var self = this; o = o || {};
+  this.el = el; this.o = o; this.slot = o.slot | 0; this.color = o.color || COLORS[this.slot % 8];
+  this.look = CH.normLook(o.look, this.slot); this.cheer = 0; this.last = 0; this.t = 0; this.blinkT = 2; this.raf = 0;
+  this.reduced = !!(root.matchMedia && root.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  el.classList.add("lk");
+  el.innerHTML = '<div class="lk-stage"><canvas class="lk-cv" aria-hidden="true"></canvas>'
+    + '<button type="button" class="lk-rand" data-lk="rand">🎲 شكل عشوائي</button></div>'
+    + '<div class="lk-rows" data-lkrows></div>';
+  this.cv = el.querySelector(".lk-cv"); this.rows = el.querySelector("[data-lkrows]");
+  this._click = function(e){ self.onClick(e); };
+  el.addEventListener("click", this._click);
+  this.renderRows();
+  this._loop = function(ts){
+    self.raf = 0;
+    if(!self.cv.isConnected || !self.cv.offsetParent) return;   // مخفي: يوقف لين wake()
+    self.frame(ts); self.raf = requestAnimationFrame(self._loop);
+  };
+  this.wake();
+}
+LookEditor.prototype.wake = function(){ if(!this.raf){ this.last = 0; this.raf = requestAnimationFrame(this._loop); } this.paintFaces(); };
+LookEditor.prototype.destroy = function(){ cancelAnimationFrame(this.raf); this.raf = 0; this.el.removeEventListener("click", this._click); this.el.innerHTML = ""; this.el.classList.remove("lk"); };
+LookEditor.prototype.setColor = function(col){ if(col && col !== this.color){ this.color = col; this.paintFaces(); } };
+LookEditor.prototype.setLook = function(L){
+  L = CH.normLook(L, this.slot); if(CH.sameLook(L, this.look)) return;
+  var g = L.g !== this.look.g; this.look = L; if(g) this.renderRows(); else this.syncRows();
+};
+LookEditor.prototype.renderRows = function(){
+  var L = this.look, fem = L.g === "f";
+  var row = function(label, inner, cls){ return '<div class="lk-row' + (cls ? " " + cls : "") + '" role="group" aria-label="' + label + '"><span class="lk-l">' + label + '</span><div class="lk-ch">' + inner + '</div></div>'; };
+  var chips = function(k, list){ return list.map(function(it){ return '<button type="button" class="lk-c" data-lk="' + k + '" data-v="' + it[0] + '" aria-pressed="false">' + esc(it[1]) + '</button>'; }).join(""); };
+  var faces = "", nf = fem ? CH.LOOK.ff : CH.LOOK.fm;
+  for(var i = 0; i < nf; i++) faces += '<button type="button" class="lk-c lk-face" data-lk="f" data-v="' + i + '" aria-pressed="false" aria-label="الملامح ' + (i + 1) + '"><canvas aria-hidden="true"></canvas></button>';
+  this.rows.innerHTML = row("أنا", chips("g", CH.LOOK.g))
+    + row("الجسم", chips("b", lkIdx(CH.LOOK.b)))
+    + row("الطول", chips("h", lkIdx(CH.LOOK.h)))
+    + (fem ? "" : row("الشعر", chips("hr", lkIdx(CH.LOOK.hr))))
+    + row("الملامح", faces, "lk-faces")
+    + row("اللبس", chips("o", lkIdx(fem ? CH.LOOK.of : CH.LOOK.om)));
+  this.syncRows();
+};
+LookEditor.prototype.syncRows = function(){
+  var L = this.look;
+  Array.prototype.forEach.call(this.rows.querySelectorAll("[data-lk]"), function(b){
+    var on = String(L[b.getAttribute("data-lk")]) === b.getAttribute("data-v");
+    b.classList.toggle("on", on); b.setAttribute("aria-pressed", on ? "true" : "false");
+  });
+  this.paintFaces();
+};
+LookEditor.prototype.paintFaces = function(){
+  var L = this.look, col = this.color;
+  Array.prototype.forEach.call(this.rows.querySelectorAll(".lk-face canvas"), function(cv, i){
+    if(cv.clientWidth) CH.fit(cv, Object.assign({}, L, { f: i }), col, { bust: true, pose: { mode: "idle" } });
+  });
+};
+LookEditor.prototype.onClick = function(e){
+  var b = e.target && e.target.closest ? e.target.closest("[data-lk]") : null; if(!b || !this.el.contains(b)) return;
+  var k = b.getAttribute("data-lk"), v = b.getAttribute("data-v"), L = Object.assign({}, this.look);
+  if(k === "rand") L = CH.randomLook(L);
+  else if(k === "g"){ if(v !== L.g){ L.o = (v === "f" ? LK_SWAP.m2f : LK_SWAP.f2m)[L.o] || 0; L.f = v === "f" ? L.f % CH.LOOK.ff : L.f; L.g = v; } }
+  else L[k] = +v;
+  L = CH.normLook(L, this.slot);
+  if(CH.sameLook(L, this.look)) return;
+  var gChanged = L.g !== this.look.g;
+  this.look = L;
+  if(gChanged){ this.renderRows(); var nb = this.rows.querySelector('[data-lk="g"][data-v="' + L.g + '"]'); if(nb) try{ nb.focus({ preventScroll: true }); }catch(err){} }
+  else this.syncRows();
+  this.cheer = this.reduced ? 0 : 0.8;
+  if(this.o.onChange) this.o.onChange(L);
+};
+LookEditor.prototype.frame = function(ts){
+  var dt = this.last ? Math.min(0.05, (ts - this.last) / 1000) : 1 / 60; this.last = ts; this.t += dt;
+  if(this.cheer > 0) this.cheer -= dt;
+  this.blinkT -= dt; var blink = this.blinkT < 0.12; if(this.blinkT < 0) this.blinkT = 2 + Math.random() * 3;
+  CH.fit(this.cv, this.look, this.color, { pose: { mode: this.cheer > 0 ? "win" : "idle", t: this.t, blink: blink, belt: true }, room: 1.95 });
+};
+
 /* ======================= مضيف اللعبة (اللوبي + الإدخال + الواجهة) ======================= */
 var KB = [
   { id: "kb0", label: "W A S D", keys: { l: ["KeyA"], r: ["KeyD"], j: ["KeyW"], h: ["KeyS"] }, hint: "W قفز · A/D حركة · S امسك" },
@@ -791,6 +1174,7 @@ var KB = [
   { id: "kb3", label: "أرقام 8456", keys: { l: ["Numpad4"], r: ["Numpad6"], j: ["Numpad8"], h: ["Numpad5"] }, hint: "8 قفز · 4/6 حركة · 5 امسك" }
 ];
 var MAXP = 8;
+var LOOKS_KEY = "sahra-rope-looks";
 
 function Host(box, hooks){
   this.box = box; this.hooks = hooks || {};
@@ -799,7 +1183,9 @@ function Host(box, hooks){
   this.level = null; this.game = null; this.round = null;
   this.keys = {}; this.padPrev = {};
   this.net = {};            // pid → { k, s, at }
-  this.hbT = 0; this.raf = 0;
+  this.hbT = 0; this.raf = 0; this.edit = null;
+  this.saved = {};          // أشكال لاعبين الكيبورد/اليد (تنحفظ بالجهاز)
+  try{ var sv = JSON.parse(root.localStorage.getItem(LOOKS_KEY) || "{}"); if(sv && typeof sv === "object") this.saved = sv; }catch(e){}
   this.reduced = !!(root.matchMedia && root.matchMedia("(prefers-reduced-motion: reduce)").matches);
   var self = this;
   this._kd = function(e){ self.onKey(e, true); };
@@ -820,6 +1206,7 @@ Host.prototype.destroy = function(){
   root.removeEventListener("keydown", this._kd); root.removeEventListener("keyup", this._ku); root.removeEventListener("blur", this._blur);
   doc.removeEventListener("visibilitychange", this._vis); root.removeEventListener("resize", this._resize);
   if(this._ro) this._ro.disconnect();
+  this.closeEditor(true);
   if(this.game) this.game.destroy();
   this.box.innerHTML = "";
   this.send("off");
@@ -856,11 +1243,18 @@ Host.prototype.addPlayer = function(o){
   if(o.kind === "pad") p.id = "pad:" + o.padi;
   if(o.kind === "kb") p.id = "kb:" + o.kbi;
   if(o.kind === "phone") p.id = "ph:" + o.pid;
+  p.look = CH.normLook(o.look || this.saved[p.id], slot);
   this.players.push(p);
   return p;
 };
 Host.prototype.removePlayer = function(id){
+  if(this.edit && this.edit.id === id) this.closeEditor(true);
   this.players = this.players.filter(function(p){ return p.id !== id; });
+};
+Host.prototype.saveLook = function(p){
+  if(!p || p.kind === "phone") return;
+  this.saved[p.id] = p.look;
+  try{ root.localStorage.setItem(LOOKS_KEY, JSON.stringify(this.saved)); }catch(e){}
 };
 Host.prototype.lobbyAllowed = function(){ return this.phase === "lobby"; };
 /* ---- الكيبورد ---- */
@@ -868,6 +1262,7 @@ Host.prototype.onKey = function(e, down){
   var t = e.target; if(t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
   if(!this.box.isConnected || this.box.offsetParent === null) return;
   var code = e.code, used = false;
+  if(this.edit){ if(code === "Escape" && down){ this.closeEditor(); e.preventDefault(); } return; }   // نافذة الشكل مفتوحة
   for(var i = 0; i < KB.length; i++){
     var K = KB[i].keys;
     for(var a in K){ if(K[a].indexOf(code) !== -1){ used = true; if(down && a === "j" && this.lobbyAllowed() && !this.players.some(function(p){ return p.kind === "kb" && p.kbi === i; })){ var np = this.addPlayer({ kind: "kb", kbi: i, name: "كيبورد " + (i + 1) }); if(np){ this.renderLobby(); this.send(); } } } }
@@ -900,9 +1295,12 @@ Host.prototype.netMsg = function(m){
     if(!p && m.t === "join"){
       if(this.phase !== "lobby"){ this.send(null, pid, "busy"); return; }
       if(this.players.length >= MAXP){ this.send(null, pid, "full"); return; }
-      p = this.addPlayer({ kind: "phone", pid: pid, name: name || "لاعب" });
+      p = this.addPlayer({ kind: "phone", pid: pid, name: name || "لاعب", look: m.lk && typeof m.lk === "object" ? m.lk : null });
       if(p){ this.toast("📱 انضم " + p.name); this.renderLobby(); }
-    } else if(p && name && name !== p.name && this.phase === "lobby"){ p.name = name; this.renderLobby(); }
+    } else if(p && this.phase === "lobby"){
+      if(name && name !== p.name){ p.name = name; this.renderLobby(); }
+      if(m.lk && typeof m.lk === "object") this.setLook(p, m.lk);
+    }
     if(p) p.seen = Date.now();
     this.send();
   } else if(m.t === "in" && p){
@@ -913,12 +1311,23 @@ Host.prototype.netMsg = function(m){
     if(this.phase === "lobby"){ this.removePlayer(p.id); this.renderLobby(); this.send(); }
     else p.seen = 0;
   } else if(m.t === "ping" && p){ p.seen = Date.now(); }
+  else if(m.t === "look" && p){   // الجوال غيّر شكله (بس قبل البداية)
+    p.seen = Date.now();
+    if(this.phase === "lobby" && m.lk && typeof m.lk === "object" && this.setLook(p, m.lk)) this.send();
+  }
+};
+Host.prototype.setLook = function(p, lk){
+  var L = CH.normLook(lk, p.slot);
+  if(CH.sameLook(L, p.look)) return false;
+  p.look = L; this.drawAvatars();
+  if(this.edit && this.edit.id === p.id) this.edit.ed.setLook(L);
+  return true;
 };
 Host.prototype.send = function(ph, to, why){
   if(!this.hooks.send) return;
   this.hooks.send("ropeS", {
     ph: ph || this.phase, to: to || null, why: why || null, lv: this.level ? this.level.n : "", d: this.level ? this.level.d : 0,
-    pl: this.players.map(function(p){ return { pid: p.kind === "phone" ? p.pid : null, n: p.name, c: p.color, s: p.slot, k: p.kind }; })
+    pl: this.players.map(function(p){ return { pid: p.kind === "phone" ? p.pid : null, n: p.name, c: p.color, s: p.slot, k: p.kind, lk: p.look }; })
   });
 };
 /* ---- الحلقة: الإدخال + نبضة للجوالات ---- */
@@ -957,10 +1366,12 @@ Host.prototype.renderLobby = function(){
   for(var i = 0; i < MAXP; i++){
     var p = this.players.find(function(x){ return x.slot === i; });
     if(p){
-      var ic = p.kind === "phone" ? "📱" : p.kind === "pad" ? "🎮" : "⌨️";
-      slots += '<li class="rp-slot on" style="--c:' + p.color + '"><span class="rp-av" data-hat="' + HATS[i] + '"></span><b>' + esc(p.name) + '</b><small>' + ic + (p.kind === "kb" ? " " + KB[p.kbi].label : "") + '</small>'
+      var ic = p.kind === "phone" ? "📱 من جواله" : p.kind === "pad" ? "🎮 يد تحكم" : "⌨️ " + KB[p.kbi].label, local = p.kind !== "phone";
+      slots += '<li class="rp-slot on" style="--c:' + p.color + '"><canvas class="rp-avc" data-avc="' + esc(p.id) + '" aria-hidden="true"></canvas>'
+        + '<span class="rp-sl"><b>' + esc(p.name) + '</b><small>' + ic + '</small></span>'
+        + (local ? '<button type="button" class="rp-ed" data-rped="' + esc(p.id) + '" title="غيّر الشكل" aria-label="غيّر شكل ' + esc(p.name) + '">🎨</button>' : '')
         + '<button type="button" class="rp-x" data-rpx="' + esc(p.id) + '" aria-label="شيل ' + esc(p.name) + '">✕</button></li>';
-    } else slots += '<li class="rp-slot"><span class="rp-av empty"></span><b>فاضي</b><small>' + (i < 2 ? "لازم لاعب" : "اختياري") + '</small></li>';
+    } else slots += '<li class="rp-slot"><span class="rp-av empty"></span><span class="rp-sl"><b>فاضي</b><small>' + (i < 2 ? "لازم لاعب" : "اختياري") + '</small></span></li>';
   }
   var n = this.players.length, can = n >= 2;
   var url = this.hooks.phoneUrl ? this.hooks.phoneUrl() : "";
@@ -978,12 +1389,53 @@ Host.prototype.renderLobby = function(){
       + KB.map(function(k, i){ var inn = self.players.some(function(p){ return p.kind === "kb" && p.kbi === i; }); return '<li class="' + (inn ? "in" : "") + '"><kbd>' + esc(k.label) + '</kbd><span>' + esc(k.hint) + '</span></li>'; }).join("")
       + '<li><kbd>🎮</kbd><span>يد تحكم: اضغط A</span></li></ul></div>'
     + '</div>'
+    + '<p class="rp-look-tip">🎨 <b>غيّروا أشكالكم قبل البداية:</b> سمين أو نحيف، طويل أو قصير، شعر كثيف أو خفيف، والملامح واللبس — اللي بالجوال من جواله، واللي بالكيبورد من زر 🎨 جنب اسمه.</p>'
     + '<ol class="rp-slots" data-rp="slots">' + slots + '</ol>'
     + '<div class="rp-start"><button type="button" class="btn-primary rp-go" data-rpgo' + (can ? "" : " disabled") + '>▶ ابدؤوا المرحلة' + (n ? ' <small>(' + n + ' لاعبين)</small>' : '') + '</button>'
     + '<p class="rp-tip">' + (can ? "🤝 امشوا مع بعض — الحبل يسحب اللي يبتعد. اللي يطيح: زملاؤه يمسكونه (زر «امسك») وهو يتسلّق الحبل (اضغط قفز)." : "تحتاجون لاعبين على الأقل.") + '</p></div>';
   this.drawPreview(box.querySelector('[data-rp="prev"]'));
+  this.drawAvatars();
   var qrBox = box.querySelector('[data-rp="qr"]');
   if(qrBox && this.hooks.qr) this.hooks.qr(qrBox, url);
+};
+Host.prototype.drawAvatars = function(){
+  var box = this.q("slots"), self = this; if(!box || this.phase !== "lobby") return;
+  Array.prototype.forEach.call(box.querySelectorAll("[data-avc]"), function(cv){
+    var id = cv.getAttribute("data-avc"), p = self.players.find(function(x){ return x.id === id; });
+    if(p) CH.fit(cv, p.look, p.color, { room: 1.72, floor: 0.04, shadow: false, pose: { mode: "idle" } });
+  });
+};
+Host.prototype.openEditor = function(id){
+  var p = this.players.find(function(x){ return x.id === id; }), self = this;
+  if(!p || this.phase !== "lobby") return;
+  this.closeEditor(true);
+  // النافذة تنحط على مستوى الصفحة (عشان ما تتأثر بحاويات اللعبة)
+  var m = this.edm;
+  if(!m){
+    m = this.edm = doc.createElement("div"); m.className = "rp-edm";
+    m.addEventListener("click", function(e){ var t = e.target; if(t === m || (t.closest && t.closest("[data-rpedx]"))) self.closeEditor(); });
+    m.addEventListener("keydown", function(e){
+      if(e.key === "Escape"){ e.preventDefault(); e.stopPropagation(); self.closeEditor(); return; }
+      if(e.key !== "Tab") return;
+      var f = m.querySelectorAll("button"), a = f[0], z = f[f.length - 1];
+      if(e.shiftKey && doc.activeElement === a){ e.preventDefault(); z.focus(); }
+      else if(!e.shiftKey && doc.activeElement === z){ e.preventDefault(); a.focus(); }
+    });
+  }
+  doc.body.appendChild(m);
+  m.innerHTML = '<div class="rp-edm-card" role="dialog" aria-modal="true" aria-labelledby="rpEdmT" style="--c:' + p.color + '">'
+    + '<div class="rp-edm-h"><h3 id="rpEdmT">🎨 شكل «' + esc(p.name) + '»</h3><button type="button" class="rp-edm-x" data-rpedx aria-label="إغلاق">✕</button></div>'
+    + '<div data-rp="lk"></div>'
+    + '<div class="rp-edm-f"><button type="button" class="btn-primary" data-rpedx>تم ✓</button></div></div>';
+  this.edit = { id: id, ed: new LookEditor(m.querySelector('[data-rp="lk"]'), { look: p.look, slot: p.slot, color: p.color,
+    onChange: function(L){ p.look = L; self.saveLook(p); self.drawAvatars(); self.send(); } }) };
+  try{ var on = m.querySelector(".lk-c.on"); if(on) on.focus({ preventScroll: true }); }catch(e){}
+};
+Host.prototype.closeEditor = function(quiet){
+  var id = null;
+  if(this.edit){ id = this.edit.id; this.edit.ed.destroy(); this.edit = null; }
+  var m = this.edm; if(m && m.parentNode){ m.innerHTML = ""; m.parentNode.removeChild(m); }
+  if(!quiet && id){ var b = this.box.querySelector('[data-rped="' + id + '"]'); if(b) try{ b.focus({ preventScroll: true }); }catch(e){} }
 };
 Host.prototype.renderPresence = function(){
   var now = Date.now(), box = this.q("slots"); if(!box) return;
@@ -1010,13 +1462,14 @@ Host.prototype.drawPreview = function(cv){
 Host.prototype.begin = function(){
   if(this.players.length < 2 || !this.level) return;
   var self = this;
+  this.closeEditor(true);
   this.phase = "play";
   this.renderLobby();
   var cv = this.q("cv");
   if(this.game) this.game.destroy();
   this.game = new Game(cv, {
     level: this.level, reducedMotion: this.reduced,
-    players: this.players.map(function(p){ return { id: p.id, name: p.name, color: p.color, slot: p.slot }; }),
+    players: this.players.map(function(p){ return { id: p.id, name: p.name, color: p.color, slot: p.slot, look: p.look }; }),
     onEvent: function(type, d){ self.onGame(type, d); }
   });
   this.game.resize(); this.game.start();
@@ -1067,6 +1520,7 @@ Host.prototype.renderWin = function(d){
 };
 Host.prototype.onClick = function(e){
   var t = e.target, self = this;
+  var ed = t.closest("[data-rped]"); if(ed){ this.openEditor(ed.getAttribute("data-rped")); return; }
   var x = t.closest("[data-rpx]"); if(x){ this.removePlayer(x.getAttribute("data-rpx")); this.renderLobby(); this.send(); return; }
   if(t.closest("[data-rpgo]")){ this.begin(); return; }
   if(t.closest("[data-rpcopy]")){ var u = this.hooks.phoneUrl ? this.hooks.phoneUrl() : ""; if(u && navigator.clipboard) navigator.clipboard.writeText(u).then(function(){ self.toast("انسخ الرابط ✅"); }, function(){}); return; }
@@ -1080,5 +1534,6 @@ Host.prototype.onClick = function(e){
   else if(act === "fs"){ var st = this.q("stage"); try{ if(doc.fullscreenElement) doc.exitFullscreen(); else if(st.requestFullscreen) st.requestFullscreen(); }catch(err){} }
 };
 
-root.SahraRope = { PHYS: PHYS, THEMES: THEMES, COLORS: COLORS, Game: Game, Host: Host, prepLevel: prepLevel, mount: function(box, hooks){ return new Host(box, hooks); } };
+root.SahraRope = { PHYS: PHYS, THEMES: THEMES, COLORS: COLORS, Game: Game, Host: Host, prepLevel: prepLevel, CH: CH, LookEditor: LookEditor,
+  mount: function(box, hooks){ return new Host(box, hooks); } };
 })(typeof window !== "undefined" ? window : globalThis);

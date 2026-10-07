@@ -13,6 +13,7 @@
 <link rel="preconnect" href="https://monovczlaegaezjkmpnm.supabase.co" crossorigin>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script defer src="config.js"></script>
+<script defer src="games/rope.js?v=71"></script>
 <style>
   :root{ color-scheme:dark; --ink:#050507; --c:#84cc16; --text:#f5f3ff; --dim:#b9b3d1; --faint:#8b85a3; }
   *{ box-sizing:border-box; margin:0; padding:0; }
@@ -26,9 +27,7 @@
   }
   .top{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
   .me{ display:flex; align-items:center; gap:10px; min-width:0; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:999px; padding:5px 14px 5px 6px; }
-  .av{ flex:0 0 auto; position:relative; width:30px; height:34px; border-radius:11px; background:var(--c); box-shadow:inset 0 -9px 0 rgba(0,0,0,.2); }
-  .av::before, .av::after{ content:""; position:absolute; top:10px; width:8px; height:10px; border-radius:50%; background:#fff; box-shadow:inset -2.5px 0 0 #111827; }
-  .av::before{ left:7px; } .av::after{ left:16px; }
+  .av{ flex:0 0 auto; display:block; width:36px; height:36px; border-radius:50%; background:color-mix(in srgb, var(--c) 34%, #0b0a14); box-shadow:0 0 0 2px color-mix(in srgb, var(--c) 70%, transparent); }
   .me b{ font-family:var(--f-display); font-size:1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:42vw; }
   .me small{ display:block; font-size:.72rem; color:var(--dim); }
   .me button{ background:none; border:0; color:var(--faint); font-size:.9rem; padding:2px 4px; }
@@ -48,6 +47,29 @@
   form.name button{ font:inherit; font-weight:800; font-size:1.1rem; padding:14px; border-radius:16px; border:0; color:#0b1203; background:var(--c); }
   form.name.shake{ animation:shake .35s; }
   @keyframes shake{ 25%{ transform:translateX(-6px); } 75%{ transform:translateX(6px); } }
+  /* محرّر الشكل (قبل البداية) */
+  .ed{ flex:1; min-height:0; overflow:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; touch-action:pan-y; margin-top:6px; padding:2px 2px 8px; }
+  .lk{ display:grid; grid-template-columns:1fr; gap:12px; max-width:720px; margin:0 auto; }
+  .lk-stage{ display:grid; gap:8px; padding:6px 6px 8px; border-radius:20px; border:1px solid rgba(255,255,255,.1);
+    background:radial-gradient(80% 60% at 50% 30%, color-mix(in srgb, var(--c) 24%, transparent), transparent 70%), rgba(255,255,255,.03); }
+  .lk-cv{ width:100%; height:min(28vh, 210px); display:block; }
+  .lk-rand{ font:inherit; font-size:.92rem; font-weight:800; padding:10px 12px; border-radius:14px; color:#fff; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.16); }
+  .lk-rows{ display:grid; gap:10px; }
+  .lk-row{ display:grid; grid-template-columns:58px minmax(0, 1fr); align-items:center; gap:8px; }
+  .lk-l{ font-size:.82rem; font-weight:800; color:var(--dim); }
+  .lk-ch{ display:flex; flex-wrap:wrap; gap:6px; }
+  .lk-c{ font:inherit; font-size:.92rem; font-weight:700; padding:9px 14px; border-radius:999px; color:var(--dim); background:rgba(255,255,255,.05); border:1.5px solid rgba(255,255,255,.12); }
+  .lk-c.on{ color:#fff; background:color-mix(in srgb, var(--c) 32%, transparent); border-color:var(--c); }
+  .lk-face{ padding:0; width:42px; height:42px; border-radius:13px; overflow:hidden; }
+  .lk-faces .lk-ch{ gap:5px; }
+  .lk-face canvas{ width:100%; height:100%; display:block; }
+  .ed-foot{ display:flex; justify-content:center; margin-top:12px; }
+  .sw{ font:inherit; font-weight:800; font-size:.92rem; padding:10px 18px; border-radius:14px; color:#fff; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.18); }
+  .sw-row{ display:flex; justify-content:center; margin-top:10px; }
+  @media (orientation:landscape){
+    .lk{ grid-template-columns:minmax(0, 36%) minmax(0, 1fr); align-items:start; }
+    .lk-cv{ height:min(50vh, 230px); }
+  }
   /* يد التحكم: يسار = حركة، يمين = قفز وإمساك (مثل يد الألعاب) */
   .pad{ flex:1; display:grid; grid-template-columns:1fr 1fr; gap:12px; align-items:end; direction:ltr; touch-action:none; padding-top:8px; min-height:0; }
   .pad .side{ display:flex; gap:12px; align-items:flex-end; height:100%; }
@@ -64,6 +86,7 @@
   .pad.dim{ opacity:.45; }
   .tip{ text-align:center; color:var(--faint); font-size:.78rem; margin-top:10px; direction:rtl; }
   .art{ display:block; width:min(300px, 76vw); margin:22px auto 0; }
+  .art-cv{ display:block; width:min(360px, 86vw); height:min(170px, 26vh); margin:18px auto 0; }
   .art .b{ animation:bob 2.4s ease-in-out infinite; transform-box:fill-box; transform-origin:center bottom; }
   .art .b2{ animation-delay:.3s; } .art .b3{ animation-delay:.6s; }
   @keyframes bob{ 50%{ transform:translateY(-6px); } }
@@ -77,14 +100,14 @@
     .pad .side.r{ justify-content:stretch; }
   }
   @media (orientation:landscape) and (max-height:440px){
-    .msg{ margin:4px auto 0; } .msg p{ display:none; } .msg h1{ font-size:1.05rem; }
+    .msg{ margin:4px auto 0; } .msg p{ display:none; } .msg h1{ font-size:1.05rem; } .msg .lv{ display:none; }
     .k{ max-width:140px; border-radius:22px; } .k.jump{ max-width:160px; }
   }
 </style>
 </head>
 <body>
   <div class="top">
-    <div class="me"><span class="av" id="av"></span><span><b id="meName">…</b><small id="meSub">مربوطين</small></span><button type="button" id="editName" aria-label="غيّر اسمك" hidden>✏️</button></div>
+    <div class="me"><canvas class="av" id="av" aria-hidden="true"></canvas><span><b id="meName">…</b><small id="meSub">مربوطين</small></span><button type="button" id="editName" aria-label="غيّر اسمك" hidden>✏️</button></div>
     <div class="conn" id="conn"><i></i><span id="connText">جاري الاتصال…</span></div>
   </div>
   <form class="name" id="nameForm" hidden autocomplete="off">
@@ -100,6 +123,10 @@
     <g class="b b2"><rect x="130" y="50" width="40" height="46" rx="15" fill="#3b82f6"/><circle cx="144" cy="68" r="5.5" fill="#fff"/><circle cx="157" cy="68" r="5.5" fill="#fff"/><circle cx="146" cy="69" r="2.6" fill="#111827"/><circle cx="159" cy="69" r="2.6" fill="#111827"/></g>
     <g class="b b3"><rect x="220" y="30" width="40" height="46" rx="15" fill="#84cc16"/><circle cx="234" cy="48" r="5.5" fill="#fff"/><circle cx="247" cy="48" r="5.5" fill="#fff"/><circle cx="236" cy="49" r="2.6" fill="#111827"/><circle cx="249" cy="49" r="2.6" fill="#111827"/><path d="M228 30 l6 -12 l6 12 l6 -12 l6 12 z" fill="#facc15"/></g>
   </svg></div>
+  <section class="ed" id="ed" hidden aria-label="شكلك باللعبة">
+    <div id="lkBox"></div>
+    <div class="ed-foot"><button class="sw" id="tryPad" type="button">🎮 جرّب الأزرار</button></div>
+  </section>
   <div class="pad" id="pad" hidden>
     <div class="side l">
       <button class="k" type="button" data-k="1" aria-label="يسار"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span>يسار</span></button>
@@ -110,6 +137,7 @@
       <button class="k jump" type="button" data-k="4" aria-label="قفز"><svg viewBox="0 0 24 24"><path d="M12 19V6M6 11l6-6 6 6"/></svg><span>قفز</span></button>
     </div>
   </div>
+  <div class="sw-row" id="swRow" hidden><button class="sw" id="backEd" type="button">🎨 رجوع لشكلي</button></div>
   <p class="tip" id="tip" hidden>اقفز مع زملائك بنفس الوقت · اللي يطيح: اضغط «قفز» وخلّه مضغوط تتسلّق الحبل · «امسك» تثبّت مكانك</p>
   <button class="reload" id="reload" type="button" hidden>🔄 تحديث</button>
 <script>
@@ -119,14 +147,19 @@ document.addEventListener("DOMContentLoaded", function(){
   var qs = new URLSearchParams(location.search);
   var room = (qs.get("r") || "").trim().toLowerCase();
   var els = { art:$("art"), av:$("av"), meName:$("meName"), meSub:$("meSub"), edit:$("editName"), conn:$("conn"), connText:$("connText"), form:$("nameForm"), input:$("nameInput"),
-              msg:$("msg"), msgT:$("msgT"), msgS:$("msgS"), lv:$("lvChip"), pad:$("pad"), tip:$("tip"), reload:$("reload") };
+              msg:$("msg"), msgT:$("msgT"), msgS:$("msgS"), lv:$("lvChip"), pad:$("pad"), tip:$("tip"), reload:$("reload"),
+              ed:$("ed"), lkBox:$("lkBox"), tryPad:$("tryPad"), backEd:$("backEd"), swRow:$("swRow") };
   var pid;
   try{ pid = localStorage.getItem("sahra-buzz-pid"); if(!pid){ pid = "p" + Math.random().toString(36).slice(2, 10); localStorage.setItem("sahra-buzz-pid", pid); } }
   catch(e){ pid = "p" + Math.random().toString(36).slice(2, 10); }
   var NAME_KEY = "sahra-buzz-name";
   function cleanName(n){ return String(n || "").replace(/\s+/g, " ").trim().slice(0, 14); }
   var myName = ""; try{ myName = cleanName(localStorage.getItem(NAME_KEY)); }catch(e){}
-  var S = { conn:"connecting", since:Date.now(), host:null, seen:0, k:0, seq:0, sentAt:0, joinAt:0, wake:null, why:null };
+  var S = { conn:"connecting", since:Date.now(), host:null, seen:0, k:0, seq:0, sentAt:0, joinAt:0, wake:null, why:null, view:"ed", lookAt:0 };
+  /* الشكل: ينحفظ بالجوال ويروح للشاشة (المحرك نفسه يرسمه هنا) */
+  var R = window.SahraRope && window.SahraRope.CH ? window.SahraRope : null;
+  var LOOK_KEY = "sahra-rope-look", myLook = null, editor = null;
+  try{ var lk0 = JSON.parse(localStorage.getItem(LOOK_KEY) || "null"); if(lk0 && typeof lk0 === "object") myLook = lk0; }catch(e){}
   var client = null, ch = null;
 
   function fatal(t, s){ els.msgT.textContent = t; els.msgS.textContent = s || ""; els.pad.hidden = true; els.form.hidden = true; els.conn.hidden = true; }
@@ -155,7 +188,7 @@ document.addEventListener("DOMContentLoaded", function(){
     if(!ch || S.conn !== "on") return false;
     try{ var r = ch.send({ type:"broadcast", event:"rope", payload:p }); if(r && r.catch) r.catch(function(){}); return true; }catch(e){ return false; }
   }
-  function hello(){ if(myName) send({ t: inGame() ? "hello" : "join", pid:pid, name:myName }); else send({ t:"hello", pid:pid }); S.joinAt = Date.now(); }
+  function hello(){ if(myName) send({ t: inGame() ? "hello" : "join", pid:pid, name:myName, lk: myLook || undefined }); else send({ t:"hello", pid:pid }); S.joinAt = Date.now(); }
   function mine(){ var pl = S.host && Array.isArray(S.host.pl) ? S.host.pl : []; for(var i = 0; i < pl.length; i++) if(pl[i] && pl[i].pid === pid) return pl[i]; return null; }
   function inGame(){ return !!mine(); }
   function alive(){ return !!S.host && Date.now() - S.seen < 12000 && S.host.ph !== "off"; }
@@ -166,9 +199,60 @@ document.addEventListener("DOMContentLoaded", function(){
     var was = inGame();
     S.host = p; S.seen = Date.now();
     var me = mine();
-    if(me){ S.why = null; if(!was) vibrate([40, 40, 80]); }
+    if(me){
+      S.why = null; if(!was) vibrate([40, 40, 80]);
+      // لو الشاشة ما وصلها شكلي (رسالة ضاعت) نعيد إرساله
+      if(R && myLook && p.ph === "lobby" && !R.CH.sameLook(R.CH.normLook(myLook, me.s), me.lk) && Date.now() - S.lookAt > 1500){ S.lookAt = Date.now(); send({ t:"look", pid:pid, lk:myLook }); }
+    }
     else if(p.ph === "lobby" && myName && Date.now() - S.joinAt > 1500){ hello(); }
     render();
+  }
+  function curLook(){ var me = mine(); return R ? R.CH.normLook(myLook || (me && me.lk), me ? me.s : 0) : null; }
+  function onLook(L){
+    myLook = L; try{ localStorage.setItem(LOOK_KEY, JSON.stringify(L)); }catch(e){}
+    S.lookAt = Date.now(); send({ t:"look", pid:pid, lk:L }); paintAv();
+  }
+  function syncEditor(me){
+    if(!R || !me) return;
+    if(!editor) editor = new R.LookEditor(els.lkBox, { look: curLook(), slot: me.s, color: me.c, onChange: onLook });
+    else { editor.setColor(me.c); if(!myLook && me.lk) editor.setLook(me.lk); editor.wake(); }
+  }
+  var avKey = "";
+  function paintAv(){
+    if(!R) return;
+    var me = mine(), L = curLook(), col = me ? me.c : "#84cc16", k = JSON.stringify(L) + col;
+    if(k === avKey && els.av.width > 2) return; avKey = k;
+    R.CH.fit(els.av, L, col, { bust: true, pose: { mode: "idle" } });
+  }
+  /* رسمة البداية: ثلاثة مربوطين بحبل */
+  var art = null;
+  if(R){
+    var acv = document.createElement("canvas"); acv.className = "art-cv"; acv.setAttribute("aria-hidden", "true");
+    els.art.innerHTML = ""; els.art.appendChild(acv);
+    art = { cv: acv, raf: 0, t: 0, last: 0, looks: [ { g:"m", b:1, h:1, hr:0, f:0, o:1 }, { g:"f", b:1, h:0, hr:0, f:1, o:0 }, { g:"m", b:2, h:2, hr:1, f:4, o:0 } ], cols: ["#f43f5e", "#a855f7", "#84cc16"] };
+  }
+  function drawArt(ts){
+    art.raf = 0;
+    if(!art.cv.offsetParent) return;
+    var dt = art.last ? Math.min(0.05, (ts - art.last) / 1000) : 0.016; art.last = ts; art.t += dt;
+    var cv = art.cv, dpr = Math.min(2, window.devicePixelRatio || 1), W = Math.round(cv.clientWidth * dpr), H = Math.round(cv.clientHeight * dpr);
+    if(cv.width !== W || cv.height !== H){ cv.width = W; cv.height = H; }
+    var c = cv.getContext("2d"), s = Math.min(H / 2.05, W / 6.4), xs = [-2.3, 0, 2.3];
+    c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, W, H);
+    c.setTransform(s, 0, 0, s, W / 2, H - 0.12 * s);
+    var hips = art.looks.map(function(L){ return R.CH.dims(L).hip; });
+    for(var i = 0; i < 2; i++){
+      var x1 = xs[i], y1 = -hips[i], x2 = xs[i + 1], y2 = -hips[i + 1], sag = 0.45 + Math.sin(art.t * 1.6 + i) * 0.05;
+      c.lineCap = "round"; c.beginPath(); c.moveTo(x1, y1); c.quadraticCurveTo((x1 + x2) / 2, Math.max(y1, y2) + sag, x2, y2);
+      c.strokeStyle = "rgba(40,24,10,.8)"; c.lineWidth = 0.13; c.stroke(); c.strokeStyle = "#d6a96a"; c.lineWidth = 0.08; c.stroke();
+    }
+    for(var j = 0; j < 3; j++){
+      c.save(); c.translate(xs[j], 0); if(j === 2) c.scale(-1, 1);
+      c.fillStyle = "rgba(0,0,0,.3)"; c.beginPath(); c.ellipse(0, 0.02, 0.36, 0.06, 0, 0, 6.29); c.fill();
+      R.CH.draw(c, art.looks[j], art.cols[j], { mode: j === 1 ? "win" : "idle", t: art.t + j * 0.8, belt: true, blink: ((art.t + j) % 3.3) < 0.12 });
+      c.restore();
+    }
+    art.raf = requestAnimationFrame(drawArt);
   }
 
   /* ===== الاسم ===== */
@@ -183,6 +267,8 @@ document.addEventListener("DOMContentLoaded", function(){
     keepAwake(); hello(); render();
   });
   els.edit.addEventListener("click", function(){ if(!S.host || S.host.ph === "lobby") openName(); });
+  els.tryPad.addEventListener("click", function(){ S.view = "pad"; render(); });
+  els.backEd.addEventListener("click", function(){ S.view = "ed"; render(); });
 
   /* ===== الأزرار (لمس متعدد + سحب الإصبع بين يسار ويمين) ===== */
   var ptr = {};   // pointerId → قيمة الزر
@@ -220,7 +306,7 @@ document.addEventListener("DOMContentLoaded", function(){
     var conn = S.conn === "on" && alive() ? "ok" : S.conn === "error" ? "bad" : "";
     els.conn.className = "conn " + conn;
     els.connText.textContent = conn === "ok" ? "متصل" : S.conn === "error" ? "مقطوع" : S.conn === "on" ? "ننتظر الشاشة" : "جاري الاتصال…";
-    var t = "", s = "", pad = false, form = false, lv = "";
+    var t = "", s = "", pad = false, form = false, lv = "", ed = false;
     if(S.editing || !myName){ form = true; }
     else if(S.conn === "error"){ t = "⚠️ انقطع الاتصال"; s = "نحاول نرجع لحالنا…"; }
     else if(!alive()){ t = S.host && S.host.ph === "off" ? "انتهت الجولة 👋" : "ننتظر الشاشة 📺"; s = "تأكد إن «مربوطين» مفتوحة على جهاز اللعبة."; }
@@ -228,7 +314,11 @@ document.addEventListener("DOMContentLoaded", function(){
       if(S.why === "full") { t = "الحبل مليان 🪢"; s = "فيه 8 لاعبين — انتظروا الجولة الجاية."; }
       else if(ph !== "lobby" || S.why === "busy"){ t = "اللعبة بدأت ⏳"; s = "تقدر تنضم لما يرجعون لشاشة اللاعبين."; }
       else { t = "ندخلك الحبل…"; s = ""; }
-    } else if(ph === "lobby"){ t = "انضميت! 🎉"; s = "جرّبوا الأزرار — المقدّم يبدأ لما تجهزون."; pad = true; lv = S.host.lv; }
+    } else if(ph === "lobby"){
+      t = "انضميت! 🎉"; lv = S.host.lv;
+      if(R && S.view !== "pad"){ ed = true; s = "جهّز شكلك 👇 — المقدّم يبدأ من الشاشة."; }
+      else { pad = true; s = "جرّبوا الأزرار — المقدّم يبدأ لما تجهزون."; }
+    }
     else if(ph === "play"){ t = ""; pad = true; lv = S.host.lv; }
     else if(ph === "win"){ t = "وصلتوا! 🏁⭐"; s = "شوفوا النتيجة على الشاشة."; lv = S.host.lv; }
     els.form.hidden = !form;
@@ -236,7 +326,12 @@ document.addEventListener("DOMContentLoaded", function(){
     els.msgT.textContent = t; els.msgS.textContent = s; els.msgS.hidden = !s;
     els.lv.hidden = !lv || form; els.lv.textContent = lv ? "🗺️ " + lv : "";
     els.pad.hidden = !pad || form;
-    els.art.hidden = pad || form;
+    els.ed.hidden = !ed || form;
+    if(ed && !form) syncEditor(me);
+    els.swRow.hidden = !(R && pad && !form && ph === "lobby");
+    els.art.hidden = pad || form || ed;
+    if(art && !els.art.hidden && !art.raf){ art.last = 0; art.raf = requestAnimationFrame(drawArt); }
+    paintAv();
     els.pad.classList.toggle("dim", ph === "lobby");
     els.tip.hidden = !pad || form || ph !== "lobby";
     els.reload.hidden = !(S.conn === "error" && Date.now() - S.since > 8000);
