@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#050507">
+<title>مربوطين — يد التحكم · طاولة السهرة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@600;700;800&family=IBM+Plex+Sans+Arabic:wght@500;600;700&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@600;700;800&family=IBM+Plex+Sans+Arabic:wght@500;600;700&display=swap"></noscript>
+<link rel="stylesheet" href="theme.css?v=7">
+<link rel="preconnect" href="https://monovczlaegaezjkmpnm.supabase.co" crossorigin>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script defer src="config.js"></script>
+<style>
+  :root{ color-scheme:dark; --ink:#050507; --c:#84cc16; --text:#f5f3ff; --dim:#b9b3d1; --faint:#8b85a3; }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  [hidden]{ display:none !important; }
+  html, body{ height:100%; }
+  body{
+    min-height:100%; min-height:100dvh; overflow:hidden; color:var(--text); font-family:var(--f-body);
+    background:radial-gradient(ellipse 110% 60% at 50% -10%, color-mix(in srgb, var(--c) 26%, transparent), transparent 62%), var(--stars-a) 0 0/260px 260px, var(--ink);
+    display:flex; flex-direction:column; padding:max(10px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+    -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; touch-action:manipulation;
+  }
+  .top{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .me{ display:flex; align-items:center; gap:10px; min-width:0; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:999px; padding:5px 14px 5px 6px; }
+  .av{ flex:0 0 auto; position:relative; width:30px; height:34px; border-radius:11px; background:var(--c); box-shadow:inset 0 -9px 0 rgba(0,0,0,.2); }
+  .av::before, .av::after{ content:""; position:absolute; top:10px; width:8px; height:10px; border-radius:50%; background:#fff; box-shadow:inset -2.5px 0 0 #111827; }
+  .av::before{ left:7px; } .av::after{ left:16px; }
+  .me b{ font-family:var(--f-display); font-size:1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:42vw; }
+  .me small{ display:block; font-size:.72rem; color:var(--dim); }
+  .me button{ background:none; border:0; color:var(--faint); font-size:.9rem; padding:2px 4px; }
+  .conn{ display:flex; align-items:center; gap:7px; font-size:.78rem; font-weight:700; color:var(--dim); white-space:nowrap; }
+  .conn i{ width:9px; height:9px; border-radius:50%; background:#f59e0b; }
+  .conn.ok i{ background:#22c55e; box-shadow:0 0 8px #22c55e; }
+  .conn.bad i{ background:#ef4444; }
+  .msg{ text-align:center; margin:10px auto 6px; max-width:520px; }
+  .msg h1{ font-family:var(--f-display); font-weight:800; font-size:clamp(1.25rem, 5vw, 1.7rem); line-height:1.35; }
+  .msg p{ color:var(--dim); font-size:.9rem; margin-top:4px; line-height:1.6; }
+  .msg .lv{ display:inline-block; margin-top:8px; font-size:.78rem; font-weight:700; color:var(--c); background:color-mix(in srgb, var(--c) 14%, transparent); border:1px solid color-mix(in srgb, var(--c) 40%, transparent); padding:3px 12px; border-radius:999px; }
+  form.name{ margin:auto; width:min(420px, 100%); text-align:center; display:grid; gap:12px; }
+  form.name h1{ font-family:var(--f-display); font-size:1.5rem; }
+  form.name p{ color:var(--dim); font-size:.9rem; }
+  form.name input{ width:100%; font:inherit; font-size:1.15rem; text-align:center; padding:14px; border-radius:16px; border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.06); color:#fff; outline:none; -webkit-user-select:text; user-select:text; }
+  form.name input:focus{ border-color:var(--c); box-shadow:0 0 0 3px color-mix(in srgb, var(--c) 30%, transparent); }
+  form.name button{ font:inherit; font-weight:800; font-size:1.1rem; padding:14px; border-radius:16px; border:0; color:#0b1203; background:var(--c); }
+  form.name.shake{ animation:shake .35s; }
+  @keyframes shake{ 25%{ transform:translateX(-6px); } 75%{ transform:translateX(6px); } }
+  /* يد التحكم: يسار = حركة، يمين = قفز وإمساك (مثل يد الألعاب) */
+  .pad{ flex:1; display:grid; grid-template-columns:1fr 1fr; gap:12px; align-items:end; direction:ltr; touch-action:none; padding-top:8px; min-height:0; }
+  .pad .side{ display:flex; gap:12px; align-items:flex-end; height:100%; }
+  .pad .side.r{ justify-content:flex-end; }
+  .k{ position:relative; flex:1 1 0; max-width:170px; aspect-ratio:1; border-radius:28px; display:grid; place-items:center; touch-action:none;
+    background:linear-gradient(180deg, rgba(255,255,255,.1), rgba(255,255,255,.04)); border:1.5px solid rgba(255,255,255,.16);
+    box-shadow:0 10px 0 rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.12); transition:transform .06s, box-shadow .06s, background .06s; color:#fff; }
+  .k svg{ width:46%; height:46%; fill:none; stroke:currentColor; stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round; pointer-events:none; }
+  .k span{ position:absolute; bottom:10%; font-size:.78rem; font-weight:800; color:var(--dim); pointer-events:none; }
+  .k.on{ transform:translateY(6px); box-shadow:0 4px 0 rgba(0,0,0,.35); background:linear-gradient(180deg, color-mix(in srgb, var(--c) 70%, #fff 0%), color-mix(in srgb, var(--c) 45%, #000)); border-color:#fff; }
+  .k.on span{ color:#fff; }
+  .k.jump{ max-width:200px; border-radius:50%; background:linear-gradient(180deg, color-mix(in srgb, var(--c) 42%, transparent), color-mix(in srgb, var(--c) 16%, transparent)); border-color:color-mix(in srgb, var(--c) 70%, #fff); }
+  .k.hold{ max-width:130px; border-radius:24px; }
+  .pad.dim{ opacity:.45; }
+  .tip{ text-align:center; color:var(--faint); font-size:.78rem; margin-top:10px; direction:rtl; }
+  .art{ display:block; width:min(300px, 76vw); margin:22px auto 0; }
+  .art .b{ animation:bob 2.4s ease-in-out infinite; transform-box:fill-box; transform-origin:center bottom; }
+  .art .b2{ animation-delay:.3s; } .art .b3{ animation-delay:.6s; }
+  @keyframes bob{ 50%{ transform:translateY(-6px); } }
+  @media (prefers-reduced-motion:reduce){ .art .b{ animation:none; } }
+  .reload{ margin:14px auto 0; font:inherit; font-weight:700; padding:10px 18px; border-radius:12px; border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.06); color:#fff; }
+  @media (orientation:portrait){
+    .pad{ grid-template-columns:1fr; grid-template-rows:auto auto; align-content:end; gap:16px; }
+    .pad .side{ height:auto; }
+    .k{ max-width:none; }
+    .k.jump{ max-width:none; border-radius:28px; }
+    .pad .side.r{ justify-content:stretch; }
+  }
+  @media (orientation:landscape) and (max-height:440px){
+    .msg{ margin:4px auto 0; } .msg p{ display:none; } .msg h1{ font-size:1.05rem; }
+    .k{ max-width:140px; border-radius:22px; } .k.jump{ max-width:160px; }
+  }
+</style>
+</head>
+<body>
+  <div class="top">
+    <div class="me"><span class="av" id="av"></span><span><b id="meName">…</b><small id="meSub">مربوطين</small></span><button type="button" id="editName" aria-label="غيّر اسمك" hidden>✏️</button></div>
+    <div class="conn" id="conn"><i></i><span id="connText">جاري الاتصال…</span></div>
+  </div>
+  <form class="name" id="nameForm" hidden autocomplete="off">
+    <h1>وش اسمك؟ 🪢</h1>
+    <p>يطلع فوق شخصيتك باللعبة.</p>
+    <input id="nameInput" maxlength="14" placeholder="اسمك" enterkeyhint="go">
+    <button type="submit">انضم للحبل</button>
+  </form>
+  <div class="msg" id="msg"><h1 id="msgT">جاري الاتصال…</h1><p id="msgS"></p><span class="lv" id="lvChip" hidden></span></div>
+  <div class="art-wrap" id="art"><svg class="art" viewBox="0 0 300 120" aria-hidden="true">
+    <path d="M62 78 C 95 112, 118 108, 150 74 S 205 40, 238 66" fill="none" stroke="#d6a96a" stroke-width="5" stroke-linecap="round" stroke-dasharray="7 5"/>
+    <g class="b"><rect x="40" y="56" width="40" height="46" rx="15" fill="#f43f5e"/><circle cx="54" cy="74" r="5.5" fill="#fff"/><circle cx="67" cy="74" r="5.5" fill="#fff"/><circle cx="56" cy="75" r="2.6" fill="#111827"/><circle cx="69" cy="75" r="2.6" fill="#111827"/></g>
+    <g class="b b2"><rect x="130" y="50" width="40" height="46" rx="15" fill="#3b82f6"/><circle cx="144" cy="68" r="5.5" fill="#fff"/><circle cx="157" cy="68" r="5.5" fill="#fff"/><circle cx="146" cy="69" r="2.6" fill="#111827"/><circle cx="159" cy="69" r="2.6" fill="#111827"/></g>
+    <g class="b b3"><rect x="220" y="30" width="40" height="46" rx="15" fill="#84cc16"/><circle cx="234" cy="48" r="5.5" fill="#fff"/><circle cx="247" cy="48" r="5.5" fill="#fff"/><circle cx="236" cy="49" r="2.6" fill="#111827"/><circle cx="249" cy="49" r="2.6" fill="#111827"/><path d="M228 30 l6 -12 l6 12 l6 -12 l6 12 z" fill="#facc15"/></g>
+  </svg></div>
+  <div class="pad" id="pad" hidden>
+    <div class="side l">
+      <button class="k" type="button" data-k="1" aria-label="يسار"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span>يسار</span></button>
+      <button class="k" type="button" data-k="2" aria-label="يمين"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg><span>يمين</span></button>
+    </div>
+    <div class="side r">
+      <button class="k hold" type="button" data-k="8" aria-label="امسك"><svg viewBox="0 0 24 24"><path d="M7 11V7a2 2 0 0 1 4 0v4M11 10V5.5a2 2 0 0 1 4 0V10M15 10V7.5a2 2 0 0 1 4 0V14a6 6 0 0 1-6 6h-1a6 6 0 0 1-5.6-3.9L5 13a2 2 0 0 1 3.4-2"/></svg><span>امسك</span></button>
+      <button class="k jump" type="button" data-k="4" aria-label="قفز"><svg viewBox="0 0 24 24"><path d="M12 19V6M6 11l6-6 6 6"/></svg><span>قفز</span></button>
+    </div>
+  </div>
+  <p class="tip" id="tip" hidden>اقفز مع زملائك بنفس الوقت · اللي يطيح: اضغط «قفز» وخلّه مضغوط تتسلّق الحبل · «امسك» تثبّت مكانك</p>
+  <button class="reload" id="reload" type="button" hidden>🔄 تحديث</button>
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  var qs = new URLSearchParams(location.search);
+  var room = (qs.get("r") || "").trim().toLowerCase();
+  var els = { art:$("art"), av:$("av"), meName:$("meName"), meSub:$("meSub"), edit:$("editName"), conn:$("conn"), connText:$("connText"), form:$("nameForm"), input:$("nameInput"),
+              msg:$("msg"), msgT:$("msgT"), msgS:$("msgS"), lv:$("lvChip"), pad:$("pad"), tip:$("tip"), reload:$("reload") };
+  var pid;
+  try{ pid = localStorage.getItem("sahra-buzz-pid"); if(!pid){ pid = "p" + Math.random().toString(36).slice(2, 10); localStorage.setItem("sahra-buzz-pid", pid); } }
+  catch(e){ pid = "p" + Math.random().toString(36).slice(2, 10); }
+  var NAME_KEY = "sahra-buzz-name";
+  function cleanName(n){ return String(n || "").replace(/\s+/g, " ").trim().slice(0, 14); }
+  var myName = ""; try{ myName = cleanName(localStorage.getItem(NAME_KEY)); }catch(e){}
+  var S = { conn:"connecting", since:Date.now(), host:null, seen:0, k:0, seq:0, sentAt:0, joinAt:0, wake:null, why:null };
+  var client = null, ch = null;
+
+  function fatal(t, s){ els.msgT.textContent = t; els.msgS.textContent = s || ""; els.pad.hidden = true; els.form.hidden = true; els.conn.hidden = true; }
+  if(!/^[a-z0-9]{4,16}$/.test(room)){ fatal("📷 امسح الباركود من الشاشة", "افتح «مربوطين» على جهاز اللعبة وصوّب كاميرا جوالك على الباركود."); return; }
+  if(typeof window.supabase === "undefined" || !window.supabase.createClient){ fatal("⚠️ ما قدرنا نحمّل الصفحة", "تأكد من الإنترنت واضغط تحديث."); els.reload.hidden = false; return; }
+  if(!window.SAHRA_SUPABASE_URL || !window.SAHRA_SUPABASE_ANON_KEY){ fatal("⚠️ إعدادات الموقع ناقصة", ""); return; }
+  client = window.supabase.createClient(window.SAHRA_SUPABASE_URL, window.SAHRA_SUPABASE_ANON_KEY, { auth:{ persistSession:false, autoRefreshToken:false, detectSessionInUrl:false } });
+  els.reload.addEventListener("click", function(){ location.reload(); });
+
+  /* ===== الاتصال ===== */
+  function setConn(c){ if(S.conn !== c){ S.conn = c; S.since = Date.now(); } }
+  function connect(){
+    setConn("connecting");
+    var c = client.channel("sahra-buzz-" + room, { config:{ broadcast:{ self:false } } });
+    c.on("broadcast", { event:"ropeS" }, function(m){ if(ch === c) onState(m && m.payload); });
+    c.subscribe(function(st){
+      if(ch !== c) return;
+      if(st === "SUBSCRIBED"){ setConn("on"); hello(); }
+      else if(st === "CHANNEL_ERROR" || st === "TIMED_OUT" || st === "CLOSED") setConn("error");
+      render();
+    });
+    ch = c;
+  }
+  function reconnect(){ var o = ch; ch = null; if(o){ try{ client.removeChannel(o); }catch(e){} } connect(); }
+  function send(p){
+    if(!ch || S.conn !== "on") return false;
+    try{ var r = ch.send({ type:"broadcast", event:"rope", payload:p }); if(r && r.catch) r.catch(function(){}); return true; }catch(e){ return false; }
+  }
+  function hello(){ if(myName) send({ t: inGame() ? "hello" : "join", pid:pid, name:myName }); else send({ t:"hello", pid:pid }); S.joinAt = Date.now(); }
+  function mine(){ var pl = S.host && Array.isArray(S.host.pl) ? S.host.pl : []; for(var i = 0; i < pl.length; i++) if(pl[i] && pl[i].pid === pid) return pl[i]; return null; }
+  function inGame(){ return !!mine(); }
+  function alive(){ return !!S.host && Date.now() - S.seen < 12000 && S.host.ph !== "off"; }
+  function onState(p){
+    if(!p || typeof p !== "object") return;
+    if(p.to && p.to !== pid) return;
+    if(p.to === pid){ S.why = p.why || null; render(); return; }
+    var was = inGame();
+    S.host = p; S.seen = Date.now();
+    var me = mine();
+    if(me){ S.why = null; if(!was) vibrate([40, 40, 80]); }
+    else if(p.ph === "lobby" && myName && Date.now() - S.joinAt > 1500){ hello(); }
+    render();
+  }
+
+  /* ===== الاسم ===== */
+  function openName(){ els.input.value = myName; S.editing = true; render(); setTimeout(function(){ try{ els.input.focus(); }catch(e){} }, 60); }
+  els.form.addEventListener("submit", function(e){
+    e.preventDefault();
+    var v = cleanName(els.input.value);
+    if(!v){ els.form.classList.remove("shake"); void els.form.offsetWidth; els.form.classList.add("shake"); return; }
+    myName = v; S.editing = false;
+    try{ localStorage.setItem(NAME_KEY, myName); }catch(err){}
+    try{ els.input.blur(); }catch(err){}
+    keepAwake(); hello(); render();
+  });
+  els.edit.addEventListener("click", function(){ if(!S.host || S.host.ph === "lobby") openName(); });
+
+  /* ===== الأزرار (لمس متعدد + سحب الإصبع بين يسار ويمين) ===== */
+  var ptr = {};   // pointerId → قيمة الزر
+  function keyAt(x, y){ var el = document.elementFromPoint(x, y); el = el && el.closest ? el.closest("[data-k]") : null; return el ? +el.getAttribute("data-k") : 0; }
+  function recompute(){
+    var k = 0; for(var id in ptr) k |= ptr[id];
+    k |= kbK;
+    if(k !== S.k){
+      var jumpNow = (k & 4) && !(S.k & 4);
+      S.k = k; push(); paint();
+      if(jumpNow) vibrate(12);
+    }
+  }
+  function push(){ S.seq++; send({ t:"in", pid:pid, k:S.k, s:S.seq }); S.sentAt = Date.now(); }
+  function paint(){ Array.prototype.forEach.call(els.pad.querySelectorAll("[data-k]"), function(b){ b.classList.toggle("on", !!(S.k & +b.getAttribute("data-k"))); }); }
+  els.pad.addEventListener("pointerdown", function(e){ e.preventDefault(); keepAwake(); ptr[e.pointerId] = keyAt(e.clientX, e.clientY); try{ els.pad.setPointerCapture(e.pointerId); }catch(err){} recompute(); }, { passive:false });
+  els.pad.addEventListener("pointermove", function(e){ if(!(e.pointerId in ptr)) return; var k = keyAt(e.clientX, e.clientY); if(k !== ptr[e.pointerId] && (k === 1 || k === 2 || ptr[e.pointerId] === 1 || ptr[e.pointerId] === 2)){ ptr[e.pointerId] = k; recompute(); } });
+  ["pointerup", "pointercancel", "lostpointercapture"].forEach(function(ev){ els.pad.addEventListener(ev, function(e){ if(e.pointerId in ptr){ delete ptr[e.pointerId]; recompute(); } }); });
+  document.addEventListener("contextmenu", function(e){ if(!(e.target && e.target.closest && e.target.closest("input"))) e.preventDefault(); });
+  /* كيبورد (لو الجوال/التابلت فيه كيبورد) */
+  var kbK = 0, KB = { ArrowLeft:1, ArrowRight:2, KeyA:1, KeyD:2, ArrowUp:4, Space:4, KeyW:4, ArrowDown:8, KeyS:8 };
+  document.addEventListener("keydown", function(e){ if(S.editing) return; var v = KB[e.code]; if(!v) return; e.preventDefault(); kbK |= v; recompute(); });
+  document.addEventListener("keyup", function(e){ var v = KB[e.code]; if(!v) return; kbK &= ~v; recompute(); });
+  window.addEventListener("blur", function(){ ptr = {}; kbK = 0; recompute(); });
+
+  /* ===== العرض ===== */
+  var LAST = "";
+  function render(){
+    var me = mine(), ph = alive() ? S.host.ph : null;
+    var col = me ? me.c : "#84cc16";
+    document.body.style.setProperty("--c", col);
+    els.meName.textContent = myName || "لاعب جديد";
+    els.meSub.textContent = me ? "اللاعب " + (me.s + 1) + " بالحبل" : "مربوطين";
+    els.edit.hidden = !myName || (ph && ph !== "lobby");
+    var conn = S.conn === "on" && alive() ? "ok" : S.conn === "error" ? "bad" : "";
+    els.conn.className = "conn " + conn;
+    els.connText.textContent = conn === "ok" ? "متصل" : S.conn === "error" ? "مقطوع" : S.conn === "on" ? "ننتظر الشاشة" : "جاري الاتصال…";
+    var t = "", s = "", pad = false, form = false, lv = "";
+    if(S.editing || !myName){ form = true; }
+    else if(S.conn === "error"){ t = "⚠️ انقطع الاتصال"; s = "نحاول نرجع لحالنا…"; }
+    else if(!alive()){ t = S.host && S.host.ph === "off" ? "انتهت الجولة 👋" : "ننتظر الشاشة 📺"; s = "تأكد إن «مربوطين» مفتوحة على جهاز اللعبة."; }
+    else if(!me){
+      if(S.why === "full") { t = "الحبل مليان 🪢"; s = "فيه 8 لاعبين — انتظروا الجولة الجاية."; }
+      else if(ph !== "lobby" || S.why === "busy"){ t = "اللعبة بدأت ⏳"; s = "تقدر تنضم لما يرجعون لشاشة اللاعبين."; }
+      else { t = "ندخلك الحبل…"; s = ""; }
+    } else if(ph === "lobby"){ t = "انضميت! 🎉"; s = "جرّبوا الأزرار — المقدّم يبدأ لما تجهزون."; pad = true; lv = S.host.lv; }
+    else if(ph === "play"){ t = ""; pad = true; lv = S.host.lv; }
+    else if(ph === "win"){ t = "وصلتوا! 🏁⭐"; s = "شوفوا النتيجة على الشاشة."; lv = S.host.lv; }
+    els.form.hidden = !form;
+    els.msg.hidden = form || (!t && !s);
+    els.msgT.textContent = t; els.msgS.textContent = s; els.msgS.hidden = !s;
+    els.lv.hidden = !lv || form; els.lv.textContent = lv ? "🗺️ " + lv : "";
+    els.pad.hidden = !pad || form;
+    els.art.hidden = pad || form;
+    els.pad.classList.toggle("dim", ph === "lobby");
+    els.tip.hidden = !pad || form || ph !== "lobby";
+    els.reload.hidden = !(S.conn === "error" && Date.now() - S.since > 8000);
+    if(!pad && S.k){ ptr = {}; kbK = 0; S.k = 0; push(); paint(); }
+  }
+
+  /* ===== اهتزاز + الشاشة ما تطفي ===== */
+  function vibrate(p){ try{ if(navigator.userActivation && !navigator.userActivation.hasBeenActive) return; if(navigator.vibrate) navigator.vibrate(p); }catch(e){} }
+  function keepAwake(){
+    try{ if(!("wakeLock" in navigator) || S.wake || document.visibilityState !== "visible") return;
+      navigator.wakeLock.request("screen").then(function(l){ S.wake = l; l.addEventListener("release", function(){ S.wake = null; }); }).catch(function(){}); }catch(e){}
+  }
+  document.addEventListener("visibilitychange", function(){
+    if(document.visibilityState !== "visible"){ ptr = {}; kbK = 0; if(S.k){ S.k = 0; push(); paint(); } return; }
+    keepAwake(); if(S.conn !== "on") reconnect(); else hello(); render();
+  });
+  /* نبضة: نعيد حالة الأزرار لو فيه زر مضغوط (لو ضاعت رسالة)، ونرسل "موجود" كل شوي */
+  setInterval(function(){
+    var now = Date.now();
+    if(S.conn === "error" && now - S.since > 9000) reconnect();
+    else if(S.conn === "connecting" && now - S.since > 18000) reconnect();
+    if(S.conn === "on" && inGame()){
+      if(S.k && now - S.sentAt > 900) push();
+      else if(!S.k && now - S.sentAt > 3000){ send({ t:"ping", pid:pid }); S.sentAt = now; }
+    }
+    if(S.conn === "on" && myName && !inGame() && alive() && S.host.ph === "lobby" && now - S.joinAt > 2500) hello();
+    render();
+  }, 500);
+  window.addEventListener("pagehide", function(){ if(inGame() && S.host && S.host.ph === "lobby") send({ t:"bye", pid:pid }); });
+
+  connect(); render();
+});
+</script>
+</body>
+</html>

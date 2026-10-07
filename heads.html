@@ -8,10 +8,12 @@
 <title>حطها على راسك — طاولة السهرة</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@600;700;800&family=IBM+Plex+Sans+Arabic:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=5">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@600;700;800&family=IBM+Plex+Sans+Arabic:wght@500;600;700&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@600;700;800&family=IBM+Plex+Sans+Arabic:wght@500;600;700&display=swap"></noscript>
+<link rel="stylesheet" href="theme.css?v=7">
+<link rel="preconnect" href="https://monovczlaegaezjkmpnm.supabase.co" crossorigin>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script defer src="config.js"></script>
 <style>
   :root{
     color-scheme: dark;
@@ -22,7 +24,7 @@
   *{ box-sizing:border-box; margin:0; padding:0; }
   [hidden]{ display:none !important; }
   html, body{ height:100%; overflow:hidden; background:var(--ink); color:var(--text); font-family:var(--f-body); }
-  body{ background:radial-gradient(ellipse 120% 55% at 50% -12%, rgba(124,92,255,.26), transparent 62%), var(--ink); }
+  body{ background:radial-gradient(ellipse 120% 55% at 50% -12%, rgba(124,92,255,.26), transparent 62%), var(--stars-a) 0 0/260px 260px, var(--ink); }
   .top-row h1, .msg, .word, .count-num, .res-title, .turn-info .big, .big-btn, .team-badge, .tb{ font-family:var(--f-display); }
   body{ touch-action:manipulation; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; -webkit-tap-highlight-color:transparent; }
   button{ font-family:inherit; cursor:pointer; }
@@ -201,7 +203,8 @@
 </div>
 
 <script>
-(function(){
+/* v7: المكتبة تتحمّل بدون ما توقف رسم الصفحة — السكربت يشتغل أول ما تجهز */
+document.addEventListener("DOMContentLoaded", function(){
   "use strict";
   var $ = function(id){ return document.getElementById(id); };
   var stage = $("stage");
@@ -737,7 +740,7 @@
   } else {
     setState("lock");
   }
-})();
+});
 </script>
 </body>
 </html>
