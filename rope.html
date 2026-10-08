@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://monovczlaegaezjkmpnm.supabase.co" crossorigin>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script defer src="config.js"></script>
-<script defer src="games/rope.js?v=71"></script>
+<script defer src="games/rope.js?v=73"></script>
 <style>
   :root{ color-scheme:dark; --ink:#050507; --c:#84cc16; --text:#f5f3ff; --dim:#b9b3d1; --faint:#8b85a3; }
   *{ box-sizing:border-box; margin:0; padding:0; }
@@ -35,6 +35,10 @@
   .conn i{ width:9px; height:9px; border-radius:50%; background:#f59e0b; }
   .conn.ok i{ background:#22c55e; box-shadow:0 0 8px #22c55e; }
   .conn.bad i{ background:#ef4444; }
+  .conn.direct{ color:#fde68a; }
+  .conn.direct i{ background:#facc15; box-shadow:0 0 8px #facc15; }
+  .nettip{ margin:8px auto 0; max-width:560px; text-align:center; font-size:.76rem; line-height:1.5; color:#fde68a; background:rgba(250,204,21,.08);
+    border:1px solid rgba(250,204,21,.22); border-radius:12px; padding:5px 12px; }
   .msg{ text-align:center; margin:10px auto 6px; max-width:520px; }
   .msg h1{ font-family:var(--f-display); font-weight:800; font-size:clamp(1.25rem, 5vw, 1.7rem); line-height:1.35; }
   .msg p{ color:var(--dim); font-size:.9rem; margin-top:4px; line-height:1.6; }
@@ -110,6 +114,7 @@
     <div class="me"><canvas class="av" id="av" aria-hidden="true"></canvas><span><b id="meName">…</b><small id="meSub">مربوطين</small></span><button type="button" id="editName" aria-label="غيّر اسمك" hidden>✏️</button></div>
     <div class="conn" id="conn"><i></i><span id="connText">جاري الاتصال…</span></div>
   </div>
+  <p class="nettip" id="netTip" hidden>☁️ أزرارك تمر بالإنترنت (أبطأ شوي) — للأسرع: اتصل بنفس الواي فاي حق جهاز اللعبة.</p>
   <form class="name" id="nameForm" hidden autocomplete="off">
     <h1>وش اسمك؟ 🪢</h1>
     <p>يطلع فوق شخصيتك باللعبة.</p>
@@ -148,14 +153,15 @@ document.addEventListener("DOMContentLoaded", function(){
   var room = (qs.get("r") || "").trim().toLowerCase();
   var els = { art:$("art"), av:$("av"), meName:$("meName"), meSub:$("meSub"), edit:$("editName"), conn:$("conn"), connText:$("connText"), form:$("nameForm"), input:$("nameInput"),
               msg:$("msg"), msgT:$("msgT"), msgS:$("msgS"), lv:$("lvChip"), pad:$("pad"), tip:$("tip"), reload:$("reload"),
-              ed:$("ed"), lkBox:$("lkBox"), tryPad:$("tryPad"), backEd:$("backEd"), swRow:$("swRow") };
+              ed:$("ed"), lkBox:$("lkBox"), tryPad:$("tryPad"), backEd:$("backEd"), swRow:$("swRow"), netTip:$("netTip") };
   var pid;
   try{ pid = localStorage.getItem("sahra-buzz-pid"); if(!pid){ pid = "p" + Math.random().toString(36).slice(2, 10); localStorage.setItem("sahra-buzz-pid", pid); } }
   catch(e){ pid = "p" + Math.random().toString(36).slice(2, 10); }
   var NAME_KEY = "sahra-buzz-name";
   function cleanName(n){ return String(n || "").replace(/\s+/g, " ").trim().slice(0, 14); }
   var myName = ""; try{ myName = cleanName(localStorage.getItem(NAME_KEY)); }catch(e){}
-  var S = { conn:"connecting", since:Date.now(), host:null, seen:0, k:0, seq:0, sentAt:0, joinAt:0, wake:null, why:null, view:"ed", lookAt:0 };
+  /* seq يبدأ من الوقت: لو الجوال حدّث الصفحة وسط اللعب، أرقام ضغطاته الجديدة تكون أكبر من القديمة والشاشة ما تتجاهلها */
+  var S = { conn:"connecting", since:Date.now(), host:null, seen:0, k:0, seq:Date.now() % 1000000000, sentAt:0, joinAt:0, wake:null, why:null, view:"ed", lookAt:0 };
   /* الشكل: ينحفظ بالجوال ويروح للشاشة (المحرك نفسه يرسمه هنا) */
   var R = window.SahraRope && window.SahraRope.CH ? window.SahraRope : null;
   var LOOK_KEY = "sahra-rope-look", myLook = null, editor = null;
@@ -175,6 +181,7 @@ document.addEventListener("DOMContentLoaded", function(){
     setConn("connecting");
     var c = client.channel("sahra-buzz-" + room, { config:{ broadcast:{ self:false } } });
     c.on("broadcast", { event:"ropeS" }, function(m){ if(ch === c) onState(m && m.payload); });
+    c.on("broadcast", { event:"ropeR" }, function(m){ if(ch === c) onRtc(m && m.payload); });
     c.subscribe(function(st){
       if(ch !== c) return;
       if(st === "SUBSCRIBED"){ setConn("on"); hello(); }
@@ -282,7 +289,80 @@ document.addEventListener("DOMContentLoaded", function(){
       if(jumpNow) vibrate(12);
     }
   }
-  function push(){ S.seq++; send({ t:"in", pid:pid, k:S.k, s:S.seq }); S.sentAt = Date.now(); }
+  function push(){ S.seq++; S.chAt = Date.now(); sendIn(); }
+  /* الضغطة تروح من الخط المباشر لو مفتوح، وإلا من السيرفر */
+  function sendIn(){
+    var now = Date.now();
+    if(direct() && dcSend("i," + S.k + "," + S.seq)){ D.lastIn = now; S.sentAt = now; return; }
+    send({ t:"in", pid:pid, k:S.k, s:S.seq }); S.sentAt = now;
+  }
+
+  /* ===== اتصال مباشر بالشاشة (WebRTC) =====
+     عن طريق السيرفر كل ضغطة تاخذ ~110–180ms. لو الجوال والشاشة على نفس الشبكة نفتح خط مباشر بينهم (DataChannel)
+     وتوصل الضغطة بأجزاء من الثانية. التعارف يمر بقناة الغرفة، ولو ما ضبط نكمّل عن طريق السيرفر مثل قبل. */
+  var ICE = [{ urls: ["stun:stun.cloudflare.com:3478", "stun:stun.l.google.com:19302"] }];
+  var D = { pc:null, dc:null, sid:"", st:"off", at:0, tries:0, nextAt:0, lastIn:0, lastPing:0, lastHost:0, pingN:0, pingAt:{}, rtt:0 };
+  function direct(){ return D.st === "open" && !!D.dc && D.dc.readyState === "open"; }
+  function iceDone(pc, ms){
+    return new Promise(function(res){
+      if(pc.iceGatheringState === "complete") return res();
+      var t = setTimeout(done, ms);
+      function chk(){ if(pc.iceGatheringState === "complete") done(); }
+      function done(){ clearTimeout(t); try{ pc.removeEventListener("icegatheringstatechange", chk); }catch(e){} res(); }
+      pc.addEventListener("icegatheringstatechange", chk);
+    });
+  }
+  function rtcStart(){
+    if(!window.RTCPeerConnection || D.pc || S.conn !== "on" || !inGame() || D.tries >= 5 || Date.now() < D.nextAt) return;
+    var pc, dc, sid = Math.random().toString(36).slice(2, 10);
+    try{ pc = new RTCPeerConnection({ iceServers: ICE }); dc = pc.createDataChannel("in", { ordered:false, maxRetransmits:0 }); }
+    catch(e){ D.tries = 99; try{ if(pc) pc.close(); }catch(x){} return; }
+    D.pc = pc; D.dc = dc; D.sid = sid; D.st = "connecting"; D.at = Date.now(); D.tries++;
+    dc.onopen = function(){ if(D.dc !== dc) return; D.st = "open"; D.tries = 0; D.lastHost = Date.now(); sendIn(); dcPing(); render(); };
+    dc.onclose = function(){ if(D.dc === dc) rtcDrop(); };
+    dc.onmessage = function(e){
+      if(D.dc !== dc) return;
+      D.lastHost = Date.now();
+      var f = String(e.data || "").split(",");
+      if(f[0] === "q"){
+        if(D.pingAt[f[1]]){ D.rtt = Math.round(performance.now() - D.pingAt[f[1]]); delete D.pingAt[f[1]]; }
+        // الشاشة حيّة ونعرف مرحلتها من الخط المباشر — لو السيرفر تأخر علينا ما يوقف اللعب
+        if(S.host && /^(lobby|play|win)$/.test(f[2] || "")){ S.seen = Date.now(); if(S.host.ph !== f[2]){ S.host.ph = f[2]; render(); } }
+      }
+    };
+    pc.onconnectionstatechange = function(){ if(D.pc === pc && (pc.connectionState === "failed" || pc.connectionState === "closed")) rtcDrop(); };
+    pc.createOffer().then(function(o){ return pc.setLocalDescription(o); })
+      .then(function(){ return iceDone(pc, 1500); })
+      .then(function(){ if(D.pc === pc && pc.localDescription) send({ t:"rtc", pid:pid, sid:sid, sdp:pc.localDescription.sdp }); })
+      .catch(function(){ if(D.pc === pc) rtcDrop(); });
+  }
+  function onRtc(p){
+    if(!p || typeof p !== "object" || p.to !== pid || !D.pc || p.sid !== D.sid || typeof p.sdp !== "string") return;
+    if(D.pc.signalingState !== "have-local-offer") return;
+    D.pc.setRemoteDescription({ type:"answer", sdp:p.sdp }).catch(function(){ rtcDrop(); });
+  }
+  function rtcDrop(){
+    var was = D.st === "open", pc = D.pc, dc = D.dc;
+    D.pc = null; D.dc = null; D.sid = ""; D.st = "off"; D.pingAt = {}; D.rtt = 0;
+    D.nextAt = Date.now() + [1500, 4000, 10000, 25000, 60000][Math.min(4, Math.max(0, D.tries - 1))];
+    try{ if(dc) dc.close(); }catch(e){}
+    try{ if(pc) pc.close(); }catch(e){}
+    if(was && S.k) push();   // نكمّل الضغطة الحالية عن طريق السيرفر عشان ما يعلق زر
+    render();
+  }
+  function dcSend(s){ try{ D.dc.send(s); return true; }catch(e){ rtcDrop(); return false; } }
+  function dcPing(){ var n = String(++D.pingN % 1000); D.pingAt[n] = performance.now(); D.lastPing = Date.now(); dcSend("p," + n); }
+  /* نبضة الخط المباشر: نعيد حالة الأزرار كل 90ms وهي مضغوطة وشوي بعد أي تغيير (لو ضاعت حزمة — حتى «فكّ الزر» ما يضيع)،
+     وفحص كل ثانية، ولو الشاشة سكتت نرجع للسيرفر */
+  setInterval(function(){
+    if(!D.pc) return;
+    var now = Date.now();
+    if(D.st === "connecting"){ if(now - D.at > 9000) rtcDrop(); return; }
+    if(!direct()) return;
+    if(now - D.lastHost > 3500){ rtcDrop(); return; }
+    if((S.k || now - (S.chAt || 0) < 400) && now - D.lastIn >= 90) sendIn();
+    if(now - D.lastPing >= 1000) dcPing();
+  }, 45);
   function paint(){ Array.prototype.forEach.call(els.pad.querySelectorAll("[data-k]"), function(b){ b.classList.toggle("on", !!(S.k & +b.getAttribute("data-k"))); }); }
   els.pad.addEventListener("pointerdown", function(e){ e.preventDefault(); keepAwake(); ptr[e.pointerId] = keyAt(e.clientX, e.clientY); try{ els.pad.setPointerCapture(e.pointerId); }catch(err){} recompute(); }, { passive:false });
   els.pad.addEventListener("pointermove", function(e){ if(!(e.pointerId in ptr)) return; var k = keyAt(e.clientX, e.clientY); if(k !== ptr[e.pointerId] && (k === 1 || k === 2 || ptr[e.pointerId] === 1 || ptr[e.pointerId] === 2)){ ptr[e.pointerId] = k; recompute(); } });
@@ -303,12 +383,16 @@ document.addEventListener("DOMContentLoaded", function(){
     els.meName.textContent = myName || "لاعب جديد";
     els.meSub.textContent = me ? "اللاعب " + (me.s + 1) + " بالحبل" : "مربوطين";
     els.edit.hidden = !myName || (ph && ph !== "lobby");
-    var conn = S.conn === "on" && alive() ? "ok" : S.conn === "error" ? "bad" : "";
-    els.conn.className = "conn " + conn;
-    els.connText.textContent = conn === "ok" ? "متصل" : S.conn === "error" ? "مقطوع" : S.conn === "on" ? "ننتظر الشاشة" : "جاري الاتصال…";
+    var conn = (S.conn === "on" || direct()) && alive() ? "ok" : S.conn === "error" ? "bad" : "";
+    var dir = conn === "ok" && direct();
+    els.conn.className = "conn " + conn + (dir ? " direct" : "");
+    els.connText.textContent = conn === "ok" ? (dir ? "متصل · ⚡ مباشر" : "متصل") : S.conn === "error" ? "مقطوع" : S.conn === "on" ? "ننتظر الشاشة" : "جاري الاتصال…";
+    els.conn.title = dir ? "جوالك متصل بالشاشة مباشرة — أسرع استجابة" + (D.rtt ? " (" + D.rtt + "ms)" : "") : "";
+    /* الخط المباشر ما ضبط (مرتين) أو المتصفح ما يدعمه: نقول له وش يسوي عشان تصير أسرع */
+    els.netTip.hidden = !(conn === "ok" && mine() && !dir && !S.editing && (!window.RTCPeerConnection || D.tries >= 2));
     var t = "", s = "", pad = false, form = false, lv = "", ed = false;
     if(S.editing || !myName){ form = true; }
-    else if(S.conn === "error"){ t = "⚠️ انقطع الاتصال"; s = "نحاول نرجع لحالنا…"; }
+    else if(S.conn === "error" && !direct()){ t = "⚠️ انقطع الاتصال"; s = "نحاول نرجع لحالنا…"; }
     else if(!alive()){ t = S.host && S.host.ph === "off" ? "انتهت الجولة 👋" : "ننتظر الشاشة 📺"; s = "تأكد إن «مربوطين» مفتوحة على جهاز اللعبة."; }
     else if(!me){
       if(S.why === "full") { t = "الحبل مليان 🪢"; s = "فيه 8 لاعبين — انتظروا الجولة الجاية."; }
@@ -334,7 +418,7 @@ document.addEventListener("DOMContentLoaded", function(){
     paintAv();
     els.pad.classList.toggle("dim", ph === "lobby");
     els.tip.hidden = !pad || form || ph !== "lobby";
-    els.reload.hidden = !(S.conn === "error" && Date.now() - S.since > 8000);
+    els.reload.hidden = !(S.conn === "error" && !direct() && Date.now() - S.since > 8000);
     if(!pad && S.k){ ptr = {}; kbK = 0; S.k = 0; push(); paint(); }
   }
 
@@ -346,7 +430,9 @@ document.addEventListener("DOMContentLoaded", function(){
   }
   document.addEventListener("visibilitychange", function(){
     if(document.visibilityState !== "visible"){ ptr = {}; kbK = 0; if(S.k){ S.k = 0; push(); paint(); } return; }
-    keepAwake(); if(S.conn !== "on") reconnect(); else hello(); render();
+    keepAwake(); if(S.conn !== "on") reconnect(); else hello();
+    if(!direct()){ D.tries = 0; D.nextAt = 0; }   // رجعنا للصفحة: نحاول الخط المباشر من جديد
+    render();
   });
   /* نبضة: نعيد حالة الأزرار لو فيه زر مضغوط (لو ضاعت رسالة)، ونرسل "موجود" كل شوي */
   setInterval(function(){
@@ -354,13 +440,19 @@ document.addEventListener("DOMContentLoaded", function(){
     if(S.conn === "error" && now - S.since > 9000) reconnect();
     else if(S.conn === "connecting" && now - S.since > 18000) reconnect();
     if(S.conn === "on" && inGame()){
-      if(S.k && now - S.sentAt > 900) push();
-      else if(!S.k && now - S.sentAt > 3000){ send({ t:"ping", pid:pid }); S.sentAt = now; }
+      if(!direct()){   // عن طريق السيرفر (الخط المباشر له نبضته الخاصة فوق)
+        if(S.k && now - S.sentAt > 900) push();
+        else if(!S.k && now - S.sentAt > 3000){ send({ t:"ping", pid:pid }); S.sentAt = now; }
+      }
+      rtcStart();
     }
     if(S.conn === "on" && myName && !inGame() && alive() && S.host.ph === "lobby" && now - S.joinAt > 2500) hello();
     render();
   }, 500);
-  window.addEventListener("pagehide", function(){ if(inGame() && S.host && S.host.ph === "lobby") send({ t:"bye", pid:pid }); });
+  window.addEventListener("pagehide", function(){
+    if(inGame() && S.host && S.host.ph === "lobby") send({ t:"bye", pid:pid });
+    if(D.pc){ try{ D.pc.close(); }catch(e){} }
+  });
 
   connect(); render();
 });

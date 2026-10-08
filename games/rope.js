@@ -1176,8 +1176,24 @@ var KB = [
 var MAXP = 8;
 var LOOKS_KEY = "sahra-rope-looks";
 
+/* ---- اتصال مباشر (WebRTC) بين الجوال والشاشة ----
+   الضغطات كانت تروح للسيرفر (Supabase) وترجع للشاشة: ~110–180ms لكل ضغطة. لو الجوال والشاشة على نفس الشبكة
+   يتصلون ببعض مباشرة (DataChannel) وتصير الضغطة بأجزاء من الثانية. التعارف (offer/answer) يمر بقناة الغرفة نفسها،
+   ولو ما ضبط الاتصال المباشر تكمل الضغطات عن طريق السيرفر مثل قبل. */
+var RTC_ICE = [{ urls: ["stun:stun.cloudflare.com:3478", "stun:stun.l.google.com:19302"] }];
+function rtcIceDone(pc, ms){
+  return new Promise(function(res){
+    if(pc.iceGatheringState === "complete") return res();
+    var t = setTimeout(done, ms);
+    function chk(){ if(pc.iceGatheringState === "complete") done(); }
+    function done(){ clearTimeout(t); try{ pc.removeEventListener("icegatheringstatechange", chk); }catch(e){} res(); }
+    pc.addEventListener("icegatheringstatechange", chk);
+  });
+}
+
 function Host(box, hooks){
   this.box = box; this.hooks = hooks || {};
+  this.rtc = {};            // pid → { pc, dc, sid, at, last } — الاتصال المباشر بكل جوال
   this.players = [];        // { id, kind:'kb'|'pad'|'phone', name, color, slot, pid?, kbi?, padi?, seen }
   this.phase = "lobby";     // lobby | play | win
   this.level = null; this.game = null; this.round = null;
@@ -1208,6 +1224,7 @@ Host.prototype.destroy = function(){
   if(this._ro) this._ro.disconnect();
   this.closeEditor(true);
   if(this.game) this.game.destroy();
+  for(var pid in this.rtc) this.rtcClose(pid);
   this.box.innerHTML = "";
   this.send("off");
 };
@@ -1249,6 +1266,8 @@ Host.prototype.addPlayer = function(o){
 };
 Host.prototype.removePlayer = function(id){
   if(this.edit && this.edit.id === id) this.closeEditor(true);
+  var gone = this.players.find(function(p){ return p.id === id; });
+  if(gone && gone.kind === "phone") this.rtcClose(gone.pid);
   this.players = this.players.filter(function(p){ return p.id !== id; });
 };
 Host.prototype.saveLook = function(p){
@@ -1315,6 +1334,65 @@ Host.prototype.netMsg = function(m){
     p.seen = Date.now();
     if(this.phase === "lobby" && m.lk && typeof m.lk === "object" && this.setLook(p, m.lk)) this.send();
   }
+  else if(m.t === "rtc" && p){ p.seen = Date.now(); this.rtcOffer(p, m); }   // الجوال يبي اتصال مباشر
+};
+/* ---- الاتصال المباشر: الجوال يرسل offer، الشاشة ترد answer، وبعدها الضغطات تجي من DataChannel ---- */
+Host.prototype.rtcOffer = function(p, m){
+  if(!root.RTCPeerConnection || typeof m.sdp !== "string" || m.sdp.length > 20000 || m.sdp.indexOf("v=0") !== 0 || typeof m.sid !== "string") return;
+  var pid = p.pid, self = this, pc;
+  this.rtcClose(pid);
+  try{ pc = new root.RTCPeerConnection({ iceServers: RTC_ICE }); }catch(e){ return; }
+  var R = this.rtc[pid] = { pc: pc, dc: null, sid: m.sid.slice(0, 16), at: Date.now(), last: 0 };
+  pc.ondatachannel = function(e){
+    var dc = e.channel;
+    if(self.rtc[pid] !== R){ try{ dc.close(); }catch(x){} return; }
+    R.dc = dc;
+    dc.onopen = function(){ if(self.rtc[pid] === R){ R.last = Date.now(); self.renderNet(); } };
+    dc.onclose = function(){ if(self.rtc[pid] === R){ self.rtcClose(pid); self.renderNet(); } };
+    dc.onmessage = function(ev){ if(self.rtc[pid] === R) self.dcMsg(pid, R, ev.data); };
+  };
+  pc.onconnectionstatechange = function(){
+    if(self.rtc[pid] !== R) return;
+    if(pc.connectionState === "failed" || pc.connectionState === "closed"){ self.rtcClose(pid); self.renderNet(); }
+  };
+  pc.setRemoteDescription({ type: "offer", sdp: m.sdp })
+    .then(function(){ return pc.createAnswer(); })
+    .then(function(a){ return pc.setLocalDescription(a); })
+    .then(function(){ return rtcIceDone(pc, 1500); })
+    .then(function(){
+      if(self.rtc[pid] !== R || !pc.localDescription) return;
+      if(self.hooks.send) self.hooks.send("ropeR", { to: pid, sid: R.sid, sdp: pc.localDescription.sdp });
+    })
+    .catch(function(){ if(self.rtc[pid] === R) self.rtcClose(pid); });
+};
+Host.prototype.rtcClose = function(pid){
+  var R = this.rtc[pid]; if(!R) return;
+  delete this.rtc[pid];
+  try{ if(R.dc) R.dc.close(); }catch(e){}
+  try{ R.pc.close(); }catch(e){}
+};
+Host.prototype.rtcOpen = function(pid){ var R = this.rtc[pid]; return !!(R && R.dc && R.dc.readyState === "open"); };
+/* رسائل الخط المباشر (نص قصير): "i,<الأزرار>,<الرقم>" ضغطة · "p,<n>" فحص — نرد "q,<n>,<المرحلة>" عشان الجوال يعرف إن الخط
+   شغّال ويعرف وين وصلنا (lobby/play/win) حتى لو انقطع عنه السيرفر شوي */
+Host.prototype.dcMsg = function(pid, R, data){
+  if(typeof data !== "string" || data.length > 48) return;
+  var p = this.players.find(function(x){ return x.kind === "phone" && x.pid === pid; }); if(!p) return;
+  var now = Date.now(), f = data.split(",");
+  R.last = now; p.seen = now;
+  if(f[0] === "i"){
+    var s = +f[2] || 0, n = this.net[pid] || (this.net[pid] = { k: 0, s: -1 });
+    if(s > n.s || s < n.s - 1000){ n.s = s; n.k = (+f[1] | 0) & 15; }
+  } else if(f[0] === "p"){
+    try{ R.dc.send("q," + String(f[1] || "").slice(0, 8) + "," + this.phase); }catch(e){}
+  }
+};
+/* علامة الاتصال جنب كل جوال باللوبي: ⚡ مباشر أو ☁️ عن طريق النت (بدون ما نعيد رسم اللوبي) */
+Host.prototype.renderNet = function(){
+  var box = this.q("slots"), self = this; if(!box) return;
+  Array.prototype.forEach.call(box.querySelectorAll("[data-rpnet]"), function(el){
+    var on = self.rtcOpen(el.getAttribute("data-rpnet")), t = on ? "⚡ مباشر" : "☁️ عبر النت";
+    if(el.textContent !== t){ el.textContent = t; el.classList.toggle("on", on); el.title = on ? "متصل بالشاشة مباشرة — أسرع استجابة" : "الضغطات تمر بالسيرفر — نحاول نتصل مباشرة"; }
+  });
 };
 Host.prototype.setLook = function(p, lk){
   var L = CH.normLook(lk, p.slot);
@@ -1354,7 +1432,15 @@ Host.prototype.tick = function(){
     });
     if(now - (this._hudT || 0) > 250){ this._hudT = now; this.renderHud(); }
   }
-  if(now - this.hbT > 3000){ this.hbT = now; this.send(); if(this.phase === "lobby") this.renderPresence(); }
+  // خط مباشر سكت (الجوال يرسل فحص كل ثانية): نسكّره، والجوال يرجع للسيرفر ويحاول من جديد
+  if(now - (this._rtcT || 0) > 1000){
+    this._rtcT = now;
+    for(var pid in this.rtc){
+      var R = this.rtc[pid];
+      if((R.dc && R.dc.readyState === "open" && now - R.last > 6000) || (!R.dc && now - R.at > 20000)){ this.rtcClose(pid); this.renderNet(); }
+    }
+  }
+  if(now - this.hbT > 3000){ this.hbT = now; this.send(); if(this.phase === "lobby"){ this.renderPresence(); this.renderNet(); } }
 };
 /* ---- اللوبي ---- */
 Host.prototype.renderLobby = function(){
@@ -1367,6 +1453,7 @@ Host.prototype.renderLobby = function(){
     var p = this.players.find(function(x){ return x.slot === i; });
     if(p){
       var ic = p.kind === "phone" ? "📱 من جواله" : p.kind === "pad" ? "🎮 يد تحكم" : "⌨️ " + KB[p.kbi].label, local = p.kind !== "phone";
+      if(p.kind === "phone") ic += ' <i class="rp-net" data-rpnet="' + esc(p.pid) + '"></i>';
       slots += '<li class="rp-slot on" style="--c:' + p.color + '"><canvas class="rp-avc" data-avc="' + esc(p.id) + '" aria-hidden="true"></canvas>'
         + '<span class="rp-sl"><b>' + esc(p.name) + '</b><small>' + ic + '</small></span>'
         + (local ? '<button type="button" class="rp-ed" data-rped="' + esc(p.id) + '" title="غيّر الشكل" aria-label="غيّر شكل ' + esc(p.name) + '">🎨</button>' : '')
@@ -1395,6 +1482,7 @@ Host.prototype.renderLobby = function(){
     + '<p class="rp-tip">' + (can ? "🤝 امشوا مع بعض — الحبل يسحب اللي يبتعد. اللي يطيح: زملاؤه يمسكونه (زر «امسك») وهو يتسلّق الحبل (اضغط قفز)." : "تحتاجون لاعبين على الأقل.") + '</p></div>';
   this.drawPreview(box.querySelector('[data-rp="prev"]'));
   this.drawAvatars();
+  this.renderNet();
   var qrBox = box.querySelector('[data-rp="qr"]');
   if(qrBox && this.hooks.qr) this.hooks.qr(qrBox, url);
 };
