@@ -350,7 +350,7 @@
       <div class="save-bar" id="setSaveBar" hidden><span id="setSaveTxt">فيه تغييرات ما انحفظت</span><span style="display:flex;gap:8px"><button class="btn-ghost sm" id="setResetBtn" type="button">تراجع</button><button class="btn-primary sm" id="setSaveBtn" type="button">💾 حفظ الإعدادات</button></span></div>
 
       <h3 class="sub-h">⏱️ مؤقت «أسرع إصبع»</h3>
-      <p class="hint">أول فريق يضغط الزر عنده هالوقت يجاوب. إذا خلص الوقت الزر يتقفل عليهم لحاله وينفتح للفريق المنافس، وينخصم عليهم حسب «➖ خصم أسرع إصبع» فوق. خلّه 0 إذا ما تبي مؤقت.</p>
+      <p class="hint">أول فريق يضغط الزر عنده هالوقت يجاوب. إذا خلص الوقت يرجع الزر للفريق الخصم كم ثانية (تحددها من بطاقة «⚡ «أسرع إصبع»» فوق)، وبعدها ينفتح للكل. ما فيه خصم تلقائي — المقدّم يخصم ويزيد من زر ⚖️. خلّه 0 إذا ما تبي مؤقت.</p>
       <div class="card" style="max-width:620px">
         <div class="row">
           <label class="field" style="flex:1 1 200px;margin:0"><span>وقت الجواب بالثواني (0 = بدون مؤقت، أقصى شي 120)</span><input class="input" id="gBuzzTimer" type="number" min="0" max="120" step="1" inputmode="numeric" placeholder="10"></label>
@@ -1441,7 +1441,7 @@ document.addEventListener("DOMContentLoaded", function(){
     million:{ name:"💰 طريق المليون", unit:"أسئلة السلّم لكل فريق (الكرسي الحار) — وبـ«الكل يجاوب» عدد الأسئلة للكل", lbl:function(n){ return arN(n, W.q) + " لكل فريق"; }, tl:function(n){ return arN(n, W.q); } }
   };
   var PLAY_DEF = { trivia_pts:[1,2,3,4], pts:{ emoji:1, flags:1, charades:1, heads:1, letters:1 }, win_target:0, emoji_secs:20, char_secs:60, heads_dur:60,
-                   buzz_pen_timeout:1, buzz_pen_wrong:1,
+                   buzz_pen_timeout:1, buzz_pen_wrong:1, buzz_steal_secs:10,
                    million:{ step_pts:1, lv_pts:[1,2,3], speed_bonus:1, all_secs:20, vote_secs:15, friend_secs:30, life:{ fifty:true, aud:true, friend:true, swap:true } } };
   var ML_LIFE = [["fifty", "50:50 حذف إجابتين"], ["aud", "👥 اسأل الجمهور"], ["friend", "📞 اتصل بصديق"], ["swap", "🔄 تبديل السؤال"]];
   var HEADS_DURS = [30, 45, 60, 90, 120];
@@ -1470,6 +1470,7 @@ document.addEventListener("DOMContentLoaded", function(){
     var hd = toInt(p.heads_dur); out.heads_dur = HEADS_DURS.indexOf(hd) !== -1 ? hd : PLAY_DEF.heads_dur;
     var bt = toInt(p.buzz_pen_timeout); out.buzz_pen_timeout = bt == null ? PLAY_DEF.buzz_pen_timeout : clamp(bt, 0, 999);
     var bw = toInt(p.buzz_pen_wrong); out.buzz_pen_wrong = bw == null ? PLAY_DEF.buzz_pen_wrong : clamp(bw, 0, 999);
+    var bs = toInt(p.buzz_steal_secs); out.buzz_steal_secs = bs == null ? PLAY_DEF.buzz_steal_secs : clamp(bs, 0, 60);
     /* طريق المليون */
     var m = p.million && typeof p.million === "object" && !Array.isArray(p.million) ? p.million : {}, md = PLAY_DEF.million;
     var lf = m.life && typeof m.life === "object" ? m.life : {}, lp = Array.isArray(m.lv_pts) && m.lv_pts.length === 3 ? m.lv_pts : md.lv_pts;
@@ -1576,9 +1577,10 @@ document.addEventListener("DOMContentLoaded", function(){
     $("playGrid").innerHTML =
       '<div class="pg-stack"><div class="card"><h3>🎯 نقاط سين جيم لكل مستوى</h3><p class="hint">كم نقطة تاخذ الخانة (من السهل للأصعب).</p><div class="pts4">'
       + ["سهل", "متوسط", "صعب", "صعب جدًا"].map(function(l, i){ return '<label class="field" style="margin:0"><span>' + l + '</span>' + num("tp" + i, p.trivia_pts[i], 0, 999) + '</label>'; }).join("") + '</div></div>'
-      + '<div class="card"><h3>➖ خصم «أسرع إصبع»</h3><p class="hint">ينخصم من الفريق اللي ضغط أول. 0 = بدون خصم.</p><div class="kv">'
-      + '<span>⏰ خلص وقت الجواب — الخصم المقترح (المقدّم يختار على مين، ما فيه خصم تلقائي)</span>' + num("bpt", p.buzz_pen_timeout, 0, 999)
-      + '<span>❌ جواب غلط (زر «غلط وخصم» يختاره المقدّم)</span>' + num("bpw", p.buzz_pen_wrong, 0, 999) + '</div></div></div>'
+      + '<div class="card"><h3>⚡ «أسرع إصبع»</h3><p class="hint">لما يخلص وقت اللي ضغط (⏱️ المؤقت تحت): الزر يرجع للفريق الخصم كم ثانية، وبعدها ينفتح للكل. والخصم ما ينخصم لحاله — المقدّم يقرر من زر ⚖️.</p><div class="kv">'
+      + '<span>⏳ فرصة الفريق الخصم بعد ما يخلص الوقت (ثانية) — 0 = ينفتح للكل على طول</span>' + num("bst", p.buzz_steal_secs, 0, 60)
+      + '<span>⏰ خلص وقت الجواب — الخصم المقترح بنافذة ⚖️ (0 = بدون)</span>' + num("bpt", p.buzz_pen_timeout, 0, 999)
+      + '<span>❌ جواب غلط — زر «غلط وخصم» (0 = يختفي الزر)</span>' + num("bpw", p.buzz_pen_wrong, 0, 999) + '</div></div></div>'
       + '<div class="card"><h3>✅ نقاط الإجابة الصح</h3><p class="hint">تنضاف للفريق لما يجاوب صح.</p><div class="kv">'
       + '<span>📸 لغز تحدي الصور</span>' + num("p_emoji", p.pts.emoji, 0, 999)
       + '<span>🚩 علم صح</span>' + num("p_flags", p.pts.flags, 0, 999)
@@ -1611,7 +1613,7 @@ document.addEventListener("DOMContentLoaded", function(){
       trivia_pts:[0, 1, 2, 3].map(function(i){ return v("tp" + i); }),
       pts:{ emoji:v("p_emoji"), flags:v("p_flags"), charades:v("p_charades"), heads:v("p_heads"), letters:v("p_letters") },
       win_target:v("win"), emoji_secs:v("es"), char_secs:v("cs"), heads_dur:v("hd"),
-      buzz_pen_timeout:v("bpt"), buzz_pen_wrong:v("bpw"),
+      buzz_pen_timeout:v("bpt"), buzz_pen_wrong:v("bpw"), buzz_steal_secs:v("bst"),
       million:{ step_pts:v("m_step"), lv_pts:[v("m_l0"), v("m_l1"), v("m_l2")], speed_bonus:v("m_bonus"), all_secs:v("m_all"), vote_secs:v("m_vote"), friend_secs:v("m_friend"),
                 life:{ fifty:ck("lf_fifty"), aud:ck("lf_aud"), friend:ck("lf_friend"), swap:ck("lf_swap") } }
     };
@@ -1619,6 +1621,7 @@ document.addEventListener("DOMContentLoaded", function(){
   function playErr(p){
     if(p.trivia_pts.some(function(x){ return x == null || x < 0 || x > 999; })) return "نقاط سين جيم لازم من 0 لين 999";
     if([p.buzz_pen_timeout, p.buzz_pen_wrong].some(function(x){ return x == null || x < 0 || x > 999; })) return "خصم «أسرع إصبع» لازم من 0 لين 999";
+    if(p.buzz_steal_secs == null || p.buzz_steal_secs < 0 || p.buzz_steal_secs > 60) return "فرصة الفريق الخصم لازم من 0 لين 60 ثانية";
     if(Object.keys(p.pts).some(function(k){ var x = p.pts[k]; return x == null || x < 0 || x > 999; })) return "نقاط الإجابة لازم من 0 لين 999";
     if(p.win_target == null || p.win_target < 0 || p.win_target > 99999) return "نقاط الفوز لازم من 0 لين 99999";
     if(p.emoji_secs == null || p.emoji_secs < 5 || p.emoji_secs > 600 || p.char_secs == null || p.char_secs < 5 || p.char_secs > 600) return "المؤقت لازم من 5 لين 600 ثانية";

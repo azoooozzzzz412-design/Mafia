@@ -179,6 +179,18 @@
   .mq-left.warn{ background:#fff; color:#c0271d; }
   body.st-mq .center{ justify-content:flex-start; gap:12px; padding-top:4px; overflow-y:auto; }
   body.st-mq{ overflow-y:auto; }
+  /* ===== اللي ضغط: الزر يختفي وتطلع بطاقة باسمه ===== */
+  .who{ --w:#8b85a3; width:min(100%, 420px); display:flex; flex-direction:column; align-items:center; gap:6px; padding:18px 18px 16px; border-radius:24px; text-align:center;
+    background:linear-gradient(180deg, color-mix(in srgb, var(--w) 30%, transparent), color-mix(in srgb, var(--w) 10%, transparent));
+    border:2px solid color-mix(in srgb, var(--w) 75%, #fff); box-shadow:0 18px 44px -18px var(--w); animation:pop .4s ease; }
+  .who-k{ font-size:.9rem; font-weight:800; color:rgba(255,255,255,.85); }
+  .who-n{ font-family:var(--f-display); font-weight:900; font-size:clamp(2rem, 11vw, 3.2rem); line-height:1.15; color:#fff; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-shadow:0 3px 14px rgba(0,0,0,.35); }
+  .who-t{ display:inline-flex; align-items:center; gap:8px; font-weight:800; font-size:1rem; padding:4px 14px; border-radius:999px; background:rgba(0,0,0,.25); }
+  .who-t i{ width:12px; height:12px; border-radius:4px; background:var(--w); }
+  body.has-q .who{ padding:12px 14px; gap:4px; }
+  body.has-q .who-n{ font-size:clamp(1.6rem, 8vw, 2.3rem); }
+  body.st-win .who{ background:rgba(0,0,0,.2); border-color:rgba(255,255,255,.7); }
+  .clock.win2{ background:color-mix(in srgb, var(--c) 30%, transparent); border-color:var(--c); }
   .foot{ font-size:.72rem; color:var(--faint); text-align:center; }
   .foot b{ font-family:ui-monospace, monospace; direction:ltr; unicode-bidi:isolate; }
   @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
@@ -201,6 +213,7 @@
     </form>
     <div class="qcard" id="qcard" hidden></div>
     <div class="mq" id="mq" data-nopress hidden></div>
+    <div class="who" id="who" hidden><span class="who-k" id="whoK">⚡ ضغط أول</span><b class="who-n" id="whoN"></b><span class="who-t"><i></i><span id="whoT"></span></span></div>
     <button class="btn" id="btn" type="button" aria-label="زر الضغط">…</button>
     <div class="clock" id="clock" hidden aria-live="off"><span>⏱️</span><b id="clockN">0</b><small id="clockW">ثانية</small></div>
     <div class="pen" id="pen" hidden role="status"><b id="penN"></b><span id="penT"></span></div>
@@ -223,7 +236,8 @@ document.addEventListener("DOMContentLoaded", function(){
               btn:$("btn"), msg:$("msg"), sub:$("sub"), reload:$("reload"), big:$("bigEmoji"), foot:$("foot"),
               meName:$("meName"), editIcon:$("editIcon"), nameForm:$("nameForm"), nameInput:$("nameInput"),
               qcard:$("qcard"), clock:$("clock"), clockN:$("clockN"), clockW:$("clockW"),
-              pen:$("pen"), penN:$("penN"), penT:$("penT"), mq:$("mq") };
+              pen:$("pen"), penN:$("penN"), penT:$("penT"), mq:$("mq"),
+              who:$("who"), whoK:$("whoK"), whoN:$("whoN"), whoT:$("whoT") };
 
   var pid;
   try{
@@ -242,7 +256,7 @@ document.addEventListener("DOMContentLoaded", function(){
   var S = { conn:"connecting", connSince:Date.now(), host:null, lastSeen:0,
             pressedQid:null, pressedAt:0, celebrated:null, wakeLock:null, audio:null,
             endAt:0, clockT:null, toutKey:null, penKey:null, addKey:null, penT:null,
-            mqSent:null, mqEnd:0, mqT:null, mqLastQ:null, mqHtml:null };
+            mqSent:null, mqEnd:0, mqT:null, mqLastQ:null, mqHtml:null, wEnd:0, wKey:null };
   var client = null, ch = null;
 
   els.reload.addEventListener("click", function(){ location.reload(); });
@@ -343,14 +357,20 @@ document.addEventListener("DOMContentLoaded", function(){
       if(S.celebrated !== key){ S.celebrated = key; vibrate([80, 50, 120]); winSound(); }
     }
     /* مؤقت الجواب: الشاشة ترسل الباقي بالثواني — نعدّ هنا لحالنا ونتزامن مع كل رسالة */
-    var left = +p.left;
+    var left = +p.left, wl = +p.wleft;
     S.endAt = (p.state === "locked" && isFinite(left) && left > 0) ? Date.now() + Math.min(left, 600) * 1000 : 0;
+    /* فرصة الفريق الخصم (بعد ما خلص وقت اللي ضغط): عدّاد هنا لحاله */
+    S.wEnd = (p.state === "armed" && Array.isArray(p.only) && isFinite(wl) && wl > 0) ? Date.now() + Math.min(wl, 120) * 1000 : 0;
     clearInterval(S.clockT); S.clockT = null;
-    if(S.endAt) S.clockT = setInterval(renderClock, 250);
-    /* خلص وقت فريق — ينبّه صاحب الدور، والباقين يعرفون إن الزر انفتح لهم */
+    if(S.endAt || S.wEnd) S.clockT = setInterval(renderClock, 250);
+    if(S.wEnd){
+      var wk = p.qid + "|" + (p.tout || "") + "|" + p.only.join(",");
+      if(S.wKey !== wk){ S.wKey = wk; if(p.only.indexOf(teamId) !== -1){ vibrate([60, 40, 60]); winSound(); } }
+    }
+    /* خلص وقت فريق — ينبّه صاحب الدور (والخصم ينبّه فوق مع بداية فرصته) */
     if(p.state === "armed" && p.tout){
       var tk = p.qid + "|" + p.tout + "|" + (p.excluded || []).join(",");
-      if(S.toutKey !== tk){ S.toutKey = tk; if(p.tout === teamId){ vibrate([200, 80, 200]); timeUpSound(); } else { vibrate(60); } }
+      if(S.toutKey !== tk){ S.toutKey = tk; if(p.tout === teamId){ vibrate([200, 80, 200]); timeUpSound(); } else if(!Array.isArray(p.only)) vibrate(60); }
     }
     /* «طريق المليون»: عدّاد الجواب/التصويت يمشي هنا لحاله ويتزامن مع كل رسالة */
     var mqv = p.mq && typeof p.mq === "object" ? p.mq : null;
@@ -399,12 +419,15 @@ document.addEventListener("DOMContentLoaded", function(){
     clearTimeout(S.penT); S.penT = setTimeout(function(){ els.pen.hidden = true; }, 6000);
   }
   function timeLeft(){ return S.endAt ? Math.max(0, Math.ceil((S.endAt - Date.now()) / 1000)) : 0; }
+  function winLeft(){ return S.wEnd ? Math.max(0, Math.ceil((S.wEnd - Date.now()) / 1000)) : 0; }
   function secsWord(n){ return n === 1 ? "ثانية" : n === 2 ? "ثانيتين" : (n >= 3 && n <= 10 ? "ثواني" : "ثانية"); }
   function renderClock(){
-    var v = LASTV, on = !!S.endAt && (v === "win" || v === "lost");
-    els.clock.hidden = !on;
-    if(!on){ if(!S.endAt){ clearInterval(S.clockT); S.clockT = null; } return; }
-    var n = timeLeft();
+    var v = LASTV, ans = !!S.endAt && (v === "win" || v === "lost"), win2 = !ans && !!S.wEnd && (v === "armed" || v === "wait" || v === "pressed");
+    els.clock.hidden = !(ans || win2);
+    if(!ans && !win2){ if(!S.endAt && !S.wEnd){ clearInterval(S.clockT); S.clockT = null; } return; }
+    var n = ans ? timeLeft() : winLeft();
+    els.clock.firstElementChild.textContent = ans ? "⏱️" : "⏳";
+    els.clock.classList.toggle("win2", win2);
     els.clockN.textContent = n; els.clockW.textContent = secsWord(n);
     els.clock.classList.toggle("warn", n <= 3);
     if(n <= 0){ clearInterval(S.clockT); S.clockT = null; }
@@ -480,7 +503,7 @@ document.addEventListener("DOMContentLoaded", function(){
   }
   var QLAST = null;
   function renderQ(v){
-    var show = !!(S.host && S.host.q) && ["idle", "armed", "pressed", "win", "lost", "excluded"].indexOf(v) !== -1;
+    var show = !!(S.host && S.host.q) && ["idle", "armed", "pressed", "win", "lost", "excluded", "wait"].indexOf(v) !== -1;
     var html = show ? qHtml(S.host.q) : "";
     if(html !== QLAST){ QLAST = html; els.qcard.innerHTML = html; }
     els.qcard.hidden = !html;
@@ -510,11 +533,12 @@ document.addEventListener("DOMContentLoaded", function(){
     if(h.mq && typeof h.mq === "object") return "mq";
     if(h.state === "locked"){
       if(h.winner === teamId) return "win";
-      if((h.excluded || []).indexOf(teamId) !== -1) return "excluded";   /* جاوبوا وغلطوا (أو خلص وقتهم) — ما تنفتح لهم مرة ثانية */
+      if((h.excluded || []).indexOf(teamId) !== -1) return "excluded";   /* جاوبوا غلط — ما تنفتح لهم مرة ثانية بهالسؤال */
       return "lost";
     }
     if(h.state === "armed"){
       if((h.excluded || []).indexOf(teamId) !== -1) return "excluded";
+      if(Array.isArray(h.only) && h.only.indexOf(teamId) === -1) return "wait";   /* خلص وقتنا: الفرصة للخصم شوي، وبعدها يرجع لنا الزر */
       if(S.pressedQid === h.qid && Date.now() - S.pressedAt < 2500) return "pressed";
       return "armed";
     }
@@ -533,7 +557,8 @@ document.addEventListener("DOMContentLoaded", function(){
     var conn = S.conn === "on" && hostAlive() ? "ok" : (S.conn === "error" ? "bad" : "");
     els.conn.className = "conn " + conn;
     els.connText.textContent = conn === "ok" ? "متصل" : (S.conn === "error" ? "مقطوع" : (S.conn === "on" ? "ننتظر الشاشة" : "جاري الاتصال…"));
-    var btn = "", msg = "", sub = "";
+    var btn = "", msg = "", sub = "", big = "", who = null, noBtn = false;
+    var steal = num(S.host && S.host.steal, 0, 60) | 0;
     switch(v){
       case "connecting": btn = "…"; msg = "جاري الاتصال…"; break;
       case "error": btn = "📡"; msg = "⚠️ انقطع الاتصال"; sub = "نحاول نرجع لحالنا… إذا طوّل اضغط تحديث."; break;
@@ -543,7 +568,8 @@ document.addEventListener("DOMContentLoaded", function(){
       case "armed":
         btn = "اضغط!";
         var to = S.host.tout ? teamById(S.host.tout) : null;
-        if(to){ msg = "دوركم! اضغطوا"; sub = "⏰ خلص وقت " + to.name + " — الزر مفتوح لكم الحين"; }
+        if(S.wEnd){ msg = "فرصتكم! اضغطوا"; sub = "⏰ خلص وقت " + (to ? to.name : "الفريق") + " — الزر لكم بس، وبعدها ينفتح للكل"; }
+        else if(to){ msg = "دوركم! اضغطوا"; sub = "⏰ خلص وقت " + to.name + " — الزر مفتوح لكم الحين"; }
         else {
           msg = "الأزرار مفتوحة!";
           var tm = num(S.host.tmax, 0, 600) | 0;
@@ -552,28 +578,29 @@ document.addEventListener("DOMContentLoaded", function(){
         break;
       case "pressed": btn = "✓"; msg = "وصلت ضغطتكم…"; break;
       case "win":
-        if(S.host.tup){ btn = "⏰"; msg = "خلص وقتكم!"; sub = "المقدّم يقرر — انتظروا شوي"; break; }
-        btn = "🎉";
-        if(S.host.winnerPid && S.host.winnerPid === pid){ msg = "ضغطت أول! جاوبوا"; }
-        else { msg = "أنتم أول! جاوبوا"; if(S.host.winnerName) sub = "اللي ضغط: " + S.host.winnerName; }
+        /* الزر يختفي ويطلع اسم اللي ضغط */
+        noBtn = true;
+        var mine = S.host.winnerPid && S.host.winnerPid === pid;
+        who = { k: mine ? "⚡ ضغطت أول!" : "⚡ ضغط أول من فريقكم", n: mine ? (myName || "أنت") : (S.host.winnerName || (me ? me.name : "")), t: me ? me.name : "", c: color };
+        msg = mine ? "جاوب الحين!" : "جاوبوا الحين!";
         break;
       case "lost":
+        noBtn = true;
         var w = teamById(S.host.winner);
-        if(S.host.tup){ btn = "⏳"; msg = "خلص وقت " + (w ? w.name : "الفريق"); sub = "انتظروا قرار المقدّم…"; break; }
-        btn = "⛔"; msg = "سبقكم " + (w ? w.name : "فريق ثاني");
-        sub = (S.host.winnerName ? "اللي ضغط: " + S.host.winnerName + " — " : "") + (S.endAt ? "لو غلطوا أو خلص وقتهم تنفتح لكم." : "لو غلطوا تنفتح لكم."); break;
+        who = { k: "⚡ ضغط أول", n: S.host.winnerName || (w ? w.name : "فريق ثاني"), t: w ? w.name : "", c: w && w.color ? w.color : "#8b85a3" };
+        msg = "سبقكم " + (w ? w.name : "فريق ثاني");
+        sub = S.endAt && steal ? "لو خلص وقتهم ترجع لكم الفرصة " + (steal <= 2 ? secsWord(steal) : steal + " " + secsWord(steal)) + "." : (S.endAt ? "لو غلطوا أو خلص وقتهم ينفتح لكم." : "لو غلطوا ينفتح لكم.");
+        break;
+      case "wait":
+        noBtn = true; big = "⏰";
+        var opp = (S.host.only || []).map(teamById).filter(Boolean);
+        msg = "خلص وقتكم!";
+        sub = "الفرصة الحين لـ " + (opp.length === 1 ? opp[0].name : "الفرق الثانية") + " — ولو ما ضغطوا يرجع لكم الزر.";
+        break;
       case "mq":
         var mt = mqTexts(S.host.mq); btn = ""; msg = mt.msg; sub = mt.sub; break;
-      case "excluded":
-        var mp = myPen();
-        if(S.host.tout === teamId){
-          var ex = S.host.excluded || [], rest = (Array.isArray(S.host.teams) ? S.host.teams : []).filter(function(t){ return t && t.id !== teamId && ex.indexOf(t.id) === -1; }).length;
-          btn = "⏰"; msg = "خلص وقتكم!"; sub = "انفتح الزر " + (rest > 1 ? "للفرق الثانية" : "للفريق المنافس") + " — انتظروا السؤال الجاي.";
-        }
-        else if(mp && mp.kind === "timeout"){ btn = "⏰"; msg = "خلص وقتكم"; sub = "انتظروا السؤال الجاي."; }
-        else if(mp && mp.kind === "wrong"){ btn = "❌"; msg = "جاوبتوا غلط"; sub = "انتظروا السؤال الجاي."; }
-        else if(mp){ btn = "➖"; msg = "انخصمت عليكم"; sub = "انتظروا السؤال الجاي."; }
-        else { btn = "✋"; msg = "جاوبتوا بهالسؤال"; sub = "انتظروا السؤال الجاي."; }
+      case "excluded":   /* (من v7.2 اللي خلص وقته ما ينقفل عليه — ينقفل بس على اللي جاوب غلط) */
+        noBtn = true; big = "❌"; msg = "جاوبتوا غلط"; sub = "انتظروا السؤال الجاي.";
         break;
     }
     els.reload.hidden = !(v === "error" && Date.now() - S.connSince > 8000);
@@ -581,14 +608,19 @@ document.addEventListener("DOMContentLoaded", function(){
     renderMq(v);
     var hasQ = v === "mq" ? false : renderQ(v);
     renderClock();
-    var key = v + "|" + btn + "|" + msg + "|" + sub + "|" + color + "|" + els.teamName.textContent + "|" + myName + "|" + hasQ;
+    var key = v + "|" + btn + "|" + msg + "|" + sub + "|" + color + "|" + els.teamName.textContent + "|" + myName + "|" + hasQ + "|" + big + "|" + noBtn + "|" + (who ? who.k + who.n + who.t + who.c : "");
     if(key === LAST) return;
     LAST = key;
     document.body.className = "st-" + v + (hasQ ? " has-q" : "");
     els.nameForm.hidden = v !== "name";
     els.btn.hidden = els.msg.hidden = els.sub.hidden = (v === "name");
-    if(v === "mq") els.btn.hidden = true;
+    if(v === "mq" || noBtn) els.btn.hidden = true;
+    /* بطاقة اللي ضغط (الزر مخفي) أو أيقونة كبيرة */
+    els.who.hidden = !who;
+    if(who){ els.who.style.setProperty("--w", who.c); els.whoK.textContent = who.k; els.whoN.textContent = who.n; els.whoT.textContent = who.t; els.whoT.parentNode.hidden = !who.t; }
+    els.big.hidden = !big; els.big.textContent = big;
     els.btn.textContent = btn; els.msg.textContent = msg; els.sub.textContent = sub;
+    els.sub.hidden = els.sub.hidden || !sub;
   }
 
   /* ===== «طريق المليون» على الجوال: يشوف السؤال، ويختار الجواب (الكل يجاوب) أو يصوّت (اسأل الجمهور) ===== */
