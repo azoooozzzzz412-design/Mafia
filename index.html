@@ -505,6 +505,22 @@
   .qr-hint{ font-size:.82rem; color:var(--tx-2); margin-top:12px; max-width:44ch; }
 
   /* ================= المافيا ================= */
+  .mafia-online{ position:relative; display:flex; align-items:center; gap:16px; margin:0 0 12px; padding:14px 16px; border-radius:var(--r-xl); text-decoration:none; color:var(--tx); overflow:hidden;
+    background:radial-gradient(ellipse 60% 140% at 0% 50%, rgba(239,68,68,.2), transparent 70%), linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+    border:1px solid rgba(239,68,68,.38); box-shadow:var(--sh-1); transition:transform .5s cubic-bezier(.32,.72,0,1), border-color .3s; }
+  .mafia-online:hover{ transform:translateY(-2px); border-color:rgba(239,68,68,.65); }
+  .mafia-online .mo-art{ width:72px; height:102px; flex-shrink:0; border-radius:12px; background:#1a0f0a url("games/mafia-card-mafia.webp?v=8") center 22% / cover no-repeat;
+    box-shadow:0 12px 26px -12px rgba(0,0,0,.85), 0 0 0 1px rgba(255,210,150,.4); transform:rotate(-4deg); }
+  .mafia-online .mo-txt{ flex:1; min-width:0; display:grid; gap:3px; }
+  .mafia-online .mo-k{ font-size:.7rem; font-weight:800; color:var(--mafia-bright); letter-spacing:.06em; }
+  .mafia-online b{ font-size:1.06rem; line-height:1.45; }
+  .mafia-online small{ color:var(--tx-2); font-size:.82rem; line-height:1.65; }
+  .mafia-online .mo-go{ flex-shrink:0; padding:10px 18px; border-radius:999px; background:var(--mafia); color:#fff; font-weight:800; font-size:.9rem; white-space:nowrap; box-shadow:0 10px 24px -10px rgba(239,68,68,.8); }
+  .mo-row{ display:flex; gap:16px; flex-wrap:wrap; margin:0 6px 16px; font-size:.86rem; }
+  .mo-link{ color:var(--tx-2); text-decoration:underline; text-underline-offset:3px; }
+  .mo-link:hover{ color:var(--tx); }
+  .mo-code{ font-family:var(--f-mono, monospace); direction:ltr; unicode-bidi:isolate; letter-spacing:.12em; color:var(--mafia-bright); }
+  @media (max-width:560px){ .mafia-online{ flex-wrap:wrap; } .mafia-online .mo-art{ width:58px; height:82px; } .mafia-online .mo-txt{ flex-basis:calc(100% - 80px); } .mafia-online .mo-go{ width:100%; text-align:center; } }
   .mafia-panel{ position:relative; padding:24px; border-radius:var(--r-xl); background:linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.015)); border:1px solid var(--line-2); box-shadow:var(--sh-1); }
   .mafia-panel .rivet{ display:none; }
   .intake .field-row{ display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
@@ -2104,6 +2120,12 @@
       <div class="mh-main"><span class="g-tile"><svg class="ic"><use href="#i-mafia"/></svg></span><div><h2>المافيا</h2><p id="mafiaSubtitle">أدخل أرقام اللاعبين، وسيجهّز لكل واحد رسالة واتساب فيها دوره سرًا.</p></div></div>
       <span class="case-stamp" id="mafiaCaseStamp"></span>
     </div>
+    <a class="mafia-online" href="mafia.html?host=1" id="mafiaOnline">
+      <span class="mo-art" aria-hidden="true"></span>
+      <span class="mo-txt"><span class="mo-k">جديد · أونلاين</span><b>العبوا المافيا أونلاين — كل واحد من بيته</b><small>مايك لكل لاعب، شات، وطاولة 3D كأنك جالس عليها والشخصيات تتحرك حولك. الراوي يدير اللعبة والأدوار سرّية حتى عنك. تفتح الغرفة وترسل الرابط (من 4 لين 12 لاعب).</small></span>
+      <span class="mo-go">افتح غرفة ←</span>
+    </a>
+    <div class="mo-row"><a class="mo-link" href="mafia.html">عندي رمز غرفة</a><a class="mo-link" href="mafia.html" id="mafiaRejoin" hidden>ارجع لغرفتك <b class="mo-code" id="mafiaRejoinCode"></b></a></div>
     <div class="mafia-panel">
       <span class="rivet tl"></span><span class="rivet tr"></span><span class="rivet bl"></span><span class="rivet br"></span>
       <div class="intake" id="mafiaIntake">
@@ -3887,7 +3909,16 @@
     } else { fallback(); }
   });
 
+  function mOnlineRender(){
+    var a = document.getElementById("mafiaRejoin"), last = null;
+    try{ last = JSON.parse(localStorage.getItem("sahra-mafia-last") || "null"); }catch(e){}
+    var ok = !!(last && /^[A-Z2-9]{6}$/.test(last.code || "") && Date.now() - (+last.at || 0) < 12 * 3600 * 1000);
+    if(!a) return;
+    a.hidden = !ok;
+    if(ok){ a.href = "mafia.html?r=" + last.code; document.getElementById("mafiaRejoinCode").textContent = last.code; }
+  }
   function mRender(){
+    mOnlineRender();
     var active = !!store.mafia.caseId;
     mEls.mafiaIntake.hidden = active;
     mEls.mafiaActive.hidden = !active;
@@ -6895,6 +6926,7 @@
     if(!first) return;
     handlePaymentReturn();
     var intent = null; try{ intent = sessionStorage.getItem("sahra-intent"); sessionStorage.removeItem("sahra-intent"); }catch(e){}
+    if(intent === "mafia-host"){ location.href = "mafia.html?host=1"; return; }
     if(intent === "shop") openShop(); else maybeWelcome();
     /* لو الأدمن أوقف الحساب أو أضاف جولات وهو شغّال */
     clearInterval(authWatchT);
@@ -7034,6 +7066,10 @@
     });
     sharedSb.auth.onAuthStateChange(function(event){ if(event === "SIGNED_OUT" && ME){ clearBootCache(); location.replace(location.pathname); } });
   }
+  try{
+    var bootQs = new URLSearchParams(location.search);
+    if(bootQs.get("buy") === "1"){ sessionStorage.setItem("sahra-intent", "shop"); bootQs.delete("buy"); history.replaceState(null, "", location.pathname + (bootQs.toString() ? "?" + bootQs.toString() : "") + location.hash); }
+  }catch(e){}
   earlyBoot();
   if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", authBoot);
   else authBoot();
