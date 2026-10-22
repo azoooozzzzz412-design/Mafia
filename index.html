@@ -2149,6 +2149,8 @@
         </div>
         <div class="player-grid" id="mPlayerGrid"></div>
         <div class="m-round" id="mRoundLine2"></div>
+        <button class="btn-primary" id="mAutoSendBtn" type="button" style="width:100%" hidden>🤖 إرسال الأدوار تلقائيًا</button>
+        <p class="form-warn" id="mAutoSendMsg"></p>
         <div class="folder-actions">
           <button class="btn-ghost" id="mNewRoundBtn" type="button">جولة جديدة 🔄</button>
           <button class="btn-ghost" id="mNewCaseBtn" type="button">قضية جديدة 🗂️</button>
@@ -3868,6 +3870,44 @@
   }
   function mWaLink(phone, message){ return "https://wa.me/"+phone+"?text="+encodeURIComponent(message); }
 
+  /* إرسال الأدوار تلقائيًا عبر بوت واتساب يشتغل على جهاز صاحب الطاولة (للأدمن فقط).
+     السر ينطلب مرة وحدة ويتحفظ بمتصفحه، وما ينحط بالملف. الإرسال اليدوي لكل لاعب يبقى متاح. */
+  var BOT_URL = "http://127.0.0.1:3000";
+  function mBotSecret(){
+    var s = "";
+    try{ s = localStorage.getItem("wa_bot_secret") || ""; }catch(e){}
+    if(!s){
+      s = (prompt("أدخل سر البوت (API_SECRET)") || "").trim();
+      if(s){ try{ localStorage.setItem("wa_bot_secret", s); }catch(e){} }
+    }
+    return s;
+  }
+  function mAutoSend(){
+    var btn = document.getElementById("mAutoSendBtn"), msg = document.getElementById("mAutoSendMsg");
+    var list = store.mafia.players.filter(function(p){ return p.role && !p.sent; });
+    if(!list.length){ msg.textContent = "كل الرسائل انرسلت."; return; }
+    var secret = mBotSecret();
+    if(!secret){ msg.textContent = "ما انكتب السر."; return; }
+    btn.disabled = true; msg.textContent = "جاري الإرسال...";
+    fetch(BOT_URL + "/send", {
+      method:"POST",
+      headers:{ "content-type":"application/json", "x-api-secret":secret },
+      body: JSON.stringify({ messages: list.map(function(p){ return { phone:p.phone, text:mBuildMessage(p) }; }) })
+    }).then(function(r){
+      if(r.status === 401){ try{ localStorage.removeItem("wa_bot_secret"); }catch(e){} throw new Error("السر غير صحيح، جرّب مرة ثانية."); }
+      if(r.status === 503) throw new Error("واتساب غير متصل بالبوت.");
+      if(!r.ok) throw new Error("البوت رفض الطلب (" + r.status + ").");
+      return r.json();
+    }).then(function(){
+      list.forEach(function(p){ p.sent = true; });
+      persist(); mRenderPlayerGrid();
+      msg.textContent = "✅ انحطت " + list.length + " رسالة بالدور، وتوصل خلال ثواني (فاصل بين كل رسالة).";
+    }).catch(function(e){
+      msg.textContent = "⚠️ " + (e && e.message === "Failed to fetch" ? "ما قدرت أوصل للبوت. تأكد أنه شغّال على هذا الجهاز." : (e && e.message) || "فشل الإرسال.") + " تقدر ترسل لكل لاعب يدويًا بالضغط على بطاقته.";
+    }).then(function(){ btn.disabled = false; });
+  }
+  document.getElementById("mAutoSendBtn").addEventListener("click", mAutoSend);
+
   var mCurrentTicketId = null;
   function mOpenTicket(id){
     var p = store.mafia.players.find(function(x){ return x.id===id; });
@@ -3925,6 +3965,7 @@
     document.getElementById("mRoundLine").innerHTML = mRoundText();
     document.getElementById("mRoundLine2").innerHTML = mRoundText();
     mEls.mafiaCaseStamp.innerHTML = active ? 'LIVE CASE <b>'+store.mafia.caseId+'</b> · ج'+store.mafia.round : '';
+    document.getElementById("mAutoSendBtn").hidden = !(ACCT && ACCT.admin);
     if(active){ mRenderPlayerGrid(); } else { mRenderPlayerList(); mRenderRoleConfig(); mUpdateStartState(); }
   }
 
