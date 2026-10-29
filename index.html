@@ -754,6 +754,47 @@
   .tu-sum b{ font-family:var(--f-mono); unicode-bidi:isolate; color:var(--tx); font-weight:700; white-space:nowrap; }
   .tu-actions{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
   .tu-actions button{ flex:1 1 200px; }
+  /* ===== (v10) خلص الوقت وفيه أحد ضغط: المقدّم يقرر صح ولا غلط ===== */
+  .bd-modal .modal{ width:min(520px, 100%); border-top:6px solid var(--c, #7c5cff); }
+  .bd-modal:not([hidden]) ~ .buzz-bar, .ans-modal:not([hidden]) ~ .buzz-bar{ display:none; }
+  .bd-who{ color:var(--tx-2); font-size:1rem; margin:2px 0 18px; line-height:1.7; }
+  .bd-who b{ color:#fff; font-weight:800; }
+  .bd-actions{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+  .bd-actions button{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; min-height:96px; padding:14px 10px; border-radius:20px;
+    border:1px solid rgba(255,255,255,.22); color:#fff; font-family:var(--f-display); font-weight:800; font-size:1.45rem; line-height:1.2;
+    box-shadow:0 14px 30px -14px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.18); transition:transform .15s var(--ease), filter .15s; }
+  .bd-actions button small{ font-family:var(--f-body); font-size:.8rem; font-weight:700; opacity:.92; }
+  .bd-actions button small:empty{ display:none; }
+  .bd-actions button:hover{ transform:translateY(-2px); filter:brightness(1.08); }
+  .bd-actions .bd-ok{ background:linear-gradient(180deg, #22b45e, #16a34a); }
+  .bd-actions .bd-no{ background:linear-gradient(180deg, #ef5b60, #e5484d); }
+  .bd-none{ font-size:.92rem; }
+  @media (max-width:420px){ .bd-actions button{ min-height:84px; font-size:1.25rem; } }
+  .buzz-bar button.bb-ok{ background:#16a34a; border-color:rgba(255,255,255,.6); color:#fff; box-shadow:0 6px 16px -6px rgba(0,0,0,.55); }
+  .buzz-bar button.bb-ok:hover{ background:#12923f; }
+  .st-ok .bl-st{ background:rgba(34,197,94,.2); color:#86efac; }
+  .buzz-flash.ok{ animation-duration:2.6s; }
+  .buzz-flash .bf-ans{ display:inline-block; font-family:var(--f-body); font-size:.36em; font-weight:700; margin-top:.6em; padding:.35em .95em; border-radius:999px; background:rgba(0,0,0,.24); }
+  /* ===== (v10) 📱 الإجابات بجوال المقدّم ===== */
+  .mh-acts{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .ans-btn{ white-space:nowrap; }
+  .ans-modal .modal{ width:min(460px, 100%); }
+  .ans-qr{ position:relative; width:min(260px, 70vw); margin:6px auto 12px; padding:10px; background:#fff; border-radius:20px; box-shadow:0 18px 40px -18px rgba(0,0,0,.9); }
+  .ans-qr svg{ display:block; width:100%; height:auto; transition:opacity .3s ease; }
+  .ans-qr .ans-wait{ color:#5b5670; font-size:.9rem; line-height:1.7; padding:36px 8px; }
+  .ans-qr.done svg{ opacity:.1; }
+  .ans-qr .ans-ok{ position:absolute; inset:0; display:grid; place-items:center; align-content:center; gap:6px; color:#14532d; font-weight:800; font-size:1.05rem; }
+  .ans-qr .ans-ok b{ font-size:2.6rem; line-height:1; }
+  .ans-st{ min-height:1.6em; font-size:.92rem; font-weight:700; color:var(--tx-2); margin-bottom:8px; }
+  .ans-st.ok{ color:#86efac; }
+  .ans-note{ font-size:.84rem; color:var(--tx-3); line-height:1.7; margin:0 0 14px; }
+  .ans-acts{ display:flex; gap:10px; flex-wrap:wrap; }
+  .ans-acts button{ flex:1 1 150px; }
+  .ans-copy{ font-size:.78rem; margin-top:12px; background:none; border:1px dashed var(--line-3); color:var(--tx-3); border-radius:10px; padding:5px 12px; }
+  .ans-copy:hover{ color:#fff; border-style:solid; }
+  .ans-copy[hidden]{ display:none; }
+  .ans-auto{ display:flex; align-items:center; justify-content:center; gap:9px; margin-top:12px; font-size:.86rem; color:var(--tx-2); cursor:pointer; }
+  .ans-auto input{ width:18px; height:18px; accent-color:var(--v); }
   .buzz-flash{
     position:fixed; inset:0; z-index:60; display:flex; align-items:center; justify-content:center; text-align:center; padding:20px;
     background:color-mix(in srgb, var(--c) 92%, #000); color:#fff; pointer-events:none;
@@ -1973,7 +2014,7 @@
     <div class="back-row"><button class="back-btn" data-view="home" type="button">→ الرئيسية</button></div>
     <div class="mode-header" style="--accent:var(--trivia);--accent-bright:var(--trivia-bright)">
       <div class="mh-main"><span class="g-tile"><svg class="ic"><use href="#i-trivia"/></svg></span><div><h2>سين جيم <span class="round-tag" data-rtag="trivia"></span></h2><p>اختاروا خانة، اقرأوا السؤال بصوت عالي، وامنحوا النقاط لمن جاوب صح.</p></div></div>
-      <button id="trivNewBoardBtn" class="btn-ghost game-only" type="button">🏁 إنهاء اللوحة</button>
+      <div class="mh-acts game-only"><button class="btn-ghost ans-btn" data-ans="trivia" type="button">📱 الإجابات</button><button id="trivNewBoardBtn" class="btn-ghost" type="button">🏁 إنهاء اللوحة</button></div>
     </div>
     <div class="round-gate" data-gate="trivia" hidden></div>
     <div class="game-body"><div class="trivia-board" id="triviaBoard"></div></div>
@@ -1984,7 +2025,7 @@
     <div class="back-row"><button class="back-btn" data-view="home" type="button">→ الرئيسية</button></div>
     <div class="mode-header" style="--accent:var(--emoji);--accent-bright:var(--emoji-bright)">
       <div class="mh-main"><span class="g-tile"><svg class="ic"><use href="#i-emoji"/></svg></span><div><h2>تحدي الصور <span class="round-tag" data-rtag="emoji"></span></h2><p id="emojiModeDesc">كل صورة تمثّل كلمة (بمعناها أو بلفظها) — ركّب الصور مع الحروف واقرأها من اليمين تطلع لك مدينة أو دولة أو شخصية أو مثل — أول فريق يخمّن ياخذ النقطة.</p></div></div>
-      <button id="emojiNextBtn" class="btn-ghost game-only" type="button">التالي ⏭️</button>
+      <div class="mh-acts game-only"><button class="btn-ghost ans-btn" data-ans="emoji" type="button">📱 الإجابات</button><button id="emojiNextBtn" class="btn-ghost" type="button">التالي ⏭️</button></div>
     </div>
     <div class="round-gate" data-gate="emoji" hidden></div>
     <div class="game-body">
@@ -2013,7 +2054,7 @@
     <div class="back-row"><button class="back-btn" data-view="home" type="button">→ الرئيسية</button></div>
     <div class="mode-header" style="--accent:var(--letters);--accent-bright:var(--letters-bright)">
       <div class="mh-main"><span class="g-tile"><svg class="ic"><use href="#i-letters"/></svg></span><div><h2>الحروف <span class="round-tag" data-rtag="letters"></span></h2><p>اختاروا خلية واقرأوا سؤال حرفها — الفريق اللي يجاوب صح ياخذ الخلية. الفريق الأول يوصّل من فوق لتحت، والثاني من اليمين لليسار.</p></div></div>
-      <button id="ltNewBtn" class="btn-ghost game-only" type="button">🏁 إنهاء اللوحة</button>
+      <div class="mh-acts game-only"><button class="btn-ghost ans-btn" data-ans="letters" type="button">📱 الإجابات</button><button id="ltNewBtn" class="btn-ghost" type="button">🏁 إنهاء اللوحة</button></div>
     </div>
     <div class="round-gate" data-gate="letters" hidden></div>
     <div class="game-body">
@@ -2096,7 +2137,7 @@
     <div class="back-row"><button class="back-btn" data-view="home" type="button">→ الرئيسية</button></div>
     <div class="mode-header" style="--accent:var(--million);--accent-bright:var(--million-bright)">
       <div class="mh-main"><span class="g-tile"><svg class="ic"><use href="#i-million"/></svg></span><div><h2>طريق المليون <span class="round-tag" data-rtag="million"></span></h2><p>سؤال وأربع خيارات، والأسئلة تصعب كل ما طلعتوا — وصلوا للمليون!</p></div></div>
-      <button id="mlEndBtn" class="btn-ghost game-only" type="button">🏁 إنهاء الجولة</button>
+      <div class="mh-acts game-only"><button class="btn-ghost ans-btn" data-ans="million" type="button">📱 الإجابات</button><button id="mlEndBtn" class="btn-ghost" type="button">🏁 إنهاء الجولة</button></div>
     </div>
     <div class="round-gate" data-gate="million" hidden></div>
     <div class="game-body"><div class="ml-wrap" id="mlBody"></div></div>
@@ -2356,6 +2397,37 @@
       <button class="btn-primary" id="tuReopen" type="button"></button>
       <button class="btn-ghost" id="tuLock" type="button"></button>
     </div>
+  </div>
+</div>
+<!-- (v10) 📱 الإجابات بجوال المقدّم: باركود لكل جولة — أول جوال يمسحه بس -->
+<div class="modal-overlay ans-modal" id="ansModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="ansTitle">
+    <button class="teams-close" id="ansClose" type="button" aria-label="إغلاق">✕</button>
+    <h3 id="ansTitle" style="font-size:1.35rem;margin:0 0 6px">📱 الإجابات بجوالك</h3>
+    <p class="tu-sub" id="ansSub"></p>
+    <div class="ans-qr" id="ansQr"></div>
+    <p class="ans-st" id="ansSt" aria-live="polite"></p>
+    <p class="ans-note">🤫 أول جوال يمسحه بس يشوف الإجابات — امسحه بجوالك أنت، وبعدها يختفي الباركود لحاله.</p>
+    <div class="ans-acts">
+      <button class="btn-primary" id="ansGo" type="button">▶ يلا نبدأ</button>
+      <button class="btn-ghost" id="ansNew" type="button">🔄 باركود جديد</button>
+    </div>
+    <button class="ans-copy" id="ansCopy" type="button">📋 نسخ الرابط</button>
+    <label class="ans-auto"><input type="checkbox" id="ansAuto"> يطلع الباركود لحاله أول كل جولة</label>
+  </div>
+</div>
+<!-- (v10) أسرع إصبع: خلص الوقت وفيه أحد ضغط — المقدّم يقرر: صح ولا غلط -->
+<div class="modal-overlay bd-modal" id="bdModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="bdTitle">
+    <button class="teams-close" id="bdClose" type="button" aria-label="إغلاق — تقدر تقرر من الشريط تحت">✕</button>
+    <div class="tu-clock" aria-hidden="true">⏰</div>
+    <h3 id="bdTitle" style="font-size:1.45rem;margin:0 0 4px">خلص الوقت!</h3>
+    <p class="bd-who" id="bdWho"></p>
+    <div class="bd-actions">
+      <button class="bd-ok" id="bdOk" type="button">✅ صح<small id="bdOkSub"></small></button>
+      <button class="bd-no" id="bdNo" type="button">❌ غلط<small id="bdNoSub"></small></button>
+    </div>
+    <button class="btn-ghost btn-block bd-none" id="bdNone" type="button">⏰ ما جاوب</button>
   </div>
 </div>
 <aside class="bz-log" id="buzzLog" aria-label="مين ضغط" aria-live="polite" hidden></aside>
@@ -2709,6 +2781,7 @@
     million: { pref:"seat", round:null, items:[] },   /* طريق المليون */
     rope: { round:null },                               /* مربوطين: round = { id, kind, level, best, done } */
     buzz: { room: "", enabled: false, auto: true },
+    ans: { auto: true },  /* (v10) 📱 الإجابات بجوال المقدّم: { auto, trivia/emoji/letters/million: { round, key, chan } } */
     heads: { round:null, deck:"all", dur:60, turns:{}, done: [], last: {} },
     win: { target: 0, shown: "" },
     sizes: {},          /* حجم الجولة اللي اختاره المقدّم لكل لعبة */
@@ -2807,6 +2880,14 @@
           enabled: !!saved.buzz.enabled,
           auto: saved.buzz.auto !== false
         };
+      }
+      if(isObj(saved.ans)){
+        store.ans = { auto: saved.ans.auto !== false };
+        ["trivia", "emoji", "letters", "million"].forEach(function(g){
+          var a = saved.ans[g];
+          if(isObj(a) && (typeof a.round === "number" || typeof a.round === "string") && String(a.round).length < 24)
+            store.ans[g] = { round: a.round, key: /^[0-9a-f]{40,128}$/.test(a.key || "") ? a.key : "", chan: /^[0-9a-f]{32}$/.test(a.chan || "") ? a.chan : "" };
+        });
       }
       if(isObj(saved.sizes)) Object.keys(saved.sizes).forEach(function(g){
         var v = saved.sizes[g];
@@ -3208,6 +3289,7 @@
         store.trivia.cells = d.items.map(function(i){ return { id: String(i.id), cat: i.cat, points: i.points, q: i.q, a: i.a, used: false }; });
         persist();
         trivOpen();
+        ansStart("trivia", d.round);
       });
     } });
   }
@@ -3265,6 +3347,8 @@
   trivEls.modal.addEventListener("click", function(e){ if(e.target === trivEls.modal) closeTrivia(); });
   document.addEventListener("keydown", function(e){
     if(e.key === "Escape"){
+      if(!document.getElementById("bdModal").hidden){ bdHide(); renderBuzzUI(); return; }
+      if(!document.getElementById("ansModal").hidden){ ansHide(); return; }
       if(!document.getElementById("scoreModal").hidden) document.getElementById("scoreModal").hidden = true;
       if(!document.getElementById("tuModal").hidden){ tuClose(); return; }
       if(!document.getElementById("planModal").hidden) closePlanModal();
@@ -3396,6 +3480,7 @@
           store.emoji.round = { id: d.round, kind: d.kind };
           store.emoji.items = d.items; store.emoji.idx = 0;
           persist(); emojiOpen();
+          ansStart("emoji", d.round);
         });
       }
     });
@@ -3874,10 +3959,13 @@
      السر ينطلب مرة وحدة ويتحفظ بمتصفحه، وما ينحط بالملف. الإرسال اليدوي لكل لاعب يبقى متاح. */
   var BOT_URL = "http://127.0.0.1:3000";
   function mBotSecret(){
+    var ok = /^[A-Za-z0-9]{16,}$/;
     var s = "";
     try{ s = localStorage.getItem("wa_bot_secret") || ""; }catch(e){}
+    if(s && !ok.test(s)){ s = ""; try{ localStorage.removeItem("wa_bot_secret"); }catch(e){} }
     if(!s){
-      s = (prompt("أدخل سر البوت (API_SECRET)") || "").trim();
+      s = (prompt("أدخل سر البوت (القيمة بعد API_SECRET= فقط، حروف وأرقام بدون مسافات)") || "").trim();
+      if(s && !ok.test(s)){ alert("السر غير صالح. انسخ القيمة الطويلة بعد API_SECRET= فقط (حروف إنجليزية وأرقام)."); return ""; }
       if(s){ try{ localStorage.setItem("wa_bot_secret", s); }catch(e){} }
     }
     return s;
@@ -3977,7 +4065,8 @@
   var buzz = { client:null, channel:null, status:"off", state:"idle", qid:null, winner:null, winnerName:"", winnerPid:null, q:null, endAt:0, tick:null, tout:null,
                excluded:[], pens:{}, adds:{}, timeUp:false, presence:{}, hb:null, audio:null, flashT:null, sendT:null,
                log:[], logPts:[], turn:0, qStart:0, logHidden:false,      /* خانة «مين ضغط»: كل الضغطات بالسؤال بالترتيب */
-               only:null, onlyEnd:0, onlyT:null };                         /* فرصة الفريق الخصم بعد ما يخلص الوقت */
+               only:null, onlyEnd:0, onlyT:null,                           /* فرصة الفريق الخصم بعد ما يخلص الوقت */
+               decide:false, twhy:null, ok:null };                         /* (v10) خلص الوقت والمقدّم يقرر صح/غلط · ليش رجع الزر للخصم · آخر «✅ صح» */
   var buzzEls = {
     openBtn: document.getElementById("buzzOpenBtn"),
     homeBtn: document.getElementById("buzzHomeBtn"),
@@ -4013,7 +4102,9 @@
         q: buzz.q,                                                        /* السؤال (بدون الإجابة) يطلع بالجوالات */
         left: buzz.state === "locked" && buzz.endAt ? Math.max(0, (buzz.endAt - Date.now()) / 1000) : 0,   /* الوقت الباقي للجواب */
         tmax: buzzTimerSecs(), tout: buzz.tout,
-        tup: 0,                                                           /* (v7) ما عاد فيه انتظار لقرار المقدّم — يبقى للجوالات القديمة */
+        tup: buzz.state === "locked" && buzz.decide ? 1 : 0,              /* (v10) خلص الوقت — المقدّم يقرر صح ولا غلط */
+        twhy: buzz.state === "armed" && buzz.tout ? (buzz.twhy === "wrong" ? "wrong" : "timeout") : null,   /* ليش رجع الزر للخصم */
+        ok: buzz.ok && Date.now() - buzz.ok.at < 8000 ? { t:buzz.ok.t, n:buzz.ok.n, cell:buzz.ok.cell ? 1 : 0, id:buzz.ok.at, ago:Math.max(0, Math.round((Date.now() - buzz.ok.at) / 1000)) } : null,   /* آخر «✅ صح» */
         only: buzz.state === "armed" && buzz.only ? buzz.only : null,      /* فرصة الخصم: بس هالفرق تقدر تضغط الحين */
         wleft: buzz.state === "armed" && buzz.only && buzz.onlyEnd ? Math.max(0, (buzz.onlyEnd - Date.now()) / 1000) : 0,
         steal: cfgPlay().buzz_steal_secs,                                  /* كم ثانية فرصة الخصم (للنص بالجوال) */
@@ -4100,6 +4191,7 @@
   }
   function buzzDisconnect(keepEnabled){
     clearInterval(buzz.hb); buzz.hb = null; buzzStopTimer(); buzzStopWindow(); buzz.q = null; buzz.tout = null; buzz.pens = {}; buzz.adds = {}; buzz.timeUp = false; tuHide();
+    buzz.decide = false; buzz.twhy = null; buzz.ok = null; bdHide();
     buzz.only = null; buzz.onlyEnd = 0; buzzClearLog();
     var ch = buzz.channel; buzz.channel = null;
     if(ch && buzz.client){ try{ buzz.client.removeChannel(ch); }catch(e){} }
@@ -4114,6 +4206,7 @@
     if(nq !== buzz.qid) buzzClearLog();            /* سؤال جديد = خانة «مين ضغط» تبدأ من جديد */
     buzz.qid = nq;
     buzz.q = q || null; buzz.tout = null; buzz.pens = {}; buzz.adds = {}; buzz.timeUp = false; tuHide();
+    buzz.decide = false; buzz.twhy = null; bdHide();
     buzz.winner = null; buzz.winnerName = ""; buzz.winnerPid = null; buzz.excluded = []; buzz.only = null; buzz.onlyEnd = 0;
     buzz.state = (force || store.buzz.auto) ? "armed" : "idle";
     if(buzz.state === "armed" && !buzz.qStart) buzz.qStart = Date.now();
@@ -4123,6 +4216,7 @@
   function buzzReopen(){
     if(!buzzActive()) return;
     buzzStopTimer(); buzzStopWindow(); buzz.timeUp = false; tuHide();
+    buzz.decide = false; buzz.twhy = null; bdHide();
     buzz.tout = null; buzz.only = null; buzz.onlyEnd = 0;
     if(buzz.winner && buzz.excluded.indexOf(buzz.winner) === -1) buzz.excluded.push(buzz.winner);
     buzz.winner = null; buzz.winnerName = ""; buzz.winnerPid = null; buzz.state = "armed";
@@ -4145,7 +4239,7 @@
   function buzzOpenAll(){
     buzzStopWindow();
     var was = !!buzz.only;
-    buzz.only = null; buzz.onlyEnd = 0; buzz.tout = null;
+    buzz.only = null; buzz.onlyEnd = 0; buzz.tout = null; buzz.twhy = null;
     if(buzz.state === "armed" && was){ buzzSend(); renderBuzzUI(); buzzBlip(); }
   }
   /* ===== الخصم: خلص وقت الجواب (تلقائي) أو «غلط وخصم» (يختاره المقدّم) — الكمية من لوحة الأدمن ===== */
@@ -4156,9 +4250,11 @@
     var st = buzzStealSecs();
     out.push("👆 أول ما أحد يضغط يختفي الزر من كل الجوالات ويطلع اسمه");
     out.push(s ? "⏱️ اللي يضغط أول عنده " + arN(s, "ثانية وحدة", "ثانيتين", "ثواني", "ثانية") + " يجاوب" : "⏱️ بدون مؤقت للجواب");
-    if(s) out.push(st ? "⏰ إذا خلص وقته يرجع الزر للفريق الخصم " + arN(st, "ثانية وحدة", "ثانيتين", "ثواني", "ثانية") + "، وبعدها ينفتح للكل" : "⏰ إذا خلص وقته ينفتح الزر للكل");
-    out.push("⚖️ ما فيه خصم تلقائي — المقدّم يخصم ويزيد من زر ⚖️");
-    if(p.buzz_pen_wrong) out.push("❌ زر «غلط وخصم» يخصم " + penWord(p.buzz_pen_wrong));
+    if(s) out.push("⏰ إذا خلص وقته تطلع للمقدّم نافذة: ✅ صح ولا ❌ غلط");
+    out.push("✅ صح: الفريق ياخذ نقاط السؤال ويتسكّر");
+    out.push(st ? "❌ غلط أو ⏰ ما جاوب: يرجع الزر للفريق الخصم " + arN(st, "ثانية وحدة", "ثانيتين", "ثواني", "ثانية") + "، وبعدها ينفتح للكل" : "❌ غلط أو ⏰ ما جاوب: ينفتح الزر للكل");
+    if(p.buzz_pen_wrong) out.push("➖ الغلط يخصم " + penWord(p.buzz_pen_wrong));
+    out.push("⚖️ وتقدر تخصم وتزيد بنفسك من زر ⚖️");
     out.push("🔔 خانة «مين ضغط» تبيّن كل اللي ضغطوا بالترتيب لين يخلص السؤال");
     return out.map(function(x){ return "<span>" + x + "</span>"; }).join("");
   }
@@ -4208,6 +4304,7 @@
     if(!keepLog) buzzClearLog();
     if(!buzzActive()) return;
     buzzStopTimer(); buzzStopWindow(); buzz.timeUp = false; tuHide();
+    buzz.decide = false; buzz.twhy = null; bdHide();
     buzz.only = null; buzz.onlyEnd = 0;
     if(buzz.state === "idle" && !buzz.winner && !buzz.q){ renderBuzzLog(); return; }
     buzz.state = "idle"; buzz.winner = null; buzz.winnerName = ""; buzz.winnerPid = null; buzz.excluded = []; buzz.q = null; buzz.tout = null;
@@ -4269,9 +4366,10 @@
     var tm = function(id){ return store.teams.find(function(t){ return t.id === id; }); };
     var rows = buzz.log.map(function(r, k){
       var t = tm(r.team) || { name: "فريق", color: "#8b85a3" }, who = r.name || t.name, st;
-      if(r.st === "ans") st = buzz.state === "locked" && buzz.endAt ? 'يجاوب <i id="blT"></i>' : "يجاوب";
+      if(r.st === "ans") st = buzz.state === "locked" && buzz.decide ? "⏰ صح ولا غلط؟" : buzz.state === "locked" && buzz.endAt ? 'يجاوب <i id="blT"></i>' : "يجاوب";
       else if(r.st === "timeout") st = "⏰ خلص وقته";
       else if(r.st === "wrong") st = "❌ غلط" + (r.pen ? ' <b dir="ltr">−' + r.pen + '</b>' : "");
+      else if(r.st === "ok") st = "✅ صح";
       else st = "بعده بـ " + blSecs(r.d);
       var when = r.st === "late" ? "" : '<span class="bl-t">' + blSecs(r.at - (buzz.qStart || r.at)) + '</span>';
       var small = [r.name ? escapeHtml(t.name) : "", when].filter(Boolean).join(" · ");
@@ -4326,16 +4424,107 @@
   }
   function buzzTimeUp(){
     buzzStopTimer(); buzzTimeUpSound();
+    /* (v10) فيه أحد ضغط وخلص وقته: نافذة للمقدّم — ✅ صح / ❌ غلط / ⏰ ما جاوب. الأزرار تنتظر قراره */
+    if(buzz.state === "locked" && buzz.winner && store.teams.some(function(t){ return t.id === buzz.winner; })){
+      buzz.decide = true;
+      buzzSend(); bdOpen();
+      return;
+    }
+    buzzTimeoutGo();
+  }
+  /* ⏰ ما جاوب: الزر يرجع للفريق الخصم N ثانية، وبعدها للكل (بدون خصم — زر ⚖️ لو تبي) */
+  function buzzTimeoutGo(){ buzzStealGo("timeout", 0); }
+  /* ❌ غلط (من النافذة أو الشريط بعد ما خلص الوقت): يخصم لو الأدمن مفعّل الخصم، والفرصة للخصم N ثانية وبعدها للكل */
+  function buzzDecideWrong(){
+    if(!buzzActive() || buzz.state !== "locked" || !buzz.winner) return;
+    var n = cfgPlay().buzz_pen_wrong, pen = n > 0 ? buzzPenalize(buzz.winner, "wrong") : 0;
+    buzzStealGo("wrong", pen);
+  }
+  function buzzStealGo(why, pen){
+    if(!buzzActive()) return;
     var late = buzz.winner, secs = buzzStealSecs();
-    buzzLogMark("timeout");
+    buzzStopTimer(); buzz.decide = false; bdHide();
+    buzzLogMark(why === "wrong" ? "wrong" : "timeout", pen);
     var opp = store.teams.filter(function(t){ return t.id !== late && buzz.excluded.indexOf(t.id) === -1; });
     buzz.state = "armed"; buzz.winner = null; buzz.winnerName = ""; buzz.winnerPid = null; buzz.timeUp = false;
-    buzz.tout = late;
+    buzz.tout = late; buzz.twhy = why === "wrong" ? "wrong" : "timeout";
     if(secs > 0 && opp.length){ buzz.only = opp.map(function(t){ return t.id; }); buzz.onlyEnd = Date.now() + secs * 1000; buzzStartWindow(); }
     else { buzz.only = null; buzz.onlyEnd = 0; }
     buzzSend(); renderBuzzUI();
-    var lt = store.teams.find(function(t){ return t.id === late; });
-    toast("⏰ خلص وقت " + (lt ? lt.name : "الفريق") + " — " + (buzz.only ? "الفرصة لـ " + (opp.length === 1 ? opp[0].name : "الفرق الثانية") + " " + arN(secs, "ثانية", "ثانيتين", "ثواني", "ثانية") : "الزر مفتوح للكل"));
+    var lt = store.teams.find(function(t){ return t.id === late; }), ln = lt ? lt.name : "الفريق";
+    var head = why === "wrong" ? "❌ جواب " + ln + " غلط" + (pen ? " — انخصمت " + penWord(pen) : "") : "⏰ خلص وقت " + ln;
+    toast(head + " — " + (buzz.only ? "الفرصة لـ " + (opp.length === 1 ? opp[0].name : "الفرق الثانية") + " " + arN(secs, "ثانية", "ثانيتين", "ثواني", "ثانية") : "الزر مفتوح للكل"));
+  }
+  /* ===== (v10) نافذة «خلص الوقت»: ✅ صح / ❌ غلط / ⏰ ما جاوب ===== */
+  function bdHide(){ var m = document.getElementById("bdModal"); if(m && !m.hidden) m.hidden = true; }
+  function bdOpen(){
+    var t = buzz.decide && store.teams.find(function(x){ return x.id === buzz.winner; });
+    if(!t){ bdHide(); renderBuzzUI(); return; }
+    var m = document.getElementById("bdModal"), k = buzz.q && buzz.q.k, pts = buzzOkPts(), pen = cfgPlay().buzz_pen_wrong, secs = buzzStealSecs();
+    var opp = store.teams.filter(function(x){ return x.id !== t.id && buzz.excluded.indexOf(x.id) === -1; });
+    var chance = secs > 0 && opp.length ? "الفرصة لـ " + (opp.length === 1 ? opp[0].name : "الفرق الثانية") + " " + arN(secs, "ثانية", "ثانيتين", "ثواني", "ثانية") : "الزر ينفتح للكل";
+    tuHide();
+    m.style.setProperty("--c", t.color);
+    document.getElementById("bdTitle").textContent = "خلص وقت " + t.name + "!";
+    document.getElementById("bdWho").innerHTML = (buzz.winnerName ? "<b>" + escapeHtml(buzz.winnerName) + "</b> من " + escapeHtml(t.name) : "<b>" + escapeHtml(t.name) + "</b>") + " — جاوب صح ولا غلط؟";
+    document.getElementById("bdOkSub").textContent = k === "letters" ? "الخلية لـ " + t.name : pts ? "+" + pts + " لـ " + t.name : "";
+    document.getElementById("bdNoSub").textContent = (pen ? "−" + pen + " · " : "") + chance;
+    document.getElementById("bdNone").textContent = "⏰ ما جاوب — " + chance + (pen ? " (بدون خصم)" : "");
+    m.hidden = false;
+    renderBuzzUI();
+    setTimeout(function(){ var b = document.getElementById("bdOk"); if(b && !m.hidden) try{ b.focus({ preventScroll: true }); }catch(e){} }, 30);
+  }
+  document.getElementById("bdOk").addEventListener("click", function(){ buzzUnlockAudio(); buzzCorrect(); });
+  document.getElementById("bdNo").addEventListener("click", function(){ buzzUnlockAudio(); buzzDecideWrong(); });
+  document.getElementById("bdNone").addEventListener("click", function(){ buzzUnlockAudio(); if(buzz.decide && buzz.state === "locked") buzzTimeoutGo(); else { bdHide(); renderBuzzUI(); } });
+  document.getElementById("bdClose").addEventListener("click", function(){ bdHide(); renderBuzzUI(); });
+  document.getElementById("bdModal").addEventListener("click", function(e){ if(e.target === e.currentTarget){ bdHide(); renderBuzzUI(); } });
+  /* ✅ صح: الجواب يطلع على الشاشة، والفريق ياخذ نقاط السؤال (نفس زر الفريق باللعبة — والسؤال يتسكّر أو يجي اللي بعده) */
+  function buzzOkPts(){ var k = buzz.q && buzz.q.k; return (k === "trivia" || k === "emoji" || k === "flags") ? buzzQPts() : 0; }
+  function buzzAnswerNow(k){
+    try{
+      if(k === "trivia") return activeCell ? activeCell.a : "";
+      if(k === "emoji") return emojiState.current ? emojiState.current.a : "";
+      if(k === "letters"){ var qs = LT.cur && store.letters.qmap[LT.cur.letter], q = qs && qs[LT.cur.qi]; return q ? q.a : ""; }
+      if(k === "flags") return FL.cur ? FL.cur.n : "";
+    }catch(e){}
+    return "";
+  }
+  function buzzAwardBtn(k, tid){
+    var box = k === "trivia" ? trivEls.teamBtns : k === "emoji" ? emojiEls.award : k === "letters" ? ltEls.mTeams : k === "flags" ? flEls.award : null;
+    var attr = k === "trivia" ? "data-award" : k === "emoji" ? "data-emojiaward" : k === "letters" ? "data-ltaward" : "data-flaward";
+    if(!box) return null;
+    var list = box.querySelectorAll("[" + attr + "]");
+    for(var i = 0; i < list.length; i++) if(list[i].getAttribute(attr) === tid) return list[i];
+    return null;
+  }
+  function buzzCorrect(){
+    if(!buzzActive() || buzz.state !== "locked" || !buzz.winner) return;
+    var t = store.teams.find(function(x){ return x.id === buzz.winner; }); if(!t) return;
+    var k = buzz.q && buzz.q.k, pts = buzzOkPts(), ans = buzzAnswerNow(k);
+    buzzStopTimer(); buzz.decide = false; bdHide();
+    buzzLogMark("ok");
+    /* نكشف الجواب (بسين جيم والصور والأعلام: أزرار الفرق تطلع معه) */
+    if(k === "trivia" && !trivEls.revealBtn.hidden) trivEls.revealBtn.click();
+    else if(k === "emoji" && !emojiEls.revealBtn.hidden) emojiEls.revealBtn.click();
+    else if(k === "letters" && !ltEls.mReveal.hidden) ltEls.mReveal.click();
+    else if(k === "flags" && !flEls.reveal.hidden) flEls.reveal.click();
+    var btn = k ? buzzAwardBtn(k, t.id) : null, cell = k === "letters" && !!btn;
+    buzz.ok = { t: t.id, n: btn ? pts : 0, cell: cell, at: Date.now() };
+    buzzOkFlash(t, ans, btn ? pts : 0, cell);
+    toast("✅ صح! " + (btn ? (cell ? "الخلية لـ " + t.name : "+" + pts + " لـ " + t.name) : k ? t.name + " — اختاروا من أزرار اللعبة" : t.name));
+    if(btn) btn.click();      /* نفس زر الفريق: النقاط + يتسكّر السؤال (أو يجي اللي بعده) */
+    else buzzIdle(true);
+  }
+  function buzzOkFlash(team, ans, pts, cell){
+    var el = buzzEls.flash;
+    el.style.setProperty("--c", team.color);
+    el.innerHTML = '<div><div>✅ صح!</div><div class="bf-name">' + escapeHtml(team.name) + (pts ? ' <span dir="ltr">+' + pts + '</span>' : cell ? ' — الخلية لهم' : '') + '</div>'
+      + (ans ? '<div class="bf-ans">الإجابة: ' + escapeHtml(ans) + '</div>' : '') + '</div>';
+    el.classList.add("ok");
+    el.hidden = true; void el.offsetWidth; el.hidden = false;
+    clearTimeout(buzz.flashT);
+    buzz.flashT = setTimeout(function(){ el.hidden = true; el.classList.remove("ok"); }, 2550);
   }
   function buzzBlip(){
     try{
@@ -4438,6 +4627,7 @@
   }
   function buzzFlash(team, who){
     var el = buzzEls.flash;
+    el.classList.remove("ok");
     el.style.setProperty("--c", team.color);
     el.innerHTML = '<div><div>⚡ ' + escapeHtml(team.name) + '</div>'
       + (who ? '<div class="bf-name">' + escapeHtml(who) + '</div>' : '') + '</div>';
@@ -4475,10 +4665,16 @@
         bar.classList.add("locked");
         bar.style.setProperty("--c", wt ? wt.color : "#555");
         var tl = buzzTimeLeft();
+        if(buzz.decide) html = '<span>⏰ خلص وقت ' + escapeHtml(buzz.winnerName || (wt ? wt.name : "")) + ' — صح ولا غلط؟</span>'
+          + '<button type="button" class="bb-ok" data-bb="ok">✅ صح</button>'
+          + '<button type="button" class="bb-pen" data-bb="no">❌ غلط</button>'
+          + '<button type="button" data-bb="none">⏰ ما جاوب</button>';
+        else
         html = (buzz.winnerName
             ? '<span>⚡ أول ضغطة: ' + escapeHtml(buzz.winnerName) + ' (' + escapeHtml(wt ? wt.name : "") + ')</span>'
             : '<span>⚡ ' + escapeHtml(wt ? wt.name : "") + ' ضغط أول!</span>')
           + (buzz.endAt ? '<span class="bb-timer' + (tl <= 3 ? ' warn' : '') + '" id="bbTimer">⏱️ ' + tl + '</span>' : '')
+          + '<button type="button" class="bb-ok" data-bb="ok">✅ صح</button>'
           + '<button type="button" data-bb="reopen">❌ غلط — افتح للباقين</button>'
           + (cfgPlay().buzz_pen_wrong ? '<button type="button" class="bb-pen" data-bb="reopen-pen">➖ غلط وخصم ' + penWord(cfgPlay().buzz_pen_wrong) + '</button>' : '')
           + '<button type="button" data-bb="idle">🔒 قفل</button>';
@@ -4512,7 +4708,10 @@
     var b = e.target.closest("[data-bb]"); if(!b) return;
     var a = b.getAttribute("data-bb");
     buzzUnlockAudio();
-    if(a === "reopen") buzzWrong(false);
+    if(a === "ok") buzzCorrect();
+    else if(a === "no") buzzDecideWrong();
+    else if(a === "none"){ if(buzz.decide && buzz.state === "locked") buzzTimeoutGo(); }
+    else if(a === "reopen") buzzWrong(false);
     else if(a === "reopen-pen") buzzWrong(true);
     else if(a === "idle") buzzIdle(true);
     else if(a === "tu") tuOpen(true);
@@ -4590,6 +4789,260 @@
   }
 
   /* ======================================================================
+     📱 الإجابات بجوال المقدّم (v10) — سين جيم، الحروف، تحدي الصور، طريق المليون
+     أول ما تبدأ الجولة يطلع باركود: المقدّم يمسحه بجواله وتطلع له إجابات الجولة كلها،
+     وجواب السؤال اللي على الشاشة الحين يطلع كبير فوق (الشاشة ترسله على قناة سرية).
+     أول جوال يفتح الرابط «يحجز» الإجابات، وأي جوال ثاني يطلع له «مفتوحة بجوال ثاني».
+     store.ans[g] = { round, key (سر الباركود), chan (القناة الحية — تجي بعد ما يحجز الجوال) }
+     ====================================================================== */
+  var ANS_GAMES = ["trivia", "emoji", "letters", "million"];
+  var ANS = { g:null, pollT:null, tickT:null, keyAt:{}, polled:{}, busy:{}, kbusy:{}, ch:{}, chOn:{}, last:{}, lastAt:{}, closeT:null, err:{} };
+  var ansEls = { modal: document.getElementById("ansModal"), sub: document.getElementById("ansSub"), qr: document.getElementById("ansQr"), st: document.getElementById("ansSt"),
+                 go: document.getElementById("ansGo"), nw: document.getElementById("ansNew"), copy: document.getElementById("ansCopy"), auto: document.getElementById("ansAuto"),
+                 close: document.getElementById("ansClose") };
+  function ansRoundOf(g){
+    var r = g === "trivia" ? store.trivia.round : g === "emoji" ? store.emoji.round : g === "letters" ? store.letters.round : g === "million" ? store.million.round : null;
+    return r && !r.done && r.id != null ? r.id : null;
+  }
+  function ansUrl(e){ return location.origin + location.pathname.replace(/[^\/]*$/, "") + "answers.html#r=" + encodeURIComponent(e.round) + "&k=" + e.key; }
+  /* بداية جولة: باركود جديد (ويطلع لحاله لو الخيار شغّال) */
+  function ansStart(g, rid){
+    if(ANS_GAMES.indexOf(g) === -1 || rid == null) return;
+    ansLeave(g);
+    store.ans[g] = { round: rid, key: "", chan: "" }; persist();
+    if(store.ans.auto !== false) ansShow(g);
+  }
+  function ansLeave(g){
+    var ch = ANS.ch[g]; ANS.ch[g] = null; ANS.chOn[g] = false; ANS.last[g] = "";
+    if(ch && sharedSb){ try{ sharedSb.removeChannel(ch); }catch(e){} }
+  }
+  function ansShow(g){
+    var rid = ansRoundOf(g);
+    if(rid == null){ toast("ابدأ جولة أول — الباركود يطلع مع الجولة"); return; }
+    var e = store.ans[g];
+    if(!e || String(e.round) !== String(rid)){ ansLeave(g); e = store.ans[g] = { round: rid, key: "", chan: "" }; persist(); }
+    ANS.g = g; ANS.err[g] = "";
+    clearTimeout(ANS.closeT);
+    ansEls.auto.checked = store.ans.auto !== false;
+    ansEls.modal.hidden = false;
+    ansRender();
+    if(!e.key) ansNewKey(g);
+    else if(!e.chan){ ANS.keyAt[g] = Date.now(); ansPollStart(); }
+    setTimeout(function(){ if(!ansEls.modal.hidden) try{ ansEls.go.focus({ preventScroll: true }); }catch(x){} }, 30);
+  }
+  function ansHide(){ clearTimeout(ANS.closeT); if(ANS.g) ANS.keyAt[ANS.g] = Date.now(); if(!ansEls.modal.hidden) ansEls.modal.hidden = true; ANS.g = null; }
+  function ansRender(){
+    var g = ANS.g; if(!g || ansEls.modal.hidden) return;
+    var e = store.ans[g], claimed = !!(e && e.chan), err = ANS.err[g];
+    ansEls.sub.textContent = "امسح الباركود بكاميرا جوالك — تطلع لك إجابات «" + GAME_INFO[g].name + "» كلها، وجواب السؤال اللي على الشاشة يطلع فوق أول بأول.";
+    ansEls.qr.classList.toggle("done", claimed && !err);
+    if(err){
+      ansEls.qr.innerHTML = '<p class="ans-wait">' + escapeHtml(err) + '</p>'; ansEls.qr._u = "";
+      ansEls.st.className = "ans-st"; ansEls.st.textContent = "";
+    } else if(!e || !e.key){
+      ansEls.qr.innerHTML = '<p class="ans-wait">جاري تجهيز الباركود…</p>'; ansEls.qr._u = "";
+      ansEls.st.className = "ans-st"; ansEls.st.textContent = "";
+    } else {
+      if(!needQR(ansRender)){ ansEls.qr.innerHTML = '<p class="ans-wait">' + (qrState === 3 ? "تعذّر تحميل الباركود — تأكد من الإنترنت" : "جاري تجهيز الباركود…") + '</p>'; ansEls.qr._u = ""; }
+      else {
+        var url = ansUrl(e);
+        if(ansEls.qr._u !== url || !ansEls.qr.querySelector("svg")){
+          try{ var qr = qrcode(0, "M"); qr.addData(url); qr.make(); ansEls.qr.innerHTML = qr.createSvgTag({ cellSize:5, margin:2 }); ansEls.qr._u = url; }
+          catch(x){ ansEls.qr.innerHTML = '<p class="ans-wait">تعذّر إنشاء الباركود</p>'; ansEls.qr._u = ""; }
+        }
+        var okEl = ansEls.qr.querySelector(".ans-ok"); if(okEl) okEl.parentNode.removeChild(okEl);
+        if(claimed) ansEls.qr.insertAdjacentHTML("beforeend", '<div class="ans-ok"><b>✅</b>انفتحت بجوالك</div>');
+      }
+      ansEls.st.className = "ans-st" + (claimed ? " ok" : "");
+      ansEls.st.textContent = claimed ? "✅ الإجابات مفتوحة بجوالك — وتتابع الشاشة لحالها" : "⏳ ننتظر جوالك يمسح الباركود…";
+    }
+    ansEls.go.textContent = claimed ? "تمام 👍" : "▶ يلا نبدأ";
+    ansEls.copy.hidden = !(e && e.key) || claimed || !!err;
+  }
+  function ansErrText(err){
+    var m = String((err && (err.message || err.details || err.code)) || err || "");
+    if(/round_answer|PGRST202|schema cache|does not exist|Could not find/i.test(m)) return "🛠️ الميزة تحتاج تحديث قاعدة البيانات — شغّل ملف SQL الجديد (answers_qr.sql) بـ Supabase.";
+    if(/bad_round/.test(m)) return "⌛ الجولة هذي قديمة (أكثر من 12 ساعة) — ابدأ جولة جديدة.";
+    if(/login_required|JWT|permission denied/i.test(m)) return "سجّل دخولك أول.";
+    return "📡 ما قدرنا نجهّز الباركود — تأكد من الإنترنت واضغط «🔄 باركود جديد».";
+  }
+  function ansNewKey(g){
+    var e = store.ans[g]; if(!e || ANS.kbusy[g]) return;
+    ANS.kbusy[g] = true; ANS.err[g] = "";
+    ansLeave(g);
+    e.key = ""; e.chan = ""; persist(); ansRender();
+    sbReady.then(function(sb){ return sb.rpc("round_answer_key", { p_round: e.round }); }).then(function(r){
+      ANS.kbusy[g] = false;
+      if(r.error) throw r.error;
+      var d = typeof r.data === "string" ? JSON.parse(r.data) : r.data;
+      if(!d || !/^[0-9a-f]{40,128}$/.test(d.key || "")) throw new Error("bad_key");
+      if(store.ans[g] !== e) return;              /* بدأت جولة ثانية بالوقت هذا */
+      e.key = d.key; e.chan = ""; persist();
+      ANS.keyAt[g] = Date.now(); ANS.polled[g] = 0;
+      ansRender(); ansPollStart();
+    }).catch(function(err){
+      ANS.kbusy[g] = false;
+      if(store.ans[g] !== e) return;
+      ANS.err[g] = ansErrText(err);
+      ansRender();
+    });
+  }
+  /* ننتظر الجوال يحجز: نسأل كل ثانيتين والنافذة مفتوحة، وكل 6 ثواني وهي مسكّرة (لين 10 دقايق — وترجع لما تفتح الباركود) */
+  function ansPollStart(){ if(!ANS.pollT) ANS.pollT = setInterval(ansPollAll, 1000); ansPollAll(); }
+  function ansPollAll(){
+    var now = Date.now(), any = false;
+    ANS_GAMES.forEach(function(g){
+      var e = store.ans[g];
+      if(!e || !e.key || e.chan || String(ansRoundOf(g)) !== String(e.round)) return;
+      if(!ANS.keyAt[g]) ANS.keyAt[g] = now;
+      if(!(ANS.g === g && !ansEls.modal.hidden) && now - ANS.keyAt[g] > 10 * 60 * 1000) return;
+      any = true;
+      var every = (ANS.g === g && !ansEls.modal.hidden) ? 2000 : 6000;
+      if(ANS.busy[g] || now - (ANS.polled[g] || 0) < every - 50) return;
+      ANS.busy[g] = true; ANS.polled[g] = now;
+      sbReady.then(function(sb){ return sb.rpc("round_answer_status", { p_round: e.round }); }).then(function(r){
+        ANS.busy[g] = false;
+        if(r.error || store.ans[g] !== e || e.chan) return;
+        var d = typeof r.data === "string" ? JSON.parse(r.data) : r.data;
+        if(d && d.claimed && /^[0-9a-f]{32}$/.test(d.chan || "")){ e.chan = d.chan; persist(); ansJoin(g); ansClaimed(g); }
+      }, function(){ ANS.busy[g] = false; });
+    });
+    if(!any){ clearInterval(ANS.pollT); ANS.pollT = null; }
+  }
+  function ansClaimed(g){
+    toast("📱 الإجابات انفتحت بجوالك ✅");
+    if(ANS.g === g && !ansEls.modal.hidden){
+      ansRender();
+      clearTimeout(ANS.closeT); ANS.closeT = setTimeout(function(){ if(ANS.g === g) ansHide(); }, 1400);
+    }
+  }
+  /* القناة السرية مع الجوال: نرسل «السؤال الحين» كل ما تغيّر + نبضة كل 5 ثواني */
+  function ansJoin(g){
+    var e = store.ans[g]; if(!e || !e.chan) return;
+    if(ANS.ch[g] && ANS.ch[g].__ans === e.chan) return;
+    ansLeave(g);
+    sbReady.then(function(sb){
+      if(!sb || store.ans[g] !== e || !e.chan || ANS.ch[g]) return;
+      var ch = sb.channel("sahra-ans-" + e.chan, { config: { broadcast: { self:false } } });
+      ch.__ans = e.chan;
+      ch.on("broadcast", { event:"hi" }, function(){ if(ANS.ch[g] === ch) ansSend(g, true); });
+      ch.subscribe(function(st){
+        if(ANS.ch[g] !== ch) return;
+        ANS.chOn[g] = st === "SUBSCRIBED";
+        if(ANS.chOn[g]) ansSend(g, true);
+      });
+      ANS.ch[g] = ch;
+      if(!ANS.tickT) ANS.tickT = setInterval(ansTick, 600);
+    });
+  }
+  function ansTick(){
+    var any = false;
+    ANS_GAMES.forEach(function(g){ if(ANS.ch[g]){ any = true; ansSend(g, false); } });
+    if(!any){ clearInterval(ANS.tickT); ANS.tickT = null; }
+  }
+  function ansSend(g, force){
+    var ch = ANS.ch[g], e = store.ans[g];
+    if(!ch || !ANS.chOn[g] || !e) return;
+    var live = String(ansRoundOf(g)) === String(e.round);
+    var body = { r: e.round, g: g, cur: live ? ansCurOf(g) : null, done: live ? ansDoneOf(g) : [], tp: cfgPlay().trivia_pts };
+    var key = JSON.stringify(body), now = Date.now();
+    if(!force && key === ANS.last[g] && now - (ANS.lastAt[g] || 0) < 5000) return;
+    ANS.last[g] = key; ANS.lastAt[g] = now;
+    body.t = now;
+    try{ var p = ch.send({ type:"broadcast", event:"cur", payload: body }); if(p && p.catch) p.catch(function(){}); }catch(x){}
+  }
+  /* السؤال اللي على الشاشة الحين (بجوابه) */
+  function ansCurOf(g){
+    try{
+      if(g === "trivia"){
+        if(!activeCell || trivEls.modal.hidden) return null;
+        return { id: activeCell.id, q: activeCell.q, a: activeCell.a, m: { cat: activeCell.cat, pts: tpts(activeCell.points) } };
+      }
+      if(g === "emoji"){
+        if(curView !== "emoji" || !emojiActive()) return null;
+        var it = store.emoji.items[store.emoji.idx];
+        return it ? { id: it.id, q: "", a: it.a, m: { cat: it.cat || "", h: it.h || "", n: store.emoji.idx + 1 } } : null;
+      }
+      if(g === "letters"){
+        if(!LT.cur || ltEls.modal.hidden) return null;
+        var qs = store.letters.qmap[LT.cur.letter], q = qs && qs[LT.cur.qi];
+        return q ? { id: q.id, q: q.q, a: q.a, m: { letter: LT.cur.letter } } : null;
+      }
+      if(g === "million"){
+        var M = store.million;
+        if(curView !== "million" || !mlActive()) return null;
+        if(M.mode === "seat"){
+          if(!M.q || ["q", "confirm", "lock", "right", "wrong"].indexOf(M.phase) === -1) return null;
+          var a = M.items[M.q.i];
+          return a ? { id: a.id, q: a.q, a: a.a, m: { lv: a.lv, step: mlQn(), n: M.n } } : null;
+        }
+        if(!M.aq || ["open", "locked", "reveal"].indexOf(M.phase) === -1) return null;
+        var b = M.items[M.qi];
+        return b ? { id: b.id, q: b.q, a: b.a, m: { lv: b.lv, step: M.qi + 1, n: M.n } } : null;
+      }
+    }catch(x){}
+    return null;
+  }
+  /* الأسئلة اللي خلصت (تنعلّم ✓ بالجوال) */
+  function ansDoneOf(g){
+    try{
+      if(g === "trivia") return store.trivia.cells.filter(function(c){ return c.used; }).map(function(c){ return c.id; });
+      if(g === "emoji") return store.emoji.items.slice(0, store.emoji.idx).map(function(x){ return x.id; });
+      if(g === "letters"){
+        var L = store.letters, out = [];
+        Object.keys(L.qpos || {}).forEach(function(l){ var qs = L.qmap[l] || [], n = Math.min(qs.length, L.qpos[l] | 0); for(var i = 0; i < n; i++) if(qs[i]) out.push(qs[i].id); });
+        return out;
+      }
+      if(g === "million"){
+        var M = store.million, done = [];
+        if(M.mode === "all") return M.items.slice(0, M.qi || 0).map(function(x){ return x.id; });
+        (M.order || []).forEach(function(tid, k){
+          var lad = (M.ladders || {})[tid] || [], r = M.res && M.res[tid];
+          var upto = k < M.ti ? (r ? r.reached + (r.out === "wrong" ? 1 : 0) : 0) : k === M.ti ? (M.step | 0) : 0;
+          lad.slice(0, Math.min(lad.length, upto)).forEach(function(i){ if(M.items[i]) done.push(M.items[i].id); });
+        });
+        return done;
+      }
+    }catch(x){}
+    return [];
+  }
+  /* بعد تحديث الصفحة: نرجع للقناة (أو نكمّل ننتظر الجوال) */
+  function ansInit(){
+    ANS_GAMES.forEach(function(g){
+      var e = store.ans[g];
+      if(!e || String(ansRoundOf(g)) !== String(e.round)) return;
+      if(e.chan) ansJoin(g);
+      else if(e.key){ ANS.keyAt[g] = Date.now(); ansPollStart(); }
+    });
+  }
+  ansEls.go.addEventListener("click", ansHide);
+  ansEls.close.addEventListener("click", ansHide);
+  ansEls.modal.addEventListener("click", function(ev){ if(ev.target === ansEls.modal) ansHide(); });
+  ansEls.auto.addEventListener("change", function(){ store.ans.auto = ansEls.auto.checked; persist(); });
+  ansEls.nw.addEventListener("click", function(){
+    var g = ANS.g; if(!g) return;
+    var e = store.ans[g];
+    if(e && e.chan){
+      ansEls.modal.hidden = true;
+      ask("باركود جديد؟", "الجوال اللي فاتح الإجابات الحين بيوقف، ولازم تمسح الباركود الجديد.", "🔄 إيه، باركود جديد").then(function(ok){
+        if(ANS.g !== g) return;
+        ansEls.modal.hidden = false;
+        if(ok) ansNewKey(g); else ansRender();
+      });
+    } else ansNewKey(g);
+  });
+  ansEls.copy.addEventListener("click", function(){
+    var e = ANS.g && store.ans[ANS.g]; if(!e || !e.key) return;
+    var url = ansUrl(e);
+    if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(function(){ toast("انسخ الرابط ✅ — افتحه بجوالك"); }, function(){ prompt("انسخ الرابط:", url); });
+    else prompt("انسخ الرابط:", url);
+  });
+  document.addEventListener("click", function(ev){
+    var b = ev.target && ev.target.closest ? ev.target.closest("[data-ans]") : null; if(!b) return;
+    ansShow(b.getAttribute("data-ans"));
+  });
+
+  /* ======================================================================
      لعبة الحروف — لوحة سداسية 5×5 (صفوف متداخلة). الفريق الأول يوصّل
      فوق↔تحت، والثاني يمين↔يسار. الجولة = لوحة كاملة (من السيرفر)
      ====================================================================== */
@@ -4646,6 +5099,7 @@
           L.board = board; L.qmap = qmap; L.qpos = {};
           L.owners = {}; L.history = []; L.lastWin = null;
           persist(); lettersOpen();
+          ansStart("letters", d.round);
         });
       }
     });
@@ -5213,6 +5667,7 @@
     store.win.shown = ""; winEls.modal.hidden = true;
     if(cfgPlay().win_target > 0) store.win.target = cfgPlay().win_target;
     store.plan = null; closePlanModal(); document.getElementById("scoreModal").hidden = true;
+    ANS_GAMES.forEach(ansLeave); store.ans = { auto: store.ans.auto !== false }; ansHide();
     emojiState.awarding = false;
     resetTimer("emoji", cfgPlay().emoji_secs); resetTimer("char", cfgPlay().char_secs);
     persist();
@@ -5649,7 +6104,7 @@
       begin: function(trial){
         var teams = store.teams.slice(0, 6);
         if(!teams.length) return Promise.reject(new Error("أضف الفرق أول"));
-        return startRound("million", trial, { mode: pref, teams: teams.length }).then(function(d){ mlSetup(d, pref); mlOpen(); });
+        return startRound("million", trial, { mode: pref, teams: teams.length }).then(function(d){ mlSetup(d, pref); mlOpen(); ansStart("million", d.round); });
       }
     });
   }
@@ -6551,6 +7006,7 @@
     bootEls.overlay.hidden = true;
     renderBuzzUI();
     if(store.buzz.enabled) buzzConnect();   /* ترجع الأزرار تشتغل لحالها بعد تحديث الصفحة، بنفس الباركود */
+    ansInit();                               /* (v10) جوال الإجابات يرجع يتابع الشاشة بعد التحديث */
     applyHeadsResult();                      /* لو راجعين من «حطها على راسك» على نفس الجهاز */
   }
   function setCatalog(c){

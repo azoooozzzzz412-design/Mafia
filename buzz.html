@@ -256,7 +256,7 @@ document.addEventListener("DOMContentLoaded", function(){
   var S = { conn:"connecting", connSince:Date.now(), host:null, lastSeen:0,
             pressedQid:null, pressedAt:0, celebrated:null, wakeLock:null, audio:null,
             endAt:0, clockT:null, toutKey:null, penKey:null, addKey:null, penT:null,
-            mqSent:null, mqEnd:0, mqT:null, mqLastQ:null, mqHtml:null, wEnd:0, wKey:null };
+            mqSent:null, mqEnd:0, mqT:null, mqLastQ:null, mqHtml:null, wEnd:0, wKey:null, okKey:null, okShown:0 };
   var client = null, ch = null;
 
   els.reload.addEventListener("click", function(){ location.reload(); });
@@ -384,7 +384,7 @@ document.addEventListener("DOMContentLoaded", function(){
       if(mine != null && mqv.reveal){ if(mine === mqv.reveal.c){ vibrate([80, 50, 120]); winSound(); } else vibrate([200, 80, 200]); }
     }
     /* انخصم على فريقنا (خلص الوقت أو جواب غلط) — نبيّنها مرة وحدة، وبس لو صارت قبل شوي. سؤال جديد = تختفي */
-    if(prev && prev.qid !== p.qid){ clearTimeout(S.penT); els.pen.hidden = true; }
+    if(prev && prev.qid !== p.qid && !(S.okShown && Date.now() - S.okShown < 6000)){ clearTimeout(S.penT); els.pen.hidden = true; }
     var pn = myPen();
     if(pn){
       var pk = p.qid + "|" + pn.kind + "|" + pn.id;
@@ -398,6 +398,22 @@ document.addEventListener("DOMContentLoaded", function(){
     if(ad){
       var ak = p.qid + "|add|" + ad.id;
       if(S.addKey !== ak){ S.addKey = ak; if((+ad.ago || 0) <= 8){ showPen(ad, true); vibrate([80, 50, 120]); } }
+    }
+    /* (v10) المقدّم قال «✅ صح» — نبيّنها مرة وحدة (حتى لو طلع السؤال اللي بعده على طول) */
+    var ok = p.ok && typeof p.ok === "object" ? p.ok : null;
+    if(ok && (+ok.ago || 0) <= 6){
+      var okk = "ok|" + ok.id + "|" + ok.t;
+      if(S.okKey !== okk){
+        S.okKey = okk;
+        var okMine = ok.t === teamId, okTeam = teamById(ok.t), okN = num(ok.n, 0, 999) | 0;
+        els.penN.textContent = okN ? "+" + okN : "✅";
+        els.penT.textContent = okMine ? (okN ? "صح! انضافت لكم " + penWord(okN) : ok.cell ? "صح! الخلية لكم" : "صح!") : "✅ " + (okTeam ? okTeam.name : "فريق ثاني") + " جاوبوا صح";
+        els.pen.classList.add("plus");
+        els.pen.hidden = false; els.pen.classList.remove("in"); void els.pen.offsetWidth; els.pen.classList.add("in");
+        clearTimeout(S.penT); S.penT = setTimeout(function(){ els.pen.hidden = true; }, 6000);
+        S.okShown = Date.now();
+        if(okMine){ vibrate([80, 50, 120]); winSound(); }
+      }
     }
     render();
   }
@@ -568,8 +584,9 @@ document.addEventListener("DOMContentLoaded", function(){
       case "armed":
         btn = "اضغط!";
         var to = S.host.tout ? teamById(S.host.tout) : null;
-        if(S.wEnd){ msg = "فرصتكم! اضغطوا"; sub = "⏰ خلص وقت " + (to ? to.name : "الفريق") + " — الزر لكم بس، وبعدها ينفتح للكل"; }
-        else if(to){ msg = "دوركم! اضغطوا"; sub = "⏰ خلص وقت " + to.name + " — الزر مفتوح لكم الحين"; }
+        var why = S.host.twhy === "wrong" ? "❌ جواب " + (to ? to.name : "الفريق") + " غلط" : "⏰ خلص وقت " + (to ? to.name : "الفريق");
+        if(S.wEnd){ msg = "فرصتكم! اضغطوا"; sub = why + " — الزر لكم بس، وبعدها ينفتح للكل"; }
+        else if(to){ msg = "دوركم! اضغطوا"; sub = why + " — الزر مفتوح لكم الحين"; }
         else {
           msg = "الأزرار مفتوحة!";
           var tm = num(S.host.tmax, 0, 600) | 0;
@@ -583,6 +600,7 @@ document.addEventListener("DOMContentLoaded", function(){
         var mine = S.host.winnerPid && S.host.winnerPid === pid;
         who = { k: mine ? "⚡ ضغطت أول!" : "⚡ ضغط أول من فريقكم", n: mine ? (myName || "أنت") : (S.host.winnerName || (me ? me.name : "")), t: me ? me.name : "", c: color };
         msg = mine ? "جاوب الحين!" : "جاوبوا الحين!";
+        if(S.host.tup){ msg = "⏰ خلص الوقت"; sub = "المقدّم يقرر: صح ولا غلط؟"; }
         break;
       case "lost":
         noBtn = true;
@@ -590,11 +608,13 @@ document.addEventListener("DOMContentLoaded", function(){
         who = { k: "⚡ ضغط أول", n: S.host.winnerName || (w ? w.name : "فريق ثاني"), t: w ? w.name : "", c: w && w.color ? w.color : "#8b85a3" };
         msg = "سبقكم " + (w ? w.name : "فريق ثاني");
         sub = S.endAt && steal ? "لو خلص وقتهم ترجع لكم الفرصة " + (steal <= 2 ? secsWord(steal) : steal + " " + secsWord(steal)) + "." : (S.endAt ? "لو غلطوا أو خلص وقتهم ينفتح لكم." : "لو غلطوا ينفتح لكم.");
+        if(S.host.tup) sub = "⏰ خلص وقتهم — المقدّم يقرر صح ولا غلط" + (steal ? "، ولو غلطوا ترجع لكم الفرصة " + (steal <= 2 ? secsWord(steal) : steal + " " + secsWord(steal)) + "." : ".");
         break;
       case "wait":
-        noBtn = true; big = "⏰";
+        var wrong = S.host.twhy === "wrong";
+        noBtn = true; big = wrong ? "❌" : "⏰";
         var opp = (S.host.only || []).map(teamById).filter(Boolean);
-        msg = "خلص وقتكم!";
+        msg = wrong ? "جوابكم غلط" : "خلص وقتكم!";
         sub = "الفرصة الحين لـ " + (opp.length === 1 ? opp[0].name : "الفرق الثانية") + " — ولو ما ضغطوا يرجع لكم الزر.";
         break;
       case "mq":

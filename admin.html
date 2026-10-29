@@ -1578,9 +1578,9 @@ document.addEventListener("DOMContentLoaded", function(){
       '<div class="pg-stack"><div class="card"><h3>🎯 نقاط سين جيم لكل مستوى</h3><p class="hint">كم نقطة تاخذ الخانة (من السهل للأصعب).</p><div class="pts4">'
       + ["سهل", "متوسط", "صعب", "صعب جدًا"].map(function(l, i){ return '<label class="field" style="margin:0"><span>' + l + '</span>' + num("tp" + i, p.trivia_pts[i], 0, 999) + '</label>'; }).join("") + '</div></div>'
       + '<div class="card"><h3>⚡ «أسرع إصبع»</h3><p class="hint">لما يخلص وقت اللي ضغط (⏱️ المؤقت تحت): الزر يرجع للفريق الخصم كم ثانية، وبعدها ينفتح للكل. والخصم ما ينخصم لحاله — المقدّم يقرر من زر ⚖️.</p><div class="kv">'
-      + '<span>⏳ فرصة الفريق الخصم بعد ما يخلص الوقت (ثانية) — 0 = ينفتح للكل على طول</span>' + num("bst", p.buzz_steal_secs, 0, 60)
+      + '<span>⏳ فرصة الفريق الخصم بعد «❌ غلط» أو «⏰ ما جاوب» (ثانية) — 0 = ينفتح للكل على طول</span>' + num("bst", p.buzz_steal_secs, 0, 60)
       + '<span>⏰ خلص وقت الجواب — الخصم المقترح بنافذة ⚖️ (0 = بدون)</span>' + num("bpt", p.buzz_pen_timeout, 0, 999)
-      + '<span>❌ جواب غلط — زر «غلط وخصم» (0 = يختفي الزر)</span>' + num("bpw", p.buzz_pen_wrong, 0, 999) + '</div></div></div>'
+      + '<span>❌ جواب غلط — الخصم بنافذة «صح ولا غلط؟» وزر «غلط وخصم» (0 = بدون خصم)</span>' + num("bpw", p.buzz_pen_wrong, 0, 999) + '</div></div></div>'
       + '<div class="card"><h3>✅ نقاط الإجابة الصح</h3><p class="hint">تنضاف للفريق لما يجاوب صح.</p><div class="kv">'
       + '<span>📸 لغز تحدي الصور</span>' + num("p_emoji", p.pts.emoji, 0, 999)
       + '<span>🚩 علم صح</span>' + num("p_flags", p.pts.flags, 0, 999)
