@@ -426,6 +426,62 @@
   .team-award-btns button.buzz-first, .challenge-award > button.buzz-first{ outline:3px solid #fff; box-shadow:0 0 0 7px rgba(255,255,255,.22); transform:scale(1.06); }
   .team-award-btns button.buzz-first::before, .challenge-award > button.buzz-first::before{ content:"⚡ "; }
 
+  /* ================= (v11) 🃏 وسائل سين جيم ================= */
+  .tm-helps{ display:flex; flex-direction:column; align-items:center; gap:10px; margin:2px 0 14px; }
+  .tm-helps[hidden], .th-bar[hidden]{ display:none; }
+  .th-open{ border:1px dashed var(--line-2); background:var(--glass); color:var(--tx-2); border-radius:999px; padding:7px 18px; font:inherit; font-weight:700; font-size:.9rem; cursor:pointer; transition:border-color .2s, color .2s, background .2s; }
+  .th-open:hover{ border-color:rgba(110,231,183,.6); color:var(--tx); background:var(--glass-2); }
+  .th-active{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
+  .th-chip{ display:inline-flex; align-items:center; gap:8px; padding:5px 6px 5px 12px; border-radius:999px; font-size:.88rem; font-weight:600; text-align:right;
+    border:1px solid color-mix(in srgb, var(--c) 65%, transparent); background:color-mix(in srgb, var(--c) 18%, transparent); }
+  .th-chip > i{ width:9px; height:9px; border-radius:50%; background:var(--c); flex:0 0 auto; }
+  .th-chip b{ font-family:var(--f-display); }
+  .th-chip.off{ opacity:.6; }
+  .th-chip button{ border:0; border-radius:999px; font:inherit; font-size:.8rem; font-weight:700; cursor:pointer; min-height:30px; }
+  .th-no{ padding:4px 12px; background:rgba(239,68,68,.22); color:#fecaca; }
+  .th-no:hover{ background:rgba(239,68,68,.4); }
+  .th-cancel{ width:30px; padding:0; background:var(--glass-2); color:var(--tx-2); }
+  .th-cancel:hover{ color:var(--tx); }
+  .th-pick{ width:100%; padding:12px 14px; border-radius:16px; background:var(--glass); border:1px solid var(--line); display:flex; flex-direction:column; gap:9px; text-align:right; }
+  .th-pick > p{ margin:0; font-weight:700; font-size:.92rem; }
+  .th-pick > p small{ color:var(--tx-3); font-weight:500; margin-inline-start:6px; }
+  .th-trow{ display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+  .th-trow .nm{ display:inline-flex; align-items:center; gap:8px; font-weight:700; }
+  .th-trow .nm i, .th-team i{ width:10px; height:10px; border-radius:50%; background:var(--c); }
+  .th-trow .hs{ display:flex; gap:6px; flex-wrap:wrap; }
+  .th-h{ display:inline-flex; align-items:center; gap:6px; min-height:38px; padding:6px 12px; border-radius:12px; border:1px solid var(--line-2); background:var(--glass-2); color:var(--tx); font:inherit; font-weight:600; font-size:.86rem; cursor:pointer; transition:transform .15s var(--ease), border-color .2s; }
+  .th-h b{ font-family:var(--f-display); color:var(--trivia-bright); }
+  .th-h:hover:not(:disabled){ transform:translateY(-1px); border-color:var(--c); }
+  .th-h:disabled{ opacity:.35; cursor:default; }
+  .th-h.used{ text-decoration:line-through; }
+  .th-victims{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+  .th-team{ display:inline-flex; align-items:center; gap:8px; min-height:42px; padding:8px 16px; border-radius:12px; border:1px solid color-mix(in srgb, var(--c) 60%, transparent); background:color-mix(in srgb, var(--c) 16%, transparent); color:var(--tx); font:inherit; font-weight:700; cursor:pointer; }
+  .th-x{ align-self:center; border:0; background:none; color:var(--tx-3); font:inherit; font-size:.85rem; cursor:pointer; padding:4px 12px; }
+  .th-x:hover{ color:var(--tx); }
+  .th-tag{ font-size:.78em; padding:1px 6px; border-radius:6px; background:rgba(0,0,0,.28); margin-inline-start:4px; }
+  .th-bar{ display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:8px 14px; margin-top:14px; padding:10px 14px; border-radius:16px; background:var(--glass); border:1px solid var(--line); font-size:.88rem; }
+  .th-lbl{ color:var(--tx-2); font-weight:700; }
+  .th-tm{ display:inline-flex; align-items:center; gap:5px; font-weight:700; }
+  .th-tm > i{ width:9px; height:9px; border-radius:50%; background:var(--c); margin-inline-end:2px; }
+  .th-ic{ display:inline-grid; place-items:center; min-width:28px; height:24px; padding:0 6px; border-radius:8px; background:var(--glass-2); border:1px solid var(--line-2); font-family:var(--f-display); font-size:.8rem; }
+  .th-ic.used{ opacity:.28; text-decoration:line-through; }
+  .th-info{ width:28px; height:28px; border-radius:50%; border:1px solid var(--line-2); background:var(--glass-2); color:var(--tx-2); font:inherit; font-weight:800; cursor:pointer; }
+  .th-info:hover{ color:var(--tx); }
+
+  /* ================= (v11) 📱 الإجابة من الجوال (الأعلام والصور) ================= */
+  .mc-box{ display:flex; flex-direction:column; gap:12px; margin-top:16px; text-align:right; }
+  .mc-box[hidden]{ display:none; }
+  .mc-tg.on{ border-color:rgba(34,197,94,.55); background:rgba(34,197,94,.12); color:#bbf7d0; }
+
+  /* ================= (v11) 🏆 ملخص السهرة ================= */
+  .sum-modal .modal{ max-width:520px; }
+  .sum-img{ border-radius:18px; overflow:hidden; background:var(--glass); border:1px solid var(--line); min-height:220px; display:grid; place-items:center; }
+  .sum-img img{ display:block; width:100%; max-height:60vh; object-fit:contain; }
+  .sum-img img:not([src]){ display:none; }
+  .sum-acts{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-top:14px; }
+  .sum-acts button{ flex:1 1 140px; }
+  .sum-acts button[hidden]{ display:none; }
+
   /* ================= بطاقة التحدي (الصور/الأعلام/التمثيل) ================= */
   .challenge-card{
     position:relative; overflow:hidden; text-align:center; padding:30px 24px; margin-bottom:18px; border-radius:var(--r-xl);
@@ -2017,7 +2073,7 @@
       <div class="mh-acts game-only"><button class="btn-ghost ans-btn" data-ans="trivia" type="button">📱 الإجابات</button><button id="trivNewBoardBtn" class="btn-ghost" type="button">🏁 إنهاء اللوحة</button></div>
     </div>
     <div class="round-gate" data-gate="trivia" hidden></div>
-    <div class="game-body"><div class="trivia-board" id="triviaBoard"></div></div>
+    <div class="game-body"><div class="trivia-board" id="triviaBoard"></div><div class="th-bar" id="trivHelpsBar" hidden></div></div>
   </section>
 
   <!-- EMOJI -->
@@ -2025,7 +2081,7 @@
     <div class="back-row"><button class="back-btn" data-view="home" type="button">→ الرئيسية</button></div>
     <div class="mode-header" style="--accent:var(--emoji);--accent-bright:var(--emoji-bright)">
       <div class="mh-main"><span class="g-tile"><svg class="ic"><use href="#i-emoji"/></svg></span><div><h2>تحدي الصور <span class="round-tag" data-rtag="emoji"></span></h2><p id="emojiModeDesc">كل صورة تمثّل كلمة (بمعناها أو بلفظها) — ركّب الصور مع الحروف واقرأها من اليمين تطلع لك مدينة أو دولة أو شخصية أو مثل — أول فريق يخمّن ياخذ النقطة.</p></div></div>
-      <div class="mh-acts game-only"><button class="btn-ghost ans-btn" data-ans="emoji" type="button">📱 الإجابات</button><button id="emojiNextBtn" class="btn-ghost" type="button">التالي ⏭️</button></div>
+      <div class="mh-acts game-only"><button class="btn-ghost ans-btn" data-ans="emoji" type="button">📱 الإجابات</button><button class="btn-ghost mc-tg" data-mc="emoji" type="button" aria-pressed="false">📱 الإجابة من الجوال</button><button id="emojiNextBtn" class="btn-ghost" type="button">التالي ⏭️</button></div>
     </div>
     <div class="round-gate" data-gate="emoji" hidden></div>
     <div class="game-body">
@@ -2044,6 +2100,7 @@
           <button id="emojiHintBtn" class="btn-ghost" type="button">تلميح 💡</button>
         </div>
         <div class="challenge-award" id="emojiAward" hidden style="margin-top:16px"></div>
+        <div class="mc-box" id="emojiMc" hidden></div>
       </div>
       <div class="timer-widget" id="emojiTimerWidget"></div>
     </div>
@@ -2070,7 +2127,7 @@
     <div class="back-row"><button class="back-btn" data-view="home" type="button">→ الرئيسية</button></div>
     <div class="mode-header" style="--accent:var(--flags);--accent-bright:var(--flags-bright)">
       <div class="mh-main"><span class="g-tile"><svg class="ic"><use href="#i-flags"/></svg></span><div><h2>حزر العلم <span class="round-tag" data-rtag="flags"></span></h2><p>يطلع علم — أول فريق يعرف الدولة ياخذ النقطة.</p></div></div>
-      <button id="flNextBtn" class="btn-ghost game-only" type="button">التالي ⏭️</button>
+      <div class="mh-acts game-only"><button class="btn-ghost mc-tg" data-mc="flags" type="button" aria-pressed="false">📱 الإجابة من الجوال</button><button id="flNextBtn" class="btn-ghost" type="button">التالي ⏭️</button></div>
     </div>
     <div class="round-gate" data-gate="flags" hidden></div>
     <div class="game-body">
@@ -2084,6 +2141,7 @@
           <button id="flHintBtn" class="btn-ghost" type="button">تلميح 💡</button>
         </div>
         <div class="challenge-award" id="flAward" hidden style="margin-top:16px"></div>
+        <div class="mc-box" id="flMc" hidden></div>
       </div>
     </div>
   </section>
@@ -2226,6 +2284,7 @@
     <div class="tm-points" id="tmPoints"></div>
     <p class="tm-question" id="tmQuestion"></p>
     <button class="tts-say" type="button" data-tts="triv" aria-label="اقرأ السؤال بصوت"><svg class="ic" aria-hidden="true"><use href="#i-volume"/></svg><span>اقرأ السؤال</span></button>
+    <div class="tm-helps" id="tmHelps"></div>
     <div class="tm-hint" id="tmHint" hidden></div>
     <div class="tm-answer" id="tmAnswer" hidden></div>
     <div class="tm-btn-row">
@@ -2318,6 +2377,7 @@
       <li>مخطط السهرة وأي جولة شغالة الحين</li>
     </ul>
     <p class="rm-note">الأسئلة والكلمات اللي طلعت قبل ما بتتكرر، وجوالات «أسرع إصبع» تبقى متصلة.</p>
+    <button class="btn-soft btn-block" id="resetSumBtn" type="button" style="margin-bottom:8px" hidden>📸 خذوا ملخص السهرة قبل</button>
     <button class="btn-primary btn-block" id="resetYesBtn" type="button">🔄 إيه، سهرة جديدة</button>
     <button class="btn-ghost btn-block" id="resetNoBtn" type="button" style="margin-top:8px">لا، رجوع</button>
   </div>
@@ -2347,7 +2407,7 @@
 <div class="modal-overlay" id="askModal" hidden>
   <div class="modal" role="dialog" aria-modal="true">
     <h3 id="askTitle" style="font-size:1.3rem;margin:4px 0 8px"></h3>
-    <p id="askText" class="rm-note" style="font-size:.94rem"></p>
+    <p id="askText" class="rm-note" style="font-size:.94rem;white-space:pre-line"></p>
     <button class="btn-primary btn-block" id="askYes" type="button"></button>
     <button class="btn-ghost btn-block" id="askNo" type="button" style="margin-top:8px">لا، رجوع</button>
   </div>
@@ -2359,7 +2419,8 @@
     <h3 id="winTitle"></h3>
     <p class="win-sub" id="winSub"></p>
     <ul class="win-list" id="winList"></ul>
-    <button class="btn-primary btn-block" id="winNewBtn" type="button">🎉 سهرة جديدة</button>
+    <button class="btn-primary btn-block" id="winSumBtn" type="button">🏆 ملخص السهرة</button>
+    <button class="btn-soft btn-block" id="winNewBtn" type="button" style="margin-top:8px">🎉 سهرة جديدة</button>
     <button class="btn-ghost btn-block" id="winKeepBtn" type="button" style="margin-top:8px">كمّلوا اللعب</button>
   </div>
 </div>
@@ -2370,12 +2431,26 @@
     <div class="m-big-ic"><svg class="ic"><use href="#i-trophy"/></svg></div>
     <h3 id="scoreTitle" style="font-size:1.5rem;margin:4px 0 14px">النتائج</h3>
     <div class="sb-list" id="scoreList"></div>
-    <button class="btn-ghost btn-block" id="scoreTeamsBtn" type="button">تعديل الفرق والنقاط</button>
+    <button class="btn-soft btn-block" id="scoreSumBtn" type="button">🏆 ملخص السهرة</button>
+    <button class="btn-ghost btn-block" id="scoreTeamsBtn" type="button" style="margin-top:8px">تعديل الفرق والنقاط</button>
   </div>
 </div>
 <!-- night planner: between rounds + final -->
 <div class="modal-overlay plan-modal" id="planModal" hidden>
   <div class="modal" role="dialog" aria-modal="true" id="planModalBox"></div>
+</div>
+<!-- (v11) 🏆 ملخص السهرة: صورة + مشاركة بالواتساب -->
+<div class="modal-overlay sum-modal" id="sumModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="sumTitle">
+    <button class="teams-close" id="sumClose" type="button" aria-label="إغلاق">✕</button>
+    <h3 id="sumTitle" style="font-size:1.35rem;margin:0 0 12px">🏆 ملخص السهرة</h3>
+    <div class="sum-img"><img id="sumImg" alt="صورة ملخص السهرة"></div>
+    <div class="sum-acts">
+      <button class="btn-primary" id="sumShare" type="button" hidden>📤 شارك الصورة</button>
+      <button class="btn-soft" id="sumWa" type="button">💬 واتساب</button>
+      <button class="btn-ghost" id="sumSave" type="button">⬇️ حفظ الصورة</button>
+    </div>
+  </div>
 </div>
 <!-- أسرع إصبع: خلص وقت الجواب — ما فيه خصم تلقائي، المقدّم يختار يخصم على مين ويزيد لمين -->
 <div class="modal-overlay tu-modal" id="tuModal" hidden>
@@ -2653,7 +2728,8 @@
                         million:{def:10,min:5,max:15,trial:5} };
   var PLAY_DEFAULTS = { trivia_pts:[1,2,3,4], pts:{ emoji:1, flags:1, charades:1, heads:1, letters:1 }, win_target:0, emoji_secs:20, char_secs:60, heads_dur:60,
                         buzz_pen_timeout:1, buzz_pen_wrong:1, buzz_steal_secs:10,
-                        million:{ step_pts:1, lv_pts:[1,2,3], speed_bonus:1, all_secs:20, vote_secs:15, friend_secs:30, life:{ fifty:true, aud:true, friend:true, swap:true } } };   /* «أسرع إصبع»: buzz_pen_timeout = الخصم المقترح لما يخلص الوقت (المقدّم يختار على مين) + زر «غلط وخصم» (0 = بدون) */
+                        million:{ step_pts:1, lv_pts:[1,2,3], speed_bonus:1, all_secs:20, vote_secs:15, friend_secs:30, life:{ fifty:true, aud:true, friend:true, swap:true } },
+                        helps:{ x2:true, steal:true, swap:true }, mc:{ secs:20, bonus:1 } };   /* «أسرع إصبع»: buzz_pen_timeout = الخصم المقترح لما يخلص الوقت (المقدّم يختار على مين) + زر «غلط وخصم» (0 = بدون) */
   function clampInt(v, lo, hi, def){ v = Math.round(+v); if(!isFinite(v)) v = def; return Math.max(lo, Math.min(hi, v)); }
   function cfgSize(g){
     var d = SIZE_DEFAULTS[g]; if(!d) return null;
@@ -2688,6 +2764,12 @@
       friend_secs: clampInt(m.friend_secs, 10, 180, md.friend_secs),
       life: { fifty: lf.fifty !== false, aud: lf.aud !== false, friend: lf.friend !== false, swap: lf.swap !== false }
     };
+    /* (v11) 🃏 وسائل سين جيم — المطفية ما تطلع */
+    var hp = isObj(p.helps) ? p.helps : {};
+    out.helps = { x2: hp.x2 !== false, steal: hp.steal !== false, swap: hp.swap !== false };
+    /* (v11) 📱 الإجابة من الجوال بالأعلام والصور: وقت السؤال + بونص الأسرع */
+    var mc = isObj(p.mc) ? p.mc : {}, mcd = PLAY_DEFAULTS.mc;
+    out.mc = { secs: clampInt(mc.secs, 5, 120, mcd.secs), bonus: clampInt(mc.bonus, 0, 999, mcd.bonus) };
     return out;
   }
   /* الحجم اللي اختاره المقدّم (لو طلع برا حدود الأدمن يرجع للافتراضي) */
@@ -2772,7 +2854,7 @@
   /* ============ state ============ */
   var store = {
     teams: [],
-    trivia: { round:null, cells: [] },
+    trivia: { round:null, cells: [], helps: {} },   /* (v11) helps = { فريق: { x2, steal, swap } } = الوسائل اللي استخدمها باللوحة */
     emoji: { round:null, items: [], idx: 0, mode: "v2" },
     charades: { round:null, items: [], idx: 0, turn: 0 },
     mafia: { caseId:null, round:0, players:[], counts:{mafia:0,detective:0,doctor:0} },
@@ -2786,7 +2868,9 @@
     win: { target: 0, shown: "" },
     sizes: {},          /* حجم الجولة اللي اختاره المقدّم لكل لعبة */
     plan: null,         /* مخطط السهرة */
-    planDraft: null     /* إعدادات المخطط قبل ما تنبني الخطة */
+    planDraft: null,    /* إعدادات المخطط قبل ما تنبني الخطة */
+    mcOn: { flags: false, emoji: false },   /* (v11) 📱 الإجابة من الجوال بالأعلام والصور */
+    night: null         /* (v11) إحصائيات السهرة للملخص: { at, rounds:[{g, at, before}], fast:{} } */
   };
   var hadSaved = false;
 
@@ -2825,13 +2909,15 @@
       store.teams.forEach(function(t){ var k = OLD_PALETTE.indexOf(String(t.color || "").toLowerCase()); if(k !== -1) t.color = TEAM_PALETTE[k]; });
       if(isObj(saved.mafia) && Array.isArray(saved.mafia.players)) store.mafia = saved.mafia;
       var T = saved.trivia;
-      if(isObj(T) && validRound(T.round) && isTriviaCellsValid(T.cells)) store.trivia = { round:T.round, cells:T.cells };
+      if(isObj(T) && validRound(T.round) && isTriviaCellsValid(T.cells)) store.trivia = { round:T.round, cells:T.cells, helps: isObj(T.helps) ? T.helps : {} };
       var E = saved.emoji;
       if(isObj(E)){
         if(E.mode === "v1" || E.mode === "v2") store.emoji.mode = E.mode;
         if(validRound(E.round) && validItems(E.items, function(x){ return Array.isArray(x.parts) && typeof x.a === "string"; })){
           store.emoji.round = E.round; store.emoji.items = E.items;
           store.emoji.idx = Math.max(0, Math.min(E.items.length, E.idx | 0));
+          if(isObj(E.ch)) store.emoji.ch = E.ch;
+          if(isObj(E.mq)) store.emoji.mq = E.mq;
         }
       }
       var C = saved.charades;
@@ -2853,7 +2939,11 @@
       var F = saved.flags;
       if(isObj(F) && validRound(F.round) && validItems(F.items, function(x){ return typeof x.n === "string" && typeof x.sp === "string"; })){
         store.flags = { round:F.round, items:F.items, idx:Math.max(0, Math.min(F.items.length, F.idx | 0)) };
+        if(isObj(F.ch)) store.flags.ch = F.ch;
+        if(isObj(F.mq)) store.flags.mq = F.mq;
       }
+      if(isObj(saved.mcOn)) store.mcOn = { flags: saved.mcOn.flags === true, emoji: saved.mcOn.emoji === true };
+      if(isObj(saved.night) && Array.isArray(saved.night.rounds) && isObj(saved.night.fast)) store.night = saved.night;
       var ML0 = saved.million;
       if(isObj(ML0)){
         store.million.pref = ML0.pref === "all" ? "all" : "seat";
@@ -3028,6 +3118,7 @@
       saveBootSnap();
       toast(d.kind === "trial" ? "🎁 بدأت التجربة المجانية" : d.kind === "admin" ? "👑 جولة أدمن (بدون خصم)" : "🎟️ انخصمت جولة — باقي لك " + roundsWord(ACCT.credits));
       planOnStart(game, d);
+      nightRound(game);
       return d;
     });
   }
@@ -3260,7 +3351,9 @@
     revealBtn: document.getElementById("tmRevealBtn"),
     award: document.getElementById("tmAward"),
     teamBtns: document.getElementById("tmTeamBtns"),
-    skipBtn: document.getElementById("tmSkipBtn")
+    skipBtn: document.getElementById("tmSkipBtn"),
+    helps: document.getElementById("tmHelps"),
+    helpsBar: document.getElementById("trivHelpsBar")
   };
   var TIERS = [100,200,300,400];
   /* النقاط تنعرض وتنحسب 1-4 (بقاعدة البيانات المستوى 100-400) */
@@ -3287,6 +3380,7 @@
       return startRound("trivia", trial).then(function(d){
         store.trivia.round = { id: d.round, kind: d.kind };
         store.trivia.cells = d.items.map(function(i){ return { id: String(i.id), cat: i.cat, points: i.points, q: i.q, a: i.a, used: false }; });
+        store.trivia.helps = {};   /* لوحة جديدة = كل الوسائل ترجع */
         persist();
         trivOpen();
         ansStart("trivia", d.round);
@@ -3309,6 +3403,7 @@
     trivEls.board.querySelectorAll(".tb-cell").forEach(function(btn){
       btn.addEventListener("click", function(){ openTrivia(btn.getAttribute("data-id")); });
     });
+    renderTrivHelpsBar();
   }
 
   function firstLetterHint(text){
@@ -3323,9 +3418,14 @@
     var cell = store.trivia.cells.find(function(c){ return c.id === id; });
     if(!cell || cell.used) return;
     activeCell = cell;
+    TH.open = false; TH.steal = null;
+    trivShowCell(cell);
+    trivEls.modal.hidden = false;
+    trivArm(cell);
+  }
+  function trivShowCell(cell){
     trivEls.cat.textContent = cell.cat;
     trivEls.points.innerHTML = '<b>' + tpts(cell.points) + '</b><small>' + ptsWord(tpts(cell.points)) + '</small>';
-    renderTriviaAwardButtons();
     trivEls.question.textContent = cell.q;
     trivEls.hint.hidden = true;
     trivEls.hint.textContent = firstLetterHint(cell.a);
@@ -3334,7 +3434,10 @@
     trivEls.answer.textContent = "الإجابة: " + cell.a;
     trivEls.award.hidden = true;
     trivEls.revealBtn.hidden = false;
-    trivEls.modal.hidden = false;
+    renderTriviaAwardButtons();
+    renderTrivHelps();
+  }
+  function trivArm(cell){
     buzzArm("triv:" + cell.id, false, { k:"trivia", cat: cell.cat, pts: tpts(cell.points), text: cell.q });
     TTS.auto("triv:" + cell.id, trivSpeech());
   }
@@ -3347,6 +3450,7 @@
   trivEls.modal.addEventListener("click", function(e){ if(e.target === trivEls.modal) closeTrivia(); });
   document.addEventListener("keydown", function(e){
     if(e.key === "Escape"){
+      if(!document.getElementById("sumModal").hidden){ closeSummary(); return; }
       if(!document.getElementById("bdModal").hidden){ bdHide(); renderBuzzUI(); return; }
       if(!document.getElementById("ansModal").hidden){ ansHide(); return; }
       if(!document.getElementById("scoreModal").hidden) document.getElementById("scoreModal").hidden = true;
@@ -3362,20 +3466,196 @@
     trivEls.answer.hidden = false;
     trivEls.revealBtn.hidden = true;
     trivEls.award.hidden = false;
+    TH.open = false; TH.steal = null;
     renderTriviaAwardButtons();
+    renderTrivHelps();
   });
 
+  /* أزرار «مين جاوب صح؟» — اللي معه ×2 ياخذ الضعف */
   function renderTriviaAwardButtons(){
-    trivEls.teamBtns.innerHTML = teamAwardButtonsHtml("award", activeCell ? tpts(activeCell.points) : 1);
+    var cell = activeCell, p = cell ? tpts(cell.points) : 1;
+    trivEls.teamBtns.innerHTML = store.teams.map(function(t){
+      var h = cellHelp(cell, t.id), g = h && h.k === "x2" ? p * 2 : p;
+      var tag = h && HELPS[h.k] ? ' <small class="th-tag">' + HELPS[h.k].ic + '</small>' : '';
+      return '<button type="button" style="background-color:' + t.color + '" data-award="' + t.id + '">+' + g + ' ' + escapeHtml(t.name) + tag + '</button>';
+    }).join("");
     markBuzzButtons();
     trivEls.teamBtns.querySelectorAll("[data-award]").forEach(function(btn){
-      btn.addEventListener("click", function(){
-        var t = store.teams.find(function(x){ return x.id === btn.getAttribute("data-award"); });
-        if(t && activeCell){ t.score += tpts(activeCell.points); activeCell.by = t.id; }
-        finishTriviaCell();
-      });
+      btn.addEventListener("click", function(){ trivAward(btn.getAttribute("data-award")); });
     });
   }
+  function trivAward(tid){
+    var t = trTeam(tid), cell = activeCell;
+    if(t && cell){
+      var p = tpts(cell.points), h = cellHelp(cell, tid);
+      t.score += h && h.k === "x2" ? p * 2 : p;
+      cell.by = t.id;
+      if(h && h.k === "steal"){
+        var v = trTeam(h.v);
+        if(v && v.id !== t.id){ v.score -= p; setTimeout(function(){ toast("🦹 " + t.name + " سرقوا " + penWord(p) + " من " + v.name); }, 0); }
+      }
+    }
+    finishTriviaCell();
+  }
+
+  /* ===== (v11) 🃏 وسائل سين جيم: كل فريق يستخدم كل وسيلة مرة وحدة باللوحة (قبل ما ينكشف الجواب) ===== */
+  var HELPS = {
+    x2:    { ic:"×2", name:"دبل", tip:"لو جاوبوا صح ياخذون ضعف النقاط، ولو غلطوا تنخصم نقاط السؤال" },
+    steal: { ic:"🦹", name:"سرقة", tip:"لو جاوبوا صح ياخذون النقاط وتنخصم من فريق يختارونه" },
+    swap:  { ic:"🔄", name:"تبديل", tip:"سؤال ثاني من نفس الفئة ونفس النقاط" }
+  };
+  var HELP_KEYS = ["x2", "steal", "swap"];
+  var TH = { open:false, steal:null, busy:false };   /* لوحة اختيار الوسيلة بالنافذة (ما تنحفظ) */
+  function helpsOn(){ var h = cfgPlay().helps; return HELP_KEYS.filter(function(k){ return h[k]; }); }
+  function trTeam(id){ return store.teams.find(function(t){ return t.id === id; }) || null; }
+  function helpUsed(tid, k){ var u = isObj(store.trivia.helps) ? store.trivia.helps[tid] : null; return !!(u && u[k]); }
+  function helpMark(tid, k, on){
+    if(!isObj(store.trivia.helps)) store.trivia.helps = {};
+    var u = store.trivia.helps[tid] || (store.trivia.helps[tid] = {});
+    if(on) u[k] = 1; else delete u[k];
+  }
+  function cellHelp(cell, tid){ return cell && isObj(cell.h) && isObj(cell.h[tid]) ? cell.h[tid] : null; }
+  function trivRevealed(){ return !trivEls.answer.hidden; }
+  /* نقاط الفريق لو جاوب صح هالسؤال (×2 = ضعف) */
+  function trivGainFor(tid){
+    if(!activeCell) return 0;
+    var p = tpts(activeCell.points), h = cellHelp(activeCell, tid);
+    return h && h.k === "x2" ? p * 2 : p;
+  }
+  function renderTrivHelps(){
+    var box = trivEls.helps, keys = helpsOn(), cell = activeCell;
+    if(!cell || !keys.length || store.teams.length < 2){ box.innerHTML = ""; box.hidden = true; return; }
+    var rev = trivRevealed(), p = tpts(cell.points), act = isObj(cell.h) ? cell.h : {};
+    var chips = Object.keys(act).map(function(tid){
+      var t = trTeam(tid), h = act[tid]; if(!t || !isObj(h)) return "";
+      var wrong = h.k === "x2" && isObj(cell.x) && cell.x[tid];
+      var sg = function(s, n){ return '<span dir="ltr">' + s + n + '</span>'; };
+      var txt = h.k === "x2" ? "<b>×2</b> " + escapeHtml(t.name) + (wrong ? " — غلطوا (" + sg("−", p) + ")" : " — صح: " + sg("+", p * 2) + " · غلط: " + sg("−", p))
+              : "<b>🦹</b> " + escapeHtml(t.name) + " يسرقون من " + escapeHtml((trTeam(h.v) || { name:"—" }).name);
+      return '<span class="th-chip' + (wrong ? " off" : "") + '" style="--c:' + t.color + '"><i></i><span>' + txt + '</span>'
+        + (h.k === "x2" && !wrong && !cell.by ? '<button type="button" class="th-no" data-x2wrong="' + tid + '">❌ غلطوا</button>' : '')
+        + (!rev && !wrong ? '<button type="button" class="th-cancel" data-thcancel="' + tid + '" aria-label="إلغاء وسيلة ' + escapeHtml(t.name) + '">✕</button>' : '') + '</span>';
+    }).join("");
+    var html = chips ? '<div class="th-active">' + chips + '</div>' : '';
+    if(!rev) html += TH.open ? trivHelpsPicker(cell, keys) : '<button type="button" class="th-open" data-thopen="1">🃏 وسيلة</button>';
+    box.innerHTML = html; box.hidden = !html;
+  }
+  function trivHelpsPicker(cell, keys){
+    if(TH.steal){
+      var st = trTeam(TH.steal);
+      return '<div class="th-pick"><p>🦹 ' + escapeHtml(st ? st.name : "") + ' يسرقون من مين؟</p><div class="th-victims">'
+        + store.teams.filter(function(t){ return t.id !== TH.steal; }).map(function(t){
+          return '<button type="button" class="th-team" style="--c:' + t.color + '" data-thvictim="' + t.id + '"><i></i>' + escapeHtml(t.name) + '</button>';
+        }).join("") + '</div><button type="button" class="th-x" data-thclose="1">رجوع</button></div>';
+    }
+    var rows = store.teams.map(function(t){
+      var mine = cellHelp(cell, t.id);
+      return '<div class="th-trow" style="--c:' + t.color + '"><span class="nm"><i></i>' + escapeHtml(t.name) + '</span><span class="hs">' + keys.map(function(k){
+        var used = helpUsed(t.id, k);
+        return '<button type="button" class="th-h' + (used ? " used" : "") + '" data-thuse="' + k + '" data-tid="' + t.id + '"' + (used || mine || TH.busy ? " disabled" : "")
+          + ' title="' + HELPS[k].tip + (used ? " (استخدموها)" : "") + '"><b>' + HELPS[k].ic + '</b>' + HELPS[k].name + '</button>';
+      }).join("") + '</span></div>';
+    }).join("");
+    return '<div class="th-pick"><p>مين بيستخدم وسيلة؟ <small>كل فريق كل وسيلة مرة باللوحة</small></p>' + rows
+      + '<button type="button" class="th-x" data-thclose="1">إغلاق</button></div>';
+  }
+  trivEls.helps.addEventListener("click", function(e){
+    var b = e.target.closest("button"); if(!b || b.disabled || !activeCell) return;
+    if(b.hasAttribute("data-thopen")){ TH.open = true; TH.steal = null; renderTrivHelps(); return; }
+    if(b.hasAttribute("data-thclose")){ if(TH.steal) TH.steal = null; else TH.open = false; renderTrivHelps(); return; }
+    var w = b.getAttribute("data-x2wrong");
+    if(w){ var wt = trTeam(w), n = trivX2Wrong(w); if(n && wt) toast("❌ " + wt.name + " غلطوا بالدبل — انخصمت " + penWord(n)); return; }
+    var c = b.getAttribute("data-thcancel");
+    if(c){ trivHelpCancel(c); return; }
+    var v = b.getAttribute("data-thvictim");
+    if(v){ trivHelpSet(TH.steal, "steal", v); return; }
+    var k = b.getAttribute("data-thuse"), tid = b.getAttribute("data-tid");
+    if(!k || !tid) return;
+    if(k === "swap"){ trivSwap(tid); return; }
+    if(k === "steal"){
+      var others = store.teams.filter(function(t){ return t.id !== tid; });
+      if(others.length === 1){ trivHelpSet(tid, "steal", others[0].id); return; }
+      TH.steal = tid; renderTrivHelps(); return;
+    }
+    trivHelpSet(tid, k);
+  });
+  function trivHelpSet(tid, k, victim){
+    var cell = activeCell, t = trTeam(tid);
+    if(!cell || !t || trivRevealed() || helpUsed(tid, k) || cellHelp(cell, tid)) return;
+    if(k === "steal" && !trTeam(victim)) return;
+    if(!isObj(cell.h)) cell.h = {};
+    cell.h[tid] = k === "steal" ? { k:"steal", v:victim } : { k:k };
+    helpMark(tid, k, true);
+    TH.open = false; TH.steal = null;
+    persist(); renderTrivHelps(); renderTriviaAwardButtons(); renderTrivHelpsBar(); renderBuzzUI();
+    var p = tpts(cell.points);
+    toast(k === "x2" ? "×2 " + t.name + " — صح: +" + (p * 2) + " · غلط: −" + p : "🦹 " + t.name + " يسرقون من " + trTeam(victim).name + " لو جاوبوا صح");
+  }
+  function trivHelpCancel(tid){
+    var cell = activeCell, h = cellHelp(cell, tid);
+    if(!h || trivRevealed() || (isObj(cell.x) && cell.x[tid])) return;
+    delete cell.h[tid]; helpMark(tid, h.k, false);
+    persist(); renderTrivHelps(); renderTriviaAwardButtons(); renderTrivHelpsBar(); renderBuzzUI();
+    toast("↩️ رجعت الوسيلة لـ " + (trTeam(tid) || { name:"" }).name);
+  }
+  /* ×2 وغلطوا: تنخصم نقاط السؤال (مرة وحدة) — والفرصة تبقى للباقين */
+  function trivX2Wrong(tid){
+    var cell = activeCell, h = cellHelp(cell, tid), t = trTeam(tid);
+    if(!h || h.k !== "x2" || !t || (isObj(cell.x) && cell.x[tid])) return 0;
+    var p = tpts(cell.points);
+    t.score -= p;
+    if(!isObj(cell.x)) cell.x = {};
+    cell.x[tid] = 1;
+    persist(); renderTeams(); renderTrivHelps(); renderBuzzUI();
+    return p;
+  }
+  /* 🔄 تبديل: سؤال ثاني من نفس الفئة والنقاط (من السيرفر) */
+  var SWAP_ERR = { no_spare:"ما فيه سؤال ثاني بهالفئة وهالنقاط", swap_limit:"خلص حد التبديل بهاللوحة", expired:"اللوحة قديمة — ابدأوا لوحة جديدة عشان تبدّلون",
+                   bad_round:"ما قدرنا نبدّل السؤال بهاللوحة", bad_item:"ما قدرنا نبدّل هالسؤال" };
+  function trivSwap(tid){
+    var cell = activeCell, t = trTeam(tid), R = store.trivia.round;
+    if(!cell || !t || !R || TH.busy || trivRevealed() || helpUsed(tid, "swap") || cellHelp(cell, tid)) return;
+    var oldId = cell.id;
+    TH.busy = true; renderTrivHelps();
+    sbReady.then(function(sb){ return sb.rpc("trivia_swap", { p_round: R.id, p_item: oldId }); }).then(function(r){
+      if(r.error) throw r.error;
+      var d = typeof r.data === "string" ? JSON.parse(r.data) : r.data;
+      if(!d || typeof d.q !== "string" || typeof d.a !== "string" || !d.id) throw new Error("bad_item");
+      if(store.trivia.round !== R || cell.id !== oldId) return;   /* اللوحة تغيّرت وقت الانتظار */
+      cell.prev = (Array.isArray(cell.prev) ? cell.prev : []).concat([oldId]).slice(-6);
+      cell.id = String(d.id); cell.q = d.q; cell.a = d.a;
+      helpMark(tid, "swap", true);
+      TH.open = false; TH.steal = null;
+      persist(); renderTriviaBoard();
+      if(activeCell === cell){ trivShowCell(cell); trivArm(cell); }
+      toast("🔄 " + t.name + " بدّلوا السؤال");
+    }).catch(function(e){
+      var m = String((e && (e.message || e.code)) || e || "");
+      var code = Object.keys(SWAP_ERR).filter(function(k){ return m.indexOf(k) !== -1; })[0];
+      toast(code ? SWAP_ERR[code] : isMissingFn(e) ? "تبديل السؤال يحتاج تحديث قاعدة البيانات (ملف SQL)" : "ما قدرنا نبدّل السؤال — تأكد من النت");
+    }).then(function(){ TH.busy = false; if(activeCell === cell) renderTrivHelps(); });
+  }
+  /* شريط الوسائل تحت اللوحة: وش باقي لكل فريق */
+  function renderTrivHelpsBar(){
+    var bar = trivEls.helpsBar, keys = helpsOn();
+    if(!bar) return;
+    if(!keys.length || store.teams.length < 2 || !trivActive()){ bar.hidden = true; bar.innerHTML = ""; return; }
+    bar.innerHTML = '<span class="th-lbl">🃏 الوسائل</span>' + store.teams.map(function(t){
+      return '<span class="th-tm" style="--c:' + t.color + '"><i></i>' + escapeHtml(t.name) + keys.map(function(k){
+        var u = helpUsed(t.id, k);
+        return '<span class="th-ic' + (u ? " used" : "") + '" title="' + HELPS[k].name + (u ? " — استخدموها" : " — باقية") + '">' + HELPS[k].ic + '</span>';
+      }).join("") + '</span>';
+    }).join("") + '<button type="button" class="th-info" data-thinfo="1" aria-label="وش الوسائل؟">؟</button>';
+    bar.hidden = false;
+  }
+  trivEls.helpsBar.addEventListener("click", function(e){
+    if(!e.target.closest("[data-thinfo]")) return;
+    var on = helpsOn();
+    notice("🃏 وسائل سين جيم", "كل فريق يستخدم كل وسيلة مرة وحدة باللوحة. افتحوا السؤال واضغطوا «🃏 وسيلة» قبل ما ينكشف الجواب."
+      + (on.indexOf("x2") !== -1 ? "\n\n×2 دبل: لو جاوبتوا صح تاخذون ضعف النقاط، ولو غلطتوا تنخصم نقاط السؤال." : "")
+      + (on.indexOf("steal") !== -1 ? "\n\n🦹 سرقة: لو جاوبتوا صح تاخذون النقاط، وتنخصم نفسها من فريق تختارونه." : "")
+      + (on.indexOf("swap") !== -1 ? "\n\n🔄 تبديل: يتبدّل السؤال بسؤال ثاني من نفس الفئة ونفس النقاط." : ""));
+  });
   trivEls.skipBtn.addEventListener("click", finishTriviaCell);
   function finishTriviaCell(){
     if(activeCell) activeCell.used = true;
@@ -3479,6 +3759,7 @@
         return startRound("emoji", trial, { mode: "v2" }).then(function(d){
           store.emoji.round = { id: d.round, kind: d.kind };
           store.emoji.items = d.items; store.emoji.idx = 0;
+          store.emoji.mq = null; store.emoji.ch = null;
           persist(); emojiOpen();
           ansStart("emoji", d.round);
         });
@@ -3507,7 +3788,11 @@
     emojiEls.revealBtn.hidden = false;
     emojiEls.nextBtn.textContent = store.emoji.idx + 1 >= store.emoji.items.length ? "إنهاء 🏁" : "التالي ⏭️";
     persist();
-    if(!document.getElementById("view-emoji").hidden) buzzArm("emoji:" + item.id, false, { k:"emoji", parts: item.parts || [] });
+    if(!document.getElementById("view-emoji").hidden){
+      if(store.mcOn.emoji) mcShow("emoji");
+      else buzzArm("emoji:" + item.id, false, { k:"emoji", parts: item.parts || [] });
+    }
+    mcRender("emoji");
   }
   emojiEls.hintBtn.addEventListener("click", function(){
     emojiEls.hintBtn.hidden = true;
@@ -4110,7 +4395,7 @@
         steal: cfgPlay().buzz_steal_secs,                                  /* كم ثانية فرصة الخصم (للنص بالجوال) */
         pens: buzzPensOut(),                                              /* الخصم بهالسؤال: {فريق: {n, kind, ago}} */
         adds: buzzAddsOut(),                                              /* الزيادة اللي عطاها المقدّم بعد ما خلص الوقت */
-        mq: mlPhone()                                                     /* «طريق المليون»: السؤال والخيارات للجوالات */
+        mq: mlPhone() || mcPhone()                                        /* «طريق المليون» + (v11) الأعلام والصور: السؤال والخيارات للجوالات */
       }});
     }catch(e){}
   }
@@ -4287,8 +4572,9 @@
   function buzzWrong(withPen){
     if(!buzzActive() || buzz.state !== "locked") return;
     var team = store.teams.find(function(t){ return t.id === buzz.winner; });
-    var pen = withPen && team ? buzzPenalize(team.id, "wrong") : 0;
-    var penTxt = pen ? "انخصمت " + penWord(pen) + " على " + team.name : "";
+    var x2 = team ? buzzX2Wrong(team.id) : 0;
+    var pen = x2 || (withPen && team ? buzzPenalize(team.id, "wrong") : 0);
+    var penTxt = pen ? "انخصمت " + penWord(pen) + " على " + team.name + (x2 ? " (×2)" : "") : "";
     buzzLogMark("wrong", pen);
     var others = store.teams.filter(function(t){ return t.id !== buzz.winner && buzz.excluded.indexOf(t.id) === -1; });
     if(!others.length){
@@ -4437,7 +4723,7 @@
   /* ❌ غلط (من النافذة أو الشريط بعد ما خلص الوقت): يخصم لو الأدمن مفعّل الخصم، والفرصة للخصم N ثانية وبعدها للكل */
   function buzzDecideWrong(){
     if(!buzzActive() || buzz.state !== "locked" || !buzz.winner) return;
-    var n = cfgPlay().buzz_pen_wrong, pen = n > 0 ? buzzPenalize(buzz.winner, "wrong") : 0;
+    var n = cfgPlay().buzz_pen_wrong, x2 = buzzX2Wrong(buzz.winner), pen = x2 || (n > 0 ? buzzPenalize(buzz.winner, "wrong") : 0);
     buzzStealGo("wrong", pen);
   }
   function buzzStealGo(why, pen){
@@ -4461,6 +4747,8 @@
     var t = buzz.decide && store.teams.find(function(x){ return x.id === buzz.winner; });
     if(!t){ bdHide(); renderBuzzUI(); return; }
     var m = document.getElementById("bdModal"), k = buzz.q && buzz.q.k, pts = buzzOkPts(), pen = cfgPlay().buzz_pen_wrong, secs = buzzStealSecs();
+    var x2h = k === "trivia" && cellHelp(activeCell, t.id);
+    if(x2h && x2h.k === "x2" && !(isObj(activeCell.x) && activeCell.x[t.id])) pen = tpts(activeCell.points);   /* (v11) ×2: الغلط = نقاط السؤال */
     var opp = store.teams.filter(function(x){ return x.id !== t.id && buzz.excluded.indexOf(x.id) === -1; });
     var chance = secs > 0 && opp.length ? "الفرصة لـ " + (opp.length === 1 ? opp[0].name : "الفرق الثانية") + " " + arN(secs, "ثانية", "ثانيتين", "ثواني", "ثانية") : "الزر ينفتح للكل";
     tuHide();
@@ -4480,7 +4768,18 @@
   document.getElementById("bdClose").addEventListener("click", function(){ bdHide(); renderBuzzUI(); });
   document.getElementById("bdModal").addEventListener("click", function(e){ if(e.target === e.currentTarget){ bdHide(); renderBuzzUI(); } });
   /* ✅ صح: الجواب يطلع على الشاشة، والفريق ياخذ نقاط السؤال (نفس زر الفريق باللعبة — والسؤال يتسكّر أو يجي اللي بعده) */
-  function buzzOkPts(){ var k = buzz.q && buzz.q.k; return (k === "trivia" || k === "emoji" || k === "flags") ? buzzQPts() : 0; }
+  function buzzOkPts(){
+    var k = buzz.q && buzz.q.k;
+    if(k === "trivia" && activeCell && buzz.winner) return trivGainFor(buzz.winner);   /* (v11) ×2 = ضعف */
+    return (k === "trivia" || k === "emoji" || k === "flags") ? buzzQPts() : 0;
+  }
+  /* (v11) ×2 بسين جيم: «غلط» = تنخصم نقاط السؤال بدل الخصم العادي */
+  function buzzX2Wrong(tid){
+    if(!(buzz.q && buzz.q.k === "trivia" && activeCell)) return 0;
+    var n = trivX2Wrong(tid);
+    if(n) buzz.pens[tid] = { n:n, kind:"wrong", at:Date.now() };
+    return n;
+  }
   function buzzAnswerNow(k){
     try{
       if(k === "trivia") return activeCell ? activeCell.a : "";
@@ -4504,6 +4803,7 @@
     var k = buzz.q && buzz.q.k, pts = buzzOkPts(), ans = buzzAnswerNow(k);
     buzzStopTimer(); buzz.decide = false; bdHide();
     buzzLogMark("ok");
+    nightFast(t.id, buzz.winnerName);
     /* نكشف الجواب (بسين جيم والصور والأعلام: أزرار الفرق تطلع معه) */
     if(k === "trivia" && !trivEls.revealBtn.hidden) trivEls.revealBtn.click();
     else if(k === "emoji" && !emojiEls.revealBtn.hidden) emojiEls.revealBtn.click();
@@ -4665,6 +4965,8 @@
         bar.classList.add("locked");
         bar.style.setProperty("--c", wt ? wt.color : "#555");
         var tl = buzzTimeLeft();
+        var bbH = buzz.q && buzz.q.k === "trivia" && wt ? cellHelp(activeCell, wt.id) : null;
+        var bbX2 = bbH && bbH.k === "x2" && !(isObj(activeCell.x) && activeCell.x[wt.id]) ? tpts(activeCell.points) : 0;
         if(buzz.decide) html = '<span>⏰ خلص وقت ' + escapeHtml(buzz.winnerName || (wt ? wt.name : "")) + ' — صح ولا غلط؟</span>'
           + '<button type="button" class="bb-ok" data-bb="ok">✅ صح</button>'
           + '<button type="button" class="bb-pen" data-bb="no">❌ غلط</button>'
@@ -4675,8 +4977,9 @@
             : '<span>⚡ ' + escapeHtml(wt ? wt.name : "") + ' ضغط أول!</span>')
           + (buzz.endAt ? '<span class="bb-timer' + (tl <= 3 ? ' warn' : '') + '" id="bbTimer">⏱️ ' + tl + '</span>' : '')
           + '<button type="button" class="bb-ok" data-bb="ok">✅ صح</button>'
-          + '<button type="button" data-bb="reopen">❌ غلط — افتح للباقين</button>'
-          + (cfgPlay().buzz_pen_wrong ? '<button type="button" class="bb-pen" data-bb="reopen-pen">➖ غلط وخصم ' + penWord(cfgPlay().buzz_pen_wrong) + '</button>' : '')
+          + (bbX2 ? '<button type="button" class="bb-pen" data-bb="reopen">❌ غلط — ×2 تنخصم ' + penWord(bbX2) + '</button>'   /* (v11) ×2: الغلط = نقاط السؤال */
+            : '<button type="button" data-bb="reopen">❌ غلط — افتح للباقين</button>'
+            + (cfgPlay().buzz_pen_wrong ? '<button type="button" class="bb-pen" data-bb="reopen-pen">➖ غلط وخصم ' + penWord(cfgPlay().buzz_pen_wrong) + '</button>' : ''))
           + '<button type="button" data-bb="idle">🔒 قفل</button>';
       } else if(buzz.state === "armed"){
         bar.classList.add("armed");
@@ -4786,6 +5089,8 @@
     if(!document.getElementById("view-letters").hidden){ if(lettersActive()) lettersRender(); else lettersOpen(); }
     if(FL.cur && !flEls.award.hidden) renderFlagAward();
     if(headsVisible()){ renderHeadsGrid(); renderHeadsLive(); }
+    renderTrivHelpsBar(); if(activeCell && !trivEls.modal.hidden) renderTrivHelps();
+    ["flags", "emoji"].forEach(function(g){ if(mcLive(g)) mcRender(g); });
   }
 
   /* ======================================================================
@@ -4945,6 +5250,11 @@
     if(!ch || !ANS.chOn[g] || !e) return;
     var live = String(ansRoundOf(g)) === String(e.round);
     var body = { r: e.round, g: g, cur: live ? ansCurOf(g) : null, done: live ? ansDoneOf(g) : [], tp: cfgPlay().trivia_pts };
+    if(live && g === "trivia"){   /* (v11) 🔄 الأسئلة اللي تبدّلت: الجوال يحدّث قائمته */
+      var sw = (store.trivia.cells || []).filter(function(c){ return Array.isArray(c.prev) && c.prev.length; })
+        .map(function(c){ return { o: c.prev, id: c.id, cat: c.cat, points: c.points, q: c.q, a: c.a }; });
+      if(sw.length) body.sw = sw;
+    }
     var key = JSON.stringify(body), now = Date.now();
     if(!force && key === ANS.last[g] && now - (ANS.lastAt[g] || 0) < 5000) return;
     ANS.last[g] = key; ANS.lastAt[g] = now;
@@ -5317,6 +5627,7 @@
       return startRound("flags", trial).then(function(d){
         store.flags.round = { id: d.round, kind: d.kind };
         store.flags.items = d.items; store.flags.idx = 0;
+        store.flags.mq = null; store.flags.ch = null;
         persist(); flagsOpen();
       });
     } });
@@ -5339,7 +5650,11 @@
     flEls.reveal.hidden = false;
     flEls.award.hidden = true;
     flEls.next.textContent = store.flags.idx + 1 >= store.flags.items.length ? "إنهاء 🏁" : "التالي ⏭️";
-    if(!document.getElementById("view-flags").hidden) buzzArm("fl:" + f.c + ":" + store.flags.idx, false, { k:"flags", flag: { sp:f.sp, x:f.x, y:f.y, w:f.w, h:f.h, sw:f.sw, sh:f.sh } });
+    if(!document.getElementById("view-flags").hidden){
+      if(store.mcOn.flags) mcShow("flags");
+      else buzzArm("fl:" + f.c + ":" + store.flags.idx, false, { k:"flags", flag: { sp:f.sp, x:f.x, y:f.y, w:f.w, h:f.h, sw:f.sw, sh:f.sh } });
+    }
+    mcRender("flags");
   }
   function renderFlagAward(){
     flEls.award.innerHTML = teamAwardButtonsHtml("flaward", cfgPlay().pts.flags)
@@ -5355,6 +5670,226 @@
     markBuzzButtons();
   }
   function nextFlag(){ if(!flagsActive()) return; store.flags.idx += 1; persist(); renderFlag(); }
+
+  /* ======================================================================
+     (v11) 📱 الإجابة من الجوال — حزر العلم وتحدي الصور
+     كل فريق يختار الجواب من جواله (4 خيارات) قبل ما يخلص الوقت، والتصحيح لحاله:
+     الصح ياخذ نقاط اللعبة، وأسرع فريق صح ياخذ بونص (لو جاوب فريقين أو أكثر من الجوال).
+     الخيارات الغلط من السيرفر (round_choices) — ولو قاعدة البيانات ما تحدّثت، من نفس الجولة.
+     ====================================================================== */
+  var MC = { tick:null, lastTick:-1, busy:{} };
+  function mcActive(g){ return g === "flags" ? flagsActive() : g === "emoji" ? emojiActive() : false; }
+  function mcLive(g){ return !!store.mcOn[g] && mcActive(g) && curView === g; }
+  function mcItem(g){ var S = store[g]; return S && Array.isArray(S.items) ? S.items[S.idx] || null : null; }
+  function mcAnswer(g, it){ return g === "flags" ? it.n : it.a; }
+  function mcKey(g, it){ return g === "flags" ? it.c : it.id; }
+  function mcQidNow(g){ var S = store[g]; return S.round ? "mc:" + g + ":" + S.round.id + ":" + S.idx : ""; }
+  function mcLoadChoices(g){
+    var S = store[g], R = S.round;
+    if(!R || (isObj(S.ch) && S.ch.r === R.id)) return Promise.resolve();
+    if(MC.busy[g]) return MC.busy[g];
+    MC.busy[g] = sbReady.then(function(sb){ return sb.rpc("round_choices", { p_round: R.id }); }).then(function(r){
+      if(r.error) throw r.error;
+      var d = typeof r.data === "string" ? JSON.parse(r.data) : r.data;
+      if(!isObj(d)) throw new Error("bad_choices");
+      if(store[g].round === R){ S.ch = { r: R.id, m: d }; persist(); }
+    }).catch(function(){
+      if(store[g].round === R){ S.ch = { r: R.id, m: {}, local: 1 }; persist(); }   /* احتياط: من نفس الجولة */
+    }).then(function(){ MC.busy[g] = null; });
+    return MC.busy[g];
+  }
+  function mcWrongFor(g, it){
+    var S = store[g], ans = mcAnswer(g, it), out = [];
+    var m = isObj(S.ch) && isObj(S.ch.m) ? S.ch.m[mcKey(g, it)] : null;
+    (Array.isArray(m) ? m : []).forEach(function(x){ if(typeof x === "string" && x && x !== ans && out.indexOf(x) === -1) out.push(x); });
+    if(out.length < 3){
+      var same = function(x){ return g === "flags" ? x.k === it.k : x.cat === it.cat; };
+      var pool = S.items.filter(function(x){ return x !== it; });
+      shuffle(pool.filter(same)).concat(shuffle(pool.filter(function(x){ return !same(x); }))).forEach(function(x){
+        var n = mcAnswer(g, x); if(out.length < 3 && n && n !== ans && out.indexOf(n) === -1) out.push(n);
+      });
+    }
+    return out.slice(0, 3);
+  }
+  /* أول ما يطلع العلم أو اللغز: نجهّز الخيارات ونفتح السؤال للجوالات */
+  function mcShow(g){
+    var R = store[g].round;
+    mcRender(g);
+    mcLoadChoices(g).then(function(){
+      if(!mcLive(g) || store[g].round !== R) return;
+      mcOpen(g); mcRender(g);
+    });
+  }
+  function mcOpen(g){
+    var S = store[g], it = mcItem(g), qid = mcQidNow(g);
+    if(!it || !qid) return;
+    if(!(S.mq && S.mq.qid === qid)){
+      var ans = mcAnswer(g, it), opts = shuffle([ans].concat(mcWrongFor(g, it))), now = Date.now();
+      S.mq = { qid: qid, opts: opts, c: opts.indexOf(ans), picks: {}, openedAt: now, endsAt: now + cfgPlay().mc.secs * 1000,
+               phase: "open", gain: null, fast: null, manual: S.mq ? !!S.mq.manual : !mlPhoneTeams().length };
+      MC.lastTick = -1;
+      persist();
+    }
+    if(S.mq.phase === "open") mcStartTick();
+    buzzIdle(); buzzSend();
+  }
+  function mcStartTick(){ if(!MC.tick) MC.tick = setInterval(mcTickFn, 250); }
+  function mcTickFn(){
+    var live = false;
+    ["flags", "emoji"].forEach(function(g){
+      var q = store[g].mq;
+      if(!q || q.phase !== "open" || !store.mcOn[g] || !mcActive(g)) return;
+      live = true;
+      var l = mlLeft(q.endsAt);
+      if(curView === g){
+        mlSetTimer("mcTimer-" + g, l, cfgPlay().mc.secs);
+        if(l <= 5 && l > 0 && MC.lastTick !== l){ MC.lastTick = l; mlSound("tick"); }
+      }
+      if(l <= 0) mcLock(g);
+    });
+    if(!live){ clearInterval(MC.tick); MC.tick = null; }
+  }
+  function mcSync(g){ persist(); buzzSend(); if(curView === g) mcRender(g); }
+  function mcLock(g){
+    var q = store[g].mq;
+    if(!q || q.phase !== "open") return;
+    q.phase = "locked"; q.endsAt = 0;
+    mlSound("lock"); mcSync(g);
+  }
+  function mcPickSet(g, tid, c, src, name){
+    var q = store[g].mq;
+    if(!q || (q.phase !== "open" && q.phase !== "locked") || !(c >= 0 && c < q.opts.length)) return false;
+    if(src === "phone" && (q.phase !== "open" || q.picks[tid])) return false;
+    q.picks[tid] = { c: c, ms: src === "phone" ? Date.now() - q.openedAt : null, src: src, by: name || "" };
+    if(q.phase === "open" && mlAllTeams().every(function(t){ return !!q.picks[t.id]; })) mcLock(g);
+    return true;
+  }
+  function onMcPick(p){
+    var g = p.qid.indexOf("mc:flags:") === 0 ? "flags" : p.qid.indexOf("mc:emoji:") === 0 ? "emoji" : "";
+    if(!g || !mcLive(g)) return;
+    var q = store[g].mq, t = mlTeam(p.team);
+    if(!q || q.qid !== p.qid || !t) return;
+    if(mcPickSet(g, t.id, +p.c, "phone", buzzCleanName(p.name))){ mlSound("blip"); mcSync(g); }
+  }
+  function mcReveal(g){
+    var q = store[g].mq;
+    if(!q || (q.phase !== "open" && q.phase !== "locked")) return;
+    var base = cfgPlay().pts[g], bonus = cfgPlay().mc.bonus, gain = {}, fast = null;
+    mlAllTeams().forEach(function(t){
+      var p = q.picks[t.id];
+      if(p && p.c === q.c){
+        gain[t.id] = base;
+        if(p.src === "phone" && typeof p.ms === "number" && (!fast || p.ms < fast.ms)) fast = { id: t.id, ms: p.ms, by: p.by };
+      }
+    });
+    /* بونص الأسرع: بس لو فيه منافسة بالجوالات (فريقين أو أكثر جاوبوا من الجوال) */
+    var phonePicks = Object.keys(q.picks).filter(function(id){ return q.picks[id].src === "phone"; }).length;
+    if(!(fast && bonus > 0 && phonePicks >= 2)) fast = null;
+    if(fast) gain[fast.id] += bonus;
+    q.gain = gain; q.fast = fast ? fast.id : null; q.phase = "reveal"; q.endsAt = 0;
+    Object.keys(gain).forEach(function(id){ var t = mlTeam(id); if(t && gain[id]) t.score += gain[id]; });
+    if(fast) nightFast(fast.id, fast.by);
+    renderTeams();
+    mlSound(Object.keys(gain).length ? "right" : "wrong");
+    mcSync(g);
+  }
+  function mcToggle(g){
+    store.mcOn[g] = !store.mcOn[g];
+    if(!store.mcOn[g]) store[g].mq = null;
+    persist();
+    if(store.mcOn[g] && !mlPhoneTeams().length) toast("📱 خلّوا كل فريق يمسح باركود «أسرع إصبع» — أو أدخل أجوبتهم بنفسك");
+    else if(!store.mcOn[g]) toast("رجعنا للطريقة العادية: أنت تختار مين جاوب صح");
+    if(mcActive(g) && curView === g){ if(g === "flags") renderFlag(); else renderEmojiCurrent(); }
+    else { mcRender(g); buzzSend(); }
+  }
+  document.querySelectorAll("[data-mc]").forEach(function(b){
+    b.addEventListener("click", function(){ buzzUnlockAudio(); mcToggle(b.getAttribute("data-mc")); });
+  });
+  function mcEls(g){
+    return g === "flags" ? { box: document.getElementById("flMc"), reveal: flEls.reveal, award: flEls.award, answer: flEls.answer }
+                         : { box: document.getElementById("emojiMc"), reveal: emojiEls.revealBtn, award: emojiEls.award, answer: emojiEls.answer };
+  }
+  function mcRender(g){
+    var E = mcEls(g), S = store[g], on = !!store.mcOn[g];
+    document.querySelectorAll('[data-mc="' + g + '"]').forEach(function(b){
+      b.classList.toggle("on", on); b.setAttribute("aria-pressed", on ? "true" : "false");
+      b.textContent = on ? "📱 الجوالات: شغّالة" : "📱 الإجابة من الجوال";
+    });
+    if(!on || !mcActive(g)){ if(!E.box.hidden){ E.box.hidden = true; E.box.innerHTML = ""; } return; }
+    var q = S.mq, rev = !!q && q.phase === "reveal";
+    E.reveal.hidden = true; E.award.hidden = true;
+    if(g === "emoji") emojiState.awarding = false;
+    E.answer.hidden = !rev;
+    E.box.hidden = false;
+    if(!q || q.qid !== mcQidNow(g)){ E.box.innerHTML = '<div class="ml-bar"><span class="msg ml-dots">نجهّز الخيارات</span></div>'; return; }
+    var byOpt = q.opts.map(function(){ return []; });
+    if(rev) mlAllTeams().forEach(function(t){ var p = q.picks[t.id]; if(p && byOpt[p.c]) byOpt[p.c].push(t); });
+    var opts = mlOptsHtml(q.opts, function(k){
+      if(!rev) return { cls: "", dis: true };
+      return { cls: k === q.c ? "ok" : (byOpt[k].length ? "no" : "dim"), dis: true,
+               extra: byOpt[k].length ? '<span class="who">' + byOpt[k].map(function(t){ return '<i style="--c:' + t.color + '" title="' + escapeHtml(t.name) + '"></i>'; }).join("") + '</span>' : '' };
+    });
+    var chips = '<div class="ml-teams">' + mlAllTeams().map(function(t){
+      var p = q.picks[t.id], gn = rev && q.gain ? q.gain[t.id] : null;
+      var st = rev ? (p ? (p.c === q.c ? '<span class="ck">✅ +' + (gn || 0) + (q.fast === t.id ? " ⚡" : "") + '</span>' : '<span class="x">❌ ' + ML_KEYS[p.c] + '</span>') : '<span class="x">ما جاوبوا</span>')
+                   : (p ? '<span class="ck">✅ جاوبوا</span>' : '<span class="w">⏳</span>');
+      return '<span class="ml-tchip' + (p ? " done" : "") + '" style="--c:' + t.color + '"><i></i>' + escapeHtml(t.name) + st + '</span>';
+    }).join("") + '</div>';
+    /* الإدخال اليدوي للفرق اللي ما عندها جوال: الأجوبة ما تنعرض على الشاشة — بس «تسجّل» */
+    var manual = !rev && q.manual ? '<div class="ml-manual"><p class="mm-hint">اضغط حرف جواب الفريق اللي يقوله لك. الأجوبة ما تنعرض على الشاشة عشان ما تنكشف.</p>' + mlAllTeams().map(function(t){
+      var p = q.picks[t.id], st = p ? (p.src === "phone" ? "📱 جاوبوا من الجوال" : "✅ تسجّل جوابهم") : "⏳ ما جاوبوا";
+      return '<div class="mm-row' + (p ? " done" : "") + '" style="--c:' + t.color + '"><b><i></i>' + escapeHtml(t.name) + '<em>' + st + '</em></b><span>' + q.opts.map(function(o, k){
+        return '<button type="button" data-mcman="' + t.id + '" data-k="' + k + '" aria-label="' + escapeHtml(t.name) + ': ' + ML_KEYS[k] + '">' + ML_KEYS[k] + '</button>';
+      }).join("") + '</span></div>';
+    }).join("") + '</div>' : '';
+    var last = S.idx + 1 >= S.items.length, bar;
+    if(rev){
+      var any = Object.keys(q.gain || {}).length;
+      bar = '<div class="ml-bar ' + (any ? "ok" : "no") + '"><span class="msg">' + (any ? "✅ الجواب «" : "❌ محد جاوب صح — الجواب «") + escapeHtml(q.opts[q.c]) + '»</span>'
+        + '<button class="btn-primary" type="button" data-mcact="next">' + (last ? "إنهاء 🏁" : "التالي ⏭️") + '</button></div>';
+    } else {
+      bar = '<div class="ml-bar">' + (q.phase === "open" ? '<span class="ml-timer" id="mcTimer-' + g + '" style="--p:100"><b>' + mlLeft(q.endsAt) + '</b></span>' : '<span class="msg">انقفلت الأجوبة</span>')
+        + '<button class="btn-primary" type="button" data-mcact="reveal">' + icon("i-check") + ' اكشف الجواب</button>'
+        + '<button class="btn-ghost" type="button" data-mcact="manual">' + (q.manual ? "إخفاء الإدخال اليدوي" : "✍️ أدخل أجوبة الفرق") + '</button></div>';
+    }
+    var note = "";
+    if(!rev && !mlPhoneTeams().length){
+      note = '<div class="ml-note">' + icon("i-buzz") + '<span>' + (buzz.status === "on" ? "ولا فريق وصّل جواله." : "الجوالات مو متصلة.")
+        + ' امسحوا الباركود من «📱 أسرع إصبع»، أو أدخل أجوبة الفرق بنفسك.</span><button class="btn-soft btn-sm" type="button" data-mcact="phones">📱 الباركود</button></div>';
+    }
+    E.box.innerHTML = note + opts + chips + manual + bar;
+    if(q.phase === "open") mlSetTimer("mcTimer-" + g, mlLeft(q.endsAt), cfgPlay().mc.secs);
+  }
+  ["flags", "emoji"].forEach(function(g){
+    mcEls(g).box.addEventListener("click", function(e){
+      var b = e.target.closest("[data-mcact],[data-mcman]"); if(!b || b.disabled) return;
+      buzzUnlockAudio();
+      var q = store[g].mq;
+      if(b.hasAttribute("data-mcman")){ if(mcPickSet(g, b.getAttribute("data-mcman"), +b.getAttribute("data-k"), "host", "")) mcSync(g); return; }
+      var a = b.getAttribute("data-mcact");
+      if(a === "reveal") mcReveal(g);
+      else if(a === "manual"){ if(q){ q.manual = !q.manual; mcSync(g); } }
+      else if(a === "next"){ if(g === "flags") nextFlag(); else nextEmoji(); }
+      else if(a === "phones") openBuzzPanel();
+    });
+  });
+  /* الجوالات: نفس شكل «الكل يجاوب» بطريق المليون (+ صورة العلم أو اللغز) */
+  function mcPhone(){
+    var g = curView;
+    if((g !== "flags" && g !== "emoji") || !mcLive(g)) return null;
+    var S = store[g], q = S.mq, it = mcItem(g), base = { v: 1, mode: "all", g: g, total: S.items.length };
+    if(!q || !it || q.qid !== mcQidNow(g)) return Object.assign(base, { phase: "wait" });
+    var picks = {};
+    Object.keys(q.picks).forEach(function(id){ picks[id] = q.picks[id].c; });
+    return Object.assign(base, {
+      qid: q.qid, n: S.idx + 1, text: g === "flags" ? "علم أي دولة؟" : "وش اللغز؟", pts: cfgPlay().pts[g],
+      img: g === "flags" ? { flag: { sp:it.sp, x:it.x, y:it.y, w:it.w, h:it.h, sw:it.sw, sh:it.sh } } : { parts: it.parts || [] },
+      opts: q.opts, phase: q.phase === "reveal" ? "reveal" : q.phase === "open" ? "pick" : "lock",
+      left: q.phase === "open" ? mlLeft(q.endsAt) : 0,
+      picked: Object.keys(q.picks),
+      reveal: q.phase === "reveal" ? { c: q.c, picks: picks, gain: q.gain || {}, fast: q.fast || null } : null
+    });
+  }
   flEls.hintBtn.addEventListener("click", function(){
     if(!FL.cur) return;
     FL.hintStep += 1;
@@ -5636,7 +6171,11 @@
 
   /* ============ سهرة جديدة: كل شي من الصفر (الفرق وأسماءها ونقاطها وكل الألعاب) ============ */
   var resetEls = { modal: document.getElementById("resetModal"), yes: document.getElementById("resetYesBtn"), no: document.getElementById("resetNoBtn") };
-  function openResetModal(){ resetEls.modal.hidden = false; }
+  function openResetModal(){
+    var played = store.teams.some(function(t){ return t.score !== 0; }) || (isObj(store.night) && Array.isArray(store.night.rounds) && store.night.rounds.length > 0);
+    document.getElementById("resetSumBtn").hidden = !played;
+    resetEls.modal.hidden = false;
+  }
   function closeResetModal(){ resetEls.modal.hidden = true; }
   document.getElementById("resetAllBtn").addEventListener("click", function(){ closeTeams(); openResetModal(); });
   document.getElementById("homeResetBtn").addEventListener("click", openResetModal);
@@ -5655,7 +6194,7 @@
     });
     /* الألعاب: أي جولة شغالة تنتهي (سجل الأسئلة اللي طلعت محفوظ بالسيرفر، فما تتكرر) */
     store.trivia = { round:null, cells:[] };
-    store.emoji.round = null; store.emoji.items = []; store.emoji.idx = 0;
+    store.emoji.round = null; store.emoji.items = []; store.emoji.idx = 0; store.emoji.mq = null; store.emoji.ch = null;
     store.charades = { round:null, items:[], idx:0, turn:0 };
     store.letters = { round:null, board:[], qmap:{}, qpos:{}, owners:{}, history:[], wins:{}, lastWin:null };
     store.flags = { round:null, items:[], idx:0 };
@@ -5667,6 +6206,7 @@
     store.win.shown = ""; winEls.modal.hidden = true;
     if(cfgPlay().win_target > 0) store.win.target = cfgPlay().win_target;
     store.plan = null; closePlanModal(); document.getElementById("scoreModal").hidden = true;
+    store.night = null; closeSummary();
     ANS_GAMES.forEach(ansLeave); store.ans = { auto: store.ans.auto !== false }; ansHide();
     emojiState.awarding = false;
     resetTimer("emoji", cfgPlay().emoji_secs); resetTimer("char", cfgPlay().char_secs);
@@ -5935,6 +6475,7 @@
     if(!(fast && cfg.speed_bonus > 0 && phonePicks >= 2)) fast = null;
     if(fast) gain[fast.id] += cfg.speed_bonus;
     M.aq.gain = gain; M.aq.fast = fast ? fast.id : null;
+    if(fast) nightFast(fast.id, (M.aq.picks[fast.id] || {}).by);
     Object.keys(gain).forEach(function(id){ var t = mlTeam(id); if(t && gain[id]){ t.score += gain[id]; M.gain[id] = (M.gain[id] || 0) + gain[id]; } });
     renderTeams();
     M.phase = "reveal";
@@ -6020,6 +6561,7 @@
     });
   }
   function onMillionPick(p){
+    if(typeof p.qid === "string" && p.qid.indexOf("mc:") === 0){ onMcPick(p); return; }   /* (v11) الأعلام والصور */
     var M = store.million;
     if(!mlActive() || M.mode !== "all" || typeof p.qid !== "string" || p.qid !== mlQid()) return;
     var t = mlTeam(p.team); if(!t) return;
@@ -6668,7 +7210,7 @@
     var P = store.plan;
     return '<div class="pl-card" style="text-align:center"><span class="pm-kicker">🏁 خلصت السهرة</span><h3 style="justify-content:center;font-size:1.6rem;margin:6px 0 4px">' + escapeHtml(winnerTitle()) + '</h3>'
       + podiumHtml() + scoreListHtml(null) + breakdownHtml(P)
-      + '<div class="pl-actions" style="justify-content:center"><button class="btn-primary" type="button" data-pl="new-night">🎉 سهرة جديدة</button><button class="btn-ghost" type="button" data-pl="new-plan">' + icon("i-wand") + ' خطة جديدة بنفس الفرق</button></div></div>';
+      + '<div class="pl-actions" style="justify-content:center"><button class="btn-primary" type="button" data-pl="summary">🏆 ملخص السهرة</button><button class="btn-soft" type="button" data-pl="new-night">🎉 سهرة جديدة</button><button class="btn-ghost" type="button" data-pl="new-plan">' + icon("i-wand") + ' خطة جديدة بنفس الفرق</button></div></div>';
   }
   function planBuild(){
     var D = planDraft();
@@ -6686,6 +7228,7 @@
       if(!ok) return;
       store.teams.forEach(function(t){ t.score = 0; });
       store.win.shown = "";
+      store.night = null;   /* (v11) إحصائيات الملخص تبدأ مع السهرة */
       P.started = true; P.finished = false; P.cur = 0; P.startedAt = Date.now(); P.editing = false;
       P.steps.forEach(function(s){ s.status = "todo"; delete s.round; delete s.before; delete s.delta; });
       persist(); renderTeams();
@@ -6799,6 +7342,7 @@
     else if(a === "score") openScoreboard();
     else if(a === "done-mafia") planOnDone("mafia");
     else if(a === "new-night") openResetModal();
+    else if(a === "summary") openSummary();
     else if(a === "new-plan"){ store.plan = null; store.teams.forEach(function(t){ t.score = 0; }); store.win.shown = ""; persist(); renderTeams(); renderPlan(); renderPlannerCard(); renderPlanBar(); }
     else if(a === "ck-teams") openTeams();
     else if(a === "ck-buzz") openBuzzPanel();
@@ -6913,7 +7457,7 @@
         + '<span class="pm-kicker">🏁 خلصت السهرة</span>'
         + '<h3 style="font-size:1.6rem;margin:4px 0 2px">' + escapeHtml(winnerTitle()) + '</h3>'
         + podiumHtml() + scoreListHtml(null) + breakdownHtml(P)
-        + '<div class="pm-btns"><button class="btn-primary btn-lg" type="button" data-pm="new">🎉 سهرة جديدة</button><button class="btn-ghost" type="button" data-pm="close">إغلاق</button></div>';
+        + '<div class="pm-btns"><button class="btn-primary btn-lg" type="button" data-pm="summary">🏆 ملخص السهرة</button><button class="btn-soft" type="button" data-pm="new">🎉 سهرة جديدة</button><button class="btn-ghost" type="button" data-pm="close">إغلاق</button></div>';
       confetti();
       try{ buzzUnlockAudio(); if(buzz.audio){ var au = buzz.audio, t0 = au.currentTime; [523, 659, 784, 1047, 1319].forEach(function(f, i){ var o = au.createOscillator(), g = au.createGain(); o.type = "triangle"; o.frequency.value = f; g.gain.setValueAtTime(0.0001, t0 + i * 0.13); g.gain.exponentialRampToValueAtTime(0.18, t0 + i * 0.13 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + i * 0.13 + 0.5); o.connect(g); g.connect(au.destination); o.start(t0 + i * 0.13); o.stop(t0 + i * 0.13 + 0.55); }); } }catch(e){}
     } else {
@@ -6937,7 +7481,177 @@
     if(a === "close") closePlanModal();
     else if(a === "go") planGo();
     else if(a === "new"){ closePlanModal(); openResetModal(); }
+    else if(a === "summary") openSummary();
   });
+  /* ======================================================================
+     (v11) 🏆 ملخص السهرة — صورة فيها الفائز والترتيب وأرقام السهرة، تنشارك بالواتساب
+     store.night: { at, rounds:[{ g, at, before:{فريق: نقاط} }], fast:{ "فريق|اسم": { t, n, c } } }
+     ====================================================================== */
+  function nightGet(){
+    if(!isObj(store.night) || !Array.isArray(store.night.rounds) || !isObj(store.night.fast)) store.night = { at: Date.now(), rounds: [], fast: {} };
+    return store.night;
+  }
+  function nightRound(g){
+    var N = nightGet();
+    N.rounds.push({ g: g, at: Date.now(), before: scoresNow() });
+    if(N.rounds.length > 80) N.rounds = N.rounds.slice(-80);
+    persist();
+  }
+  /* «أسرع إصبع»: ضغط أول وجاوب صح، أو أسرع فريق صح من الجوال */
+  function nightFast(tid, name){
+    if(!tid) return;
+    var N = nightGet(), nm = String(name || "").replace(/\s+/g, " ").trim().slice(0, 20), key = tid + "|" + nm;
+    var f = N.fast[key] || (N.fast[key] = { t: tid, n: nm, c: 0 });
+    f.c += 1;
+    persist();
+  }
+  function arDur(ms){
+    var m = Math.max(1, Math.round(ms / 60000)), h = Math.floor(m / 60), r = m % 60;
+    var hs = h ? arN(h, "ساعة", "ساعتين", "ساعات", "ساعة") : "", ms2 = r ? arN(r, "دقيقة", "دقيقتين", "دقايق", "دقيقة") : "";
+    return hs && ms2 ? hs + " و" + ms2 : hs || ms2;
+  }
+  function nightSummary(){
+    var N = nightGet(), now = scoresNow(), ranked = rankedTeams(), best = null, games = [], fast = null;
+    N.rounds.forEach(function(r, i){
+      if(games.indexOf(r.g) === -1 && GAME_INFO[r.g]) games.push(r.g);
+      var after = i + 1 < N.rounds.length ? N.rounds[i + 1].before : now;
+      store.teams.forEach(function(t){
+        if(!isObj(r.before) || !(t.id in r.before) || !isObj(after) || !(t.id in after)) return;
+        var d = after[t.id] - r.before[t.id];
+        if(d > 0 && (!best || d > best.d)) best = { t: t, d: d, g: r.g };
+      });
+    });
+    Object.keys(N.fast).forEach(function(k){
+      var f = N.fast[k], t = trTeam(f.t);
+      if(t && (!fast || f.c > fast.c)) fast = { t: t, n: f.n, c: f.c };
+    });
+    var P = store.plan, start = P && P.started && P.startedAt ? Math.min(P.startedAt, N.at || P.startedAt) : N.at;
+    var end = P && P.finished && P.endedAt ? P.endedAt : Date.now();
+    var date = "";
+    try{ date = new Date().toLocaleDateString("ar-SA-u-nu-latn-ca-gregory", { weekday: "long", day: "numeric", month: "long" }); }catch(e){}
+    return { ranked: ranked, title: winnerTitle(), rounds: N.rounds.length, games: games, best: best, fast: fast,
+             dur: N.rounds.length && start ? arDur(end - start) : "", date: date };
+  }
+  function sumStats(D){
+    var out = [];
+    if(D.rounds) out.push({ ic: "🎮", k: "الجولات", v: arN(D.rounds, "جولة وحدة", "جولتين", "جولات", "جولة"), s: D.games.map(function(g){ return GAME_INFO[g].name; }).join("، ") });
+    if(D.dur) out.push({ ic: "⏱️", k: "مدة السهرة", v: D.dur, s: "" });
+    if(D.fast) out.push({ ic: "⚡", k: "أسرع إصبع", v: D.fast.n || D.fast.t.name, s: (D.fast.n ? D.fast.t.name + " · " : "") + arN(D.fast.c, "مرة وحدة", "مرتين", "مرات", "مرة") });
+    if(D.best) out.push({ ic: "🔥", k: "أقوى جولة", v: D.best.t.name + " +" + D.best.d, s: "بـ«" + GAME_INFO[D.best.g].name + "»" });
+    return out;
+  }
+  function sumText(){
+    var D = nightSummary(), md = ["🥇", "🥈", "🥉"];
+    var lines = ["🏆 ملخص سهرتنا — طاولة السهرة", D.title, ""];
+    D.ranked.forEach(function(t, i){ lines.push((md[i] || (i + 1) + ".") + " " + t.name + ": ‎" + t.score); });
+    var st = sumStats(D);
+    if(st.length) lines.push("");
+    st.forEach(function(s){ lines.push(s.ic + " " + s.k + ": " + s.v + (s.s ? " (" + s.s + ")" : "")); });
+    lines.push("", "العبوا معنا: " + location.origin + "/");
+    return lines.join("\n");
+  }
+  function hexA(c, a){
+    var m = /^#?([0-9a-f]{6})$/i.exec(String(c || "").trim());
+    if(!m) return "rgba(124,92,255," + a + ")";
+    var n = parseInt(m[1], 16);
+    return "rgba(" + (n >> 16 & 255) + "," + (n >> 8 & 255) + "," + (n & 255) + "," + a + ")";
+  }
+  function sumDraw(){
+    var D = nightSummary(), st = sumStats(D), teams = D.ranked.slice(0, 6);
+    var W = 1080, rowH = 86, tileH = 132, gap = 18, tileRows = Math.ceil(st.length / 2);
+    var top = 500, rankH = teams.length * rowH, statsY = top + rankH + 34, H = statsY + tileRows * (tileH + gap) + 120;
+    var cv = document.createElement("canvas"), x = cv.getContext("2d");
+    cv.width = W; cv.height = H;
+    var FD = "Alexandria, 'IBM Plex Sans Arabic', 'Segoe UI', system-ui, sans-serif", FB = "'IBM Plex Sans Arabic', 'Segoe UI', system-ui, sans-serif";
+    var bg = x.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, "#17113a"); bg.addColorStop(1, "#06050d");
+    x.fillStyle = bg; x.fillRect(0, 0, W, H);
+    var gl = x.createRadialGradient(W / 2, 330, 30, W / 2, 330, 620); gl.addColorStop(0, "rgba(250,204,21,.22)"); gl.addColorStop(1, "rgba(250,204,21,0)");
+    x.fillStyle = gl; x.fillRect(0, 0, W, H);
+    x.direction = "rtl"; x.textBaseline = "alphabetic";
+    function fit(s, maxW){ s = String(s); if(x.measureText(s).width <= maxW) return s; while(s.length > 1 && x.measureText(s + "…").width > maxW) s = s.slice(0, -1); return s + "…"; }
+    function txt(s, px, py, font, color, align, maxW){
+      var num = /^[-+−]?\d+$/.test(String(s));   /* الأرقام السالبة: الإشارة قبل الرقم */
+      x.font = font; x.fillStyle = color; x.textAlign = align || "center"; x.direction = num ? "ltr" : "rtl";
+      x.fillText(fit(s, maxW || W - 140), px, py);
+      x.direction = "rtl";
+    }
+    function box(bx, by, bw, bh, r){
+      x.beginPath();
+      if(x.roundRect) x.roundRect(bx, by, bw, bh, r);
+      else { x.moveTo(bx + r, by); x.arcTo(bx + bw, by, bx + bw, by + bh, r); x.arcTo(bx + bw, by + bh, bx, by + bh, r); x.arcTo(bx, by + bh, bx, by, r); x.arcTo(bx, by, bx + bw, by, r); x.closePath(); }
+    }
+    txt("🌙 طاولة السهرة", W / 2, 96, "600 34px " + FB, "rgba(255,255,255,.62)");
+    txt("ملخص السهرة", W / 2, 172, "800 66px " + FD, "#ffffff");
+    if(D.date) txt(D.date, W / 2, 226, "500 30px " + FB, "rgba(255,255,255,.5)");
+    txt("🏆", W / 2, 362, "116px " + FB, "#ffffff");
+    txt(D.title, W / 2, 452, "800 56px " + FD, "#facc15");
+    var L = 80, R = W - 80, max = Math.max(1, teams.length ? teams[0].score : 1), md = ["🥇", "🥈", "🥉"];
+    teams.forEach(function(t, i){
+      var y = top + i * rowH, h = rowH - 16;
+      box(L, y, R - L, h, 24); x.fillStyle = "rgba(255,255,255,.06)"; x.fill();
+      var frac = Math.max(0, Math.min(1, t.score / max)), bw = Math.max(48, (R - L) * frac);
+      box(R - bw, y, bw, h, 24); x.fillStyle = hexA(t.color, i === 0 ? .55 : .35); x.fill();
+      txt(md[i] || String(i + 1), R - 46, y + 50, (md[i] ? "40px " : "700 34px ") + FB, "#ffffff");
+      txt(t.name, R - 92, y + 48, "700 36px " + FD, "#ffffff", "right", R - L - 260);
+      txt(String(t.score), L + 34, y + 50, "800 42px " + FD, "#ffffff", "left");
+    });
+    var tw = (R - L - gap) / 2;
+    st.forEach(function(s, i){
+      var col = i % 2, row = Math.floor(i / 2), one = st.length % 2 === 1 && i === st.length - 1;
+      var bx = one ? L : (col === 0 ? R - tw : L), bwid = one ? R - L : tw, by = statsY + row * (tileH + gap), cx = bx + bwid - 30;
+      box(bx, by, bwid, tileH, 24); x.fillStyle = "rgba(255,255,255,.07)"; x.fill();
+      x.strokeStyle = "rgba(255,255,255,.1)"; x.lineWidth = 2; x.stroke();
+      txt(s.ic + " " + s.k, cx, by + 42, "600 26px " + FB, "rgba(255,255,255,.6)", "right", bwid - 60);
+      txt(s.v, cx, by + 88, "800 36px " + FD, "#ffffff", "right", bwid - 60);
+      if(s.s) txt(s.s, cx, by + 120, "500 22px " + FB, "rgba(255,255,255,.5)", "right", bwid - 60);
+    });
+    txt(location.host || "sahratable.com", W / 2, H - 48, "700 30px " + FB, "rgba(255,255,255,.55)");
+    return cv;
+  }
+  var SUM = { blob: null, url: "" };
+  var sumEls = { modal: document.getElementById("sumModal"), img: document.getElementById("sumImg"), share: document.getElementById("sumShare") };
+  function openSummary(){
+    if(!store.teams.length){ toast("أضيفوا الفرق أول"); return; }
+    var fonts = [];
+    try{ fonts = ["800 66px Alexandria", "700 36px Alexandria", "600 30px 'IBM Plex Sans Arabic'"].map(function(f){ return document.fonts.load(f); }); }catch(e){}
+    var wait = new Promise(function(res){ setTimeout(res, 1500); });
+    sumEls.img.removeAttribute("src");
+    sumEls.modal.hidden = false;
+    Promise.race([Promise.all(fonts).catch(function(){}), wait]).then(function(){
+      var cv = sumDraw();
+      sumEls.img.src = cv.toDataURL("image/png");
+      SUM.blob = null;
+      if(cv.toBlob) cv.toBlob(function(b){
+        SUM.blob = b;
+        var f = b && typeof File === "function" ? new File([b], "sahra-night.png", { type: "image/png" }) : null;
+        try{ sumEls.share.hidden = !(f && navigator.canShare && navigator.canShare({ files: [f] })); }catch(e){ sumEls.share.hidden = true; }
+      }, "image/png");
+    });
+  }
+  function closeSummary(){ sumEls.modal.hidden = true; }
+  document.getElementById("sumClose").addEventListener("click", closeSummary);
+  sumEls.modal.addEventListener("click", function(e){ if(e.target === sumEls.modal) closeSummary(); });
+  sumEls.share.addEventListener("click", function(){
+    if(!SUM.blob) return;
+    var f = new File([SUM.blob], "sahra-night.png", { type: "image/png" });
+    navigator.share({ files: [f], text: sumText() }).catch(function(e){
+      if(e && e.name === "AbortError") return;
+      window.open("https://wa.me/?text=" + encodeURIComponent(sumText()), "_blank", "noopener");
+    });
+  });
+  document.getElementById("sumWa").addEventListener("click", function(){
+    window.open("https://wa.me/?text=" + encodeURIComponent(sumText()), "_blank", "noopener");
+  });
+  document.getElementById("sumSave").addEventListener("click", function(){
+    if(!sumEls.img.src) return;
+    var a = document.createElement("a");
+    a.href = sumEls.img.src; a.download = "sahra-night.png";
+    document.body.appendChild(a); a.click(); a.remove();
+  });
+  document.getElementById("winSumBtn").addEventListener("click", openSummary);
+  document.getElementById("scoreSumBtn").addEventListener("click", openSummary);
+  document.getElementById("resetSumBtn").addEventListener("click", openSummary);
+
   var scoreEls = { modal: document.getElementById("scoreModal"), list: document.getElementById("scoreList") };
   function openScoreboard(){
     var P = store.plan, last = null;

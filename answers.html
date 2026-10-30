@@ -71,6 +71,31 @@
   .msg button{ margin-top:16px; font-family:inherit; font-weight:800; font-size:1rem; padding:12px 22px; border-radius:999px; border:1px solid var(--line2);
     background:linear-gradient(180deg, #8a6dff, #6c4cff); color:#fff; }
   .foot{ margin-top:22px; text-align:center; color:var(--faint); font-size:.76rem; }
+
+  /* (v11) 🚩 «السؤال فيه غلط» */
+  .rp{ flex-shrink:0; align-self:center; min-width:36px; height:36px; border-radius:11px; border:1px solid var(--line); background:rgba(255,255,255,.04);
+    color:var(--faint); font-family:inherit; font-size:.95rem; cursor:pointer; filter:grayscale(1); opacity:.7; }
+  .rp:active{ transform:scale(.96); }
+  .rp.done{ filter:none; opacity:1; border-color:rgba(239,68,68,.45); background:rgba(239,68,68,.12); }
+  .now-k .rp{ height:30px; min-width:0; padding:0 10px; font-size:.76rem; font-weight:800; filter:none; opacity:.85; }
+  .sheet{ position:fixed; inset:0; z-index:20; display:flex; align-items:flex-end; justify-content:center; background:rgba(0,0,0,.6); padding:12px; }
+  .sheet-box{ width:100%; max-width:520px; border-radius:22px; padding:18px 16px max(16px, env(safe-area-inset-bottom));
+    background:linear-gradient(180deg, #221c38, #15121f); border:1px solid var(--line2); box-shadow:0 -10px 40px rgba(0,0,0,.6); }
+  .sheet-box > b{ display:block; font-family:var(--f-display); font-size:1.1rem; }
+  .sheet-q{ margin:6px 0 12px; color:var(--dim); font-size:.86rem; line-height:1.6; max-height:5.2em; overflow:hidden; }
+  .sheet-q i{ font-style:normal; color:var(--gold); font-weight:800; }
+  .reasons{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .reasons button, .sheet-acts button{ font-family:inherit; font-weight:700; font-size:.92rem; min-height:46px; border-radius:14px; border:1px solid var(--line2); background:rgba(255,255,255,.05); color:var(--txt); cursor:pointer; }
+  .reasons button[aria-pressed="true"]{ border-color:var(--v); background:rgba(124,92,255,.25); color:#fff; }
+  .sheet textarea{ display:block; width:100%; margin-top:10px; min-height:70px; resize:vertical; padding:10px 12px; border-radius:14px; border:1px solid var(--line2);
+    background:rgba(0,0,0,.25); color:var(--txt); font-family:inherit; font-size:.92rem; }
+  .sheet-acts{ display:flex; gap:8px; margin-top:12px; }
+  .sheet-acts button{ flex:1; }
+  .sheet-acts .go{ background:linear-gradient(180deg, #8a6dff, #6c4cff); border-color:transparent; color:#fff; }
+  .sheet-acts .go:disabled{ opacity:.45; }
+  .sheet-err{ margin-top:10px; color:#fca5a5; font-size:.84rem; text-align:center; }
+  .toast{ position:fixed; bottom:max(18px, env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); z-index:30; padding:10px 18px; border-radius:999px;
+    background:#221c38; border:1px solid var(--line2); font-weight:700; font-size:.9rem; box-shadow:0 10px 30px rgba(0,0,0,.5); white-space:nowrap; }
 </style>
 </head>
 <body>
@@ -84,22 +109,38 @@
   <div class="msg" id="msg"><div class="em">⏳</div><h2>جاري فتح الإجابات…</h2></div>
 
   <section class="now idle" id="now" hidden aria-live="polite">
-    <div class="now-k"><span>السؤال الحين</span><span class="now-m" id="nowM"></span></div>
+    <div class="now-k"><span>السؤال الحين</span><span class="now-m" id="nowM"></span><button class="rp" id="nowRep" type="button" hidden>🚩 فيه غلط؟</button></div>
     <div class="now-q" id="nowQ">افتح سؤال على الشاشة ويطلع جوابه هنا</div>
     <div class="now-a" id="nowA"></div>
   </section>
 
   <main id="list" hidden></main>
-  <p class="foot" id="foot" hidden>الأسئلة اللي انسألت عليها ✓ — والجوال يتابع الشاشة لحاله</p>
+  <p class="foot" id="foot" hidden>الأسئلة اللي انسألت عليها ✓ — والجوال يتابع الشاشة لحاله<br>لقيت سؤال فيه غلط؟ اضغط 🚩 جنبه ونصلّحه</p>
 </div>
+<div class="sheet" id="repSheet" hidden>
+  <div class="sheet-box" role="dialog" aria-modal="true" aria-labelledby="repT">
+    <b id="repT">🚩 وش الغلط بهالسؤال؟</b>
+    <p class="sheet-q" id="repQ"></p>
+    <div class="reasons" id="repReasons">
+      <button type="button" data-r="answer" aria-pressed="false">الجواب غلط</button>
+      <button type="button" data-r="unclear" aria-pressed="false">السؤال مو واضح</button>
+      <button type="button" data-r="old" aria-pressed="false">معلومة قديمة</button>
+      <button type="button" data-r="other" aria-pressed="false">شي ثاني</button>
+    </div>
+    <textarea id="repNote" maxlength="300" placeholder="ملاحظة (اختياري): وش الصح؟"></textarea>
+    <div class="sheet-acts"><button class="go" id="repSend" type="button" disabled>إرسال</button><button id="repCancel" type="button">إلغاء</button></div>
+    <p class="sheet-err" id="repErr" hidden></p>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
 <script>
 (function(){
   "use strict";
   var GNAME = { trivia: "سين جيم", letters: "الحروف", emoji: "تحدي الصور", million: "طريق المليون" };
   var LV = { 1: "سهل", 2: "متوسط", 3: "صعب" };
   var TIERS = [100, 200, 300, 400];
-  var A = { round: 0, key: "", dev: "", game: "", items: [], chan: "", tp: [1, 2, 3, 4], cur: null, done: {}, seen: {} };
-  var els = {}; ["gName", "msg", "now", "nowM", "nowQ", "nowA", "list", "foot", "live", "liveTx"].forEach(function(id){ els[id] = document.getElementById(id); });
+  var A = { round: 0, key: "", dev: "", game: "", items: [], chan: "", tp: [1, 2, 3, 4], cur: null, done: {}, seen: {}, rep: {} };
+  var els = {}; ["gName", "msg", "now", "nowM", "nowQ", "nowA", "list", "foot", "live", "liveTx", "nowRep", "repSheet", "repQ", "repReasons", "repNote", "repSend", "repCancel", "repErr", "toast"].forEach(function(id){ els[id] = document.getElementById(id); });
   function esc(t){ return String(t == null ? "" : t).replace(/[&<>"']/g, function(c){ return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function store(k, v){ try{ if(v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); }catch(e){ try{ if(v === undefined) return sessionStorage.getItem(k); sessionStorage.setItem(k, v); }catch(x){} } return null; }
   function rid(n){ var a = new Uint8Array(n), s = ""; try{ crypto.getRandomValues(a); }catch(e){ for(var i = 0; i < n; i++) a[i] = Math.floor(Math.random() * 256); } for(var j = 0; j < n; j++) s += ("0" + a[j].toString(16)).slice(-2); return s; }
@@ -115,6 +156,7 @@
   if(!A.round || !/^[0-9a-f]{40,128}$/.test(A.key)){ showMsg("📷", "افتح الصفحة من الباركود", "امسح الباركود اللي يطلع بشاشة اللعبة بكاميرا الجوال."); return; }
   A.dev = store("sahra-ans-dev") || ""; if(!/^[0-9a-f]{24}$/.test(A.dev)){ A.dev = rid(12); store("sahra-ans-dev", A.dev); }
   try{ A.seen = JSON.parse(store("sahra-ans-seen-" + A.round) || "{}") || {}; }catch(e){ A.seen = {}; }
+  try{ A.rep = JSON.parse(store("sahra-ans-rep-" + A.round) || "{}") || {}; }catch(e){ A.rep = {}; }
 
   var client = null;
   function boot(){
@@ -142,7 +184,8 @@
   /* ---------- القائمة ---------- */
   function rowHtml(id, tag, q, a, h, big){
     return '<div class="row" data-id="' + esc(id) + '"><span class="tag' + (big ? " big" : "") + '">' + esc(tag) + '</span><div class="tx">'
-      + (q ? '<div class="q">' + esc(q) + '</div>' : "") + '<div class="a">' + esc(a) + '</div>' + (h ? '<div class="h">' + esc(h) + '</div>' : "") + '</div></div>';
+      + (q ? '<div class="q">' + esc(q) + '</div>' : "") + '<div class="a">' + esc(a) + '</div>' + (h ? '<div class="h">' + esc(h) + '</div>' : "") + '</div>'
+      + '<button class="rp" type="button" data-rep="' + esc(id) + '" aria-label="بلّغ عن غلط بهالسؤال">🚩</button></div>';
   }
   function tierPts(p){ var i = TIERS.indexOf(+p); return i === -1 ? p : (A.tp[i] != null ? A.tp[i] : i + 1); }
   function render(){
@@ -185,7 +228,9 @@
       var id = r.getAttribute("data-id");
       r.classList.toggle("cur", !!cid && id === cid);
       r.classList.toggle("seen", id !== cid && (!!A.seen[id] || !!A.done[id]));
+      var b = r.querySelector(".rp"); if(b) b.classList.toggle("done", !!A.rep[id]);
     });
+    if(els.nowRep){ els.nowRep.hidden = !cid; els.nowRep.classList.toggle("done", !!A.rep[cid]); els.nowRep.textContent = A.rep[cid] ? "🚩 بلّغت" : "🚩 فيه غلط؟"; }
   }
   function renderNow(){
     var c = A.cur;
@@ -204,6 +249,7 @@
     if(!p || +p.r !== A.round) return;
     A.lastAt = Date.now(); liveUi();
     if(Array.isArray(p.tp) && p.tp.length === 4){ var ch = String(p.tp) !== String(A.tp); A.tp = p.tp; if(ch && A.game === "trivia") render(); }
+    if(A.game === "trivia" && Array.isArray(p.sw) && applySwaps(p.sw)) render();   /* (v11) 🔄 سؤال تبدّل باللوحة */
     A.done = {}; (Array.isArray(p.done) ? p.done : []).forEach(function(id){ A.done[String(id)] = 1; });
     var c = p.cur && typeof p.cur === "object" && p.cur.id != null ? p.cur : null;
     var was = A.cur ? String(A.cur.id) : "";
@@ -214,6 +260,76 @@
     }
     renderNow(); marks();
   }
+
+  /* (v11) 🔄 «تبديل السؤال» بسين جيم: السؤال الجديد ياخذ مكان القديم بالقائمة */
+  function applySwaps(list){
+    var changed = false;
+    list.slice(0, 40).forEach(function(s){
+      if(!s || typeof s !== "object" || !Array.isArray(s.o) || typeof s.q !== "string" || typeof s.a !== "string" || s.id == null) return;
+      var olds = s.o.map(String);
+      for(var i = 0; i < A.items.length; i++){
+        var it = A.items[i];
+        if(it && olds.indexOf(String(it.id)) !== -1){
+          A.items[i] = { id: String(s.id), cat: String(s.cat || it.cat || ""), points: +s.points || it.points, q: s.q.slice(0, 500), a: s.a.slice(0, 300) };
+          changed = true;
+        }
+      }
+    });
+    return changed;
+  }
+
+  /* ---------- (v11) 🚩 «السؤال فيه غلط» — يوصل للوحة الأدمن ---------- */
+  var REP = { id: "", r: "", busy: false }, toastT = null;
+  function toast(t){ els.toast.textContent = t; els.toast.hidden = false; clearTimeout(toastT); toastT = setTimeout(function(){ els.toast.hidden = true; }, 2600); }
+  function itemById(id){
+    for(var i = 0; i < A.items.length; i++){
+      var it = A.items[i]; if(!it) continue;
+      if(String(it.id) === id) return it;
+      if(Array.isArray(it.qs)) for(var j = 0; j < it.qs.length; j++) if(it.qs[j] && String(it.qs[j].id) === id) return it.qs[j];
+    }
+    return A.cur && String(A.cur.id) === id ? A.cur : null;
+  }
+  function repOpen(id){
+    var it = itemById(id); if(!it) return;
+    REP.id = id; REP.r = "";
+    var q = it.q || [it.cat, it.h].filter(Boolean).join(" · ");
+    els.repQ.innerHTML = (q ? esc(q) + "<br>" : "") + "الجواب: <i>" + esc(it.a || "") + "</i>";
+    els.repNote.value = ""; els.repErr.hidden = true;
+    els.repReasons.querySelectorAll("[data-r]").forEach(function(b){ b.setAttribute("aria-pressed", "false"); });
+    els.repSend.disabled = true; els.repSend.textContent = "إرسال";
+    els.repSheet.hidden = false;
+  }
+  function repClose(){ els.repSheet.hidden = true; REP.id = ""; }
+  els.list.addEventListener("click", function(e){ var b = e.target.closest("[data-rep]"); if(b) repOpen(b.getAttribute("data-rep")); });
+  els.nowRep.addEventListener("click", function(){ if(A.cur) repOpen(String(A.cur.id)); });
+  els.repReasons.addEventListener("click", function(e){
+    var b = e.target.closest("[data-r]"); if(!b) return;
+    REP.r = b.getAttribute("data-r");
+    els.repReasons.querySelectorAll("[data-r]").forEach(function(x){ x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+    els.repSend.disabled = REP.busy;
+  });
+  els.repCancel.addEventListener("click", repClose);
+  els.repSheet.addEventListener("click", function(e){ if(e.target === els.repSheet) repClose(); });
+  els.repSend.addEventListener("click", function(){
+    if(!REP.id || !REP.r || REP.busy || !client) return;
+    var id = REP.id;
+    REP.busy = true; els.repSend.disabled = true; els.repSend.textContent = "يرسل…"; els.repErr.hidden = true;
+    client.rpc("report_item", { p_round: A.round, p_key: A.key, p_dev: A.dev, p_item: id, p_reason: REP.r, p_note: els.repNote.value.slice(0, 300) }).then(function(r){
+      if(r.error) throw r.error;
+      A.rep[id] = 1; store("sahra-ans-rep-" + A.round, JSON.stringify(A.rep));
+      repClose(); marks(); toast("✅ وصل البلاغ — شكرًا، بنراجعه");
+    }).catch(function(e){
+      var m = String((e && (e.message || e.details || e.code)) || e || "");
+      els.repErr.textContent = /claimed/.test(m) ? "الإجابات مفتوحة بجوال ثاني."
+        : /expired/.test(m) ? "انتهت صلاحية الجولة."
+        : /report_limit/.test(m) ? "وصلت الحد: 30 بلاغ بالجولة."
+        : /bad_item/.test(m) ? "هالسؤال ما عاد موجود بالجولة (يمكن تبدّل)."
+        : /report_item|function|PGRST202|schema cache/i.test(m) ? "الميزة تحتاج تحديث قاعدة البيانات (ملف SQL)."
+        : "ما وصل البلاغ — تأكد من النت وجرّب مرة ثانية.";
+      els.repErr.hidden = false;
+      els.repSend.textContent = "إرسال"; els.repSend.disabled = false;
+    }).then(function(){ REP.busy = false; });
+  });
 
   /* ---------- القناة الحية (سرّية: ما يعرفها إلا هالجوال والشاشة) ---------- */
   var CH = { c: null, on: false, busy: false, resetAt: 0 };

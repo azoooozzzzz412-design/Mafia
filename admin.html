@@ -71,6 +71,18 @@
   .err{ background:var(--bad-soft); border:1px solid var(--bad-line); color:#fecaca; border-radius:14px; padding:11px 14px; font-size:.9rem; margin:8px 0; line-height:1.7; }
   .okbox{ background:var(--ok-soft); border:1px solid var(--ok-line); color:#d1fae5; border-radius:14px; padding:11px 14px; font-size:.9rem; margin:8px 0; line-height:1.7; }
   .empty{ color:var(--tx-3); text-align:center; padding:28px 10px; font-size:.92rem; }
+  /* (v11) 🚩 البلاغات */
+  .rp-list{ display:flex; flex-direction:column; gap:10px; }
+  .rp-card{ padding:14px 16px; border-radius:16px; background:var(--glass); border:1px solid var(--line); }
+  .rp-top{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; font-size:.8rem; color:var(--tx-3); margin-bottom:8px; }
+  .rp-top .g{ color:var(--tx-2); font-weight:700; }
+  .rp-top .why{ padding:2px 10px; border-radius:999px; background:var(--bad-soft); border:1px solid var(--bad-line); color:#fecaca; font-weight:700; }
+  .rp-top .when{ margin-inline-start:auto; }
+  .rp-q{ font-size:.95rem; line-height:1.7; }
+  .rp-a{ margin-top:4px; color:var(--tx-2); font-size:.9rem; }
+  .rp-a b{ color:#fde68a; }
+  .rp-note{ margin-top:8px; padding:8px 12px; border-radius:12px; background:rgba(255,255,255,.04); border:1px dashed var(--line); font-size:.88rem; color:var(--tx-2); }
+  .rp-acts{ display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
   .loading{ opacity:.55; pointer-events:none; }
   .card{ padding:18px; margin-bottom:14px; }
   .card > h3{ font-family:var(--f-display); font-weight:700; font-size:1.05rem; margin-bottom:4px; display:flex; align-items:center; gap:8px; }
@@ -283,6 +295,7 @@
       <button type="button" data-tab="content">📝 <span>المحتوى</span></button>
       <button type="button" data-tab="games">⚙️ <span>الإعدادات</span></button>
       <button type="button" data-tab="stats">📊 <span>إحصائيات</span></button>
+      <button type="button" data-tab="reports">🚩 <span>البلاغات</span> <span class="count" id="repCount" hidden></span></button>
     </nav>
   </div>
   <main>
@@ -372,6 +385,14 @@
       </div>
       <div id="sErr"></div>
       <div id="statsBody"></div>
+    </section>
+
+    <section id="tab-reports" hidden>
+      <h2 class="sec">🚩 بلاغات الأسئلة</h2>
+      <p class="hint">المقدّم يبلّغ من صفحة <b>الإجابات بجواله</b> لما يلقى سؤال فيه غلط. صلّحه بـ ✏️، أو خبّه 🙈 عشان ما يطلع بالجولات — وبعدها ينتقل لـ«تم» لحاله.</p>
+      <div class="row" id="rpFilters"></div>
+      <div id="rpErr"></div>
+      <div class="rp-list" id="rpList"></div>
     </section>
   </main>
 </div>
@@ -488,7 +509,8 @@ document.addEventListener("DOMContentLoaded", function(){
     $("me").innerHTML = (ME.avatar_url ? '<img src="' + esc(ME.avatar_url) + '" alt="" referrerpolicy="no-referrer">' : '') + '<span>' + esc(ME.full_name || ME.email) + '</span>';
     var t = (location.hash || "").replace("#", "");
     if(t === "settings") t = "games";
-    openTab(["users", "sales", "content", "games", "stats"].indexOf(t) !== -1 ? t : "users");
+    openTab(["users", "sales", "content", "games", "stats", "reports"].indexOf(t) !== -1 ? t : "users");
+    repBadge();
   }
 
   /* ================= التبويبات ================= */
@@ -497,14 +519,107 @@ document.addEventListener("DOMContentLoaded", function(){
     if(TAB === "games" && name !== "games" && setDirty() && !confirm("فيه تغييرات بالإعدادات ما انحفظت — تطلع بدون حفظ؟")) return;
     TAB = name;
     Array.prototype.forEach.call($("tabs").querySelectorAll("[data-tab]"), function(b){ b.classList.toggle("on", b.getAttribute("data-tab") === name); });
-    ["users", "sales", "content", "games", "stats"].forEach(function(k){ $("tab-" + k).hidden = k !== name; });
+    ["users", "sales", "content", "games", "stats", "reports"].forEach(function(k){ $("tab-" + k).hidden = k !== name; });
     history.replaceState(null, "", "#" + name);
     if(name === "users") loadUsers();
     if(name === "sales") loadSales();
     if(name === "content") openSub(SUB || "trivia");
     if(name === "games") loadGames();
     if(name === "stats") loadStats();
+    if(name === "reports") loadReports();
   }
+
+  /* ================= (v11) 🚩 بلاغات الأسئلة ================= */
+  var RP = { st:"open", rows:[] };
+  var RP_WHY = { answer:"الجواب غلط", unclear:"السؤال مو واضح", old:"معلومة قديمة", other:"شي ثاني" };
+  /* البلاغ ← الجدول والعمود اللي فيه السؤال */
+  function rpSrc(game, id){
+    id = String(id || "");
+    var m;
+    if(game === "trivia" && (m = /^q(\d+)$/.exec(id))) return { t:"trivia_questions", id:+m[1], qf:"question", ql:"السؤال", af:"answer" };
+    if(game === "letters" && /^\d+$/.test(id)) return { t:"letters_questions", id:+id, qf:"question", ql:"السؤال", af:"answer" };
+    if(game === "million" && /^\d+$/.test(id)) return { t:"mcq_questions", id:+id, qf:"question", ql:"السؤال", af:"answer" };
+    if(game === "emoji" && (m = /^(v1|v2):(\d+)$/.exec(id))) return { t:m[1] === "v2" ? "rebus2_puzzles" : "rebus_puzzles", id:+m[2], qf:"hint", ql:"التلميح", af:"answer" };
+    return null;
+  }
+  function rpErrText(e){
+    var m = String((e && (e.message || e.code)) || e || "");
+    return /question_reports|PGRST205|does not exist|schema cache/i.test(m) ? "البلاغات تحتاج تحديث قاعدة البيانات — شغّل ملف v11_update.sql في Supabase." : errText(e);
+  }
+  function repBadge(){
+    SB.from("question_reports").select("id", { count:"exact", head:true }).eq("status", "open").then(function(r){
+      var n = r && !r.error ? r.count | 0 : 0, b = $("repCount");
+      b.textContent = n; b.hidden = !n;
+    }, function(){});
+  }
+  function loadReports(){
+    $("rpList").innerHTML = '<div class="empty">جاري التحميل…</div>';
+    return SB.from("question_reports").select("*").order("created_at", { ascending:false }).limit(300).then(function(r){
+      must(r); RP.rows = r.data || []; clearErr("rpErr"); renderReports();
+    }).catch(function(e){ $("rpErr").innerHTML = '<div class="err">⚠️ ' + esc(rpErrText(e)) + '</div>'; $("rpList").innerHTML = ""; });
+  }
+  function renderReports(){
+    var n = { open:0, fixed:0, ignored:0 };
+    RP.rows.forEach(function(x){ if(n[x.status] != null) n[x.status]++; });
+    $("rpFilters").innerHTML = [["open", "🚩 مفتوحة"], ["fixed", "✅ تم"], ["ignored", "تجاهلتها"]].map(function(f){
+      return '<button class="chip' + (RP.st === f[0] ? " on" : "") + '" type="button" data-rpst="' + f[0] + '">' + f[1] + '<b>' + n[f[0]] + '</b></button>';
+    }).join("");
+    var b = $("repCount"); b.textContent = n.open; b.hidden = !n.open;
+    var rows = RP.rows.filter(function(x){ return x.status === RP.st; });
+    if(!rows.length){ $("rpList").innerHTML = '<div class="empty">' + (RP.st === "open" ? "ما فيه بلاغات جديدة 👌" : "ما فيه شي هنا") + '</div>'; return; }
+    $("rpList").innerHTML = rows.map(function(x){
+      var src = rpSrc(x.game, x.item_id);
+      return '<div class="rp-card" data-rp="' + x.id + '"><div class="rp-top"><span class="g">' + esc(gameName(x.game)) + '</span><span class="why">' + esc(RP_WHY[x.reason] || x.reason) + '</span><span class="when">' + esc(ago(x.created_at)) + '</span></div>'
+        + (x.q ? '<div class="rp-q">' + esc(x.q) + '</div>' : '') + '<div class="rp-a">الجواب: <b>' + esc(x.a) + '</b></div>'
+        + (x.note ? '<div class="rp-note">📝 ' + esc(x.note) + '</div>' : '')
+        + '<div class="rp-acts">' + (src ? '<button class="btn-primary sm" type="button" data-rpa="edit">✏️ عدّل</button><button class="btn-ghost sm" type="button" data-rpa="hide">🙈 خبّه من الجولات</button>' : '')
+        + (x.status !== "fixed" ? '<button class="btn-ok" type="button" data-rpa="fixed">✅ تم</button>' : '')
+        + (x.status !== "ignored" ? '<button class="btn-ghost sm" type="button" data-rpa="ignored">تجاهل</button>' : '')
+        + (x.status !== "open" ? '<button class="btn-ghost sm" type="button" data-rpa="open">↩️ رجّعها مفتوحة</button>' : '') + '</div></div>';
+    }).join("");
+  }
+  function rpSet(row, st){
+    return SB.from("question_reports").update({ status:st }).eq("id", row.id).then(function(r){
+      must(r); row.status = st; renderReports();
+    });
+  }
+  $("rpFilters").addEventListener("click", function(e){ var b = e.target.closest("[data-rpst]"); if(b){ RP.st = b.getAttribute("data-rpst"); renderReports(); } });
+  $("rpList").addEventListener("click", function(e){
+    var b = e.target.closest("[data-rpa]"); if(!b) return;
+    var id = +b.closest("[data-rp]").getAttribute("data-rp"), row = RP.rows.find(function(x){ return x.id === id; });
+    if(!row) return;
+    var a = b.getAttribute("data-rpa"), src = rpSrc(row.game, row.item_id);
+    if(a === "fixed" || a === "ignored" || a === "open"){
+      rpSet(row, a).then(function(){ toast(a === "fixed" ? "✅ تم" : a === "ignored" ? "تجاهلناه" : "↩️ رجع مفتوح"); }).catch(function(err){ toast("⚠️ " + rpErrText(err)); });
+      return;
+    }
+    if(!src) return;
+    if(a === "hide"){
+      setActive(src.t, "id", src.id, false, null, function(){ rpSet(row, "fixed").catch(function(){}); });
+      return;
+    }
+    if(a === "edit"){
+      b.disabled = true;
+      SB.from(src.t).select("*").eq("id", src.id).maybeSingle().then(function(r){
+        must(r);
+        if(!r.data){ toast("⚠️ السؤال انحذف من المحتوى"); return; }
+        var cur = r.data;
+        openModal("✏️ تعديل السؤال", [
+          { k:src.qf, label:src.ql, type:"textarea", rows:3, max:300 },
+          { k:src.af, label:"الجواب", max:120 }
+        ], cur, function(v){
+          var q = String(v[src.qf] || "").trim(), ans = String(v[src.af] || "").trim();
+          if(src.qf === "question" && q.length < 3) throw new Error("اكتب السؤال");
+          if(!ans) throw new Error("اكتب الجواب");
+          var up = {}; up[src.qf] = q; up[src.af] = ans;
+          return SB.from(src.t).update(up).eq("id", src.id).then(function(res){
+            must(res);
+            return rpSet(row, "fixed");
+          }).then(function(){ toast("💾 انحفظ التعديل — وعلّمنا البلاغ «تم»"); });
+        }, "حفظ التعديل");
+      }).catch(function(err){ toast("⚠️ " + rpErrText(err)); }).then(function(){ b.disabled = false; });
+    }
+  });
   $("tabs").addEventListener("click", function(e){ var b = e.target.closest("[data-tab]"); if(b) openTab(b.getAttribute("data-tab")); });
 
   /* ================= نافذة التعديل ================= */
@@ -1442,8 +1557,10 @@ document.addEventListener("DOMContentLoaded", function(){
   };
   var PLAY_DEF = { trivia_pts:[1,2,3,4], pts:{ emoji:1, flags:1, charades:1, heads:1, letters:1 }, win_target:0, emoji_secs:20, char_secs:60, heads_dur:60,
                    buzz_pen_timeout:1, buzz_pen_wrong:1, buzz_steal_secs:10,
-                   million:{ step_pts:1, lv_pts:[1,2,3], speed_bonus:1, all_secs:20, vote_secs:15, friend_secs:30, life:{ fifty:true, aud:true, friend:true, swap:true } } };
+                   million:{ step_pts:1, lv_pts:[1,2,3], speed_bonus:1, all_secs:20, vote_secs:15, friend_secs:30, life:{ fifty:true, aud:true, friend:true, swap:true } },
+                   helps:{ x2:true, steal:true, swap:true }, mc:{ secs:20, bonus:1 } };
   var ML_LIFE = [["fifty", "50:50 حذف إجابتين"], ["aud", "👥 اسأل الجمهور"], ["friend", "📞 اتصل بصديق"], ["swap", "🔄 تبديل السؤال"]];
+  var TRIV_HELPS = [["x2", "×2 دبل"], ["steal", "🦹 سرقة"], ["swap", "🔄 تبديل السؤال"]];   /* (v11) وسائل سين جيم */
   var HEADS_DURS = [30, 45, 60, 90, 120];
   var SET = { sizes:{}, play:{}, saved:"" };
   function toInt(v){ if(typeof v === "number" && isFinite(v)) return Math.round(v); if(typeof v === "string" && /^\s*-?\d{1,6}\s*$/.test(v)) return parseInt(v, 10); return null; }
@@ -1478,6 +1595,10 @@ document.addEventListener("DOMContentLoaded", function(){
     out.million = { step_pts:ci(m.step_pts, 0, 999, md.step_pts), lv_pts:lp.map(function(v, i){ return ci(v, 0, 999, md.lv_pts[i]); }), speed_bonus:ci(m.speed_bonus, 0, 999, md.speed_bonus),
                     all_secs:ci(m.all_secs, 5, 300, md.all_secs), vote_secs:ci(m.vote_secs, 5, 120, md.vote_secs), friend_secs:ci(m.friend_secs, 10, 180, md.friend_secs),
                     life:{ fifty:lf.fifty !== false, aud:lf.aud !== false, friend:lf.friend !== false, swap:lf.swap !== false } };
+    /* (v11) وسائل سين جيم + الإجابة من الجوال (الأعلام والصور) */
+    var hp = p.helps && typeof p.helps === "object" ? p.helps : {}, mc = p.mc && typeof p.mc === "object" ? p.mc : {};
+    out.helps = { x2:hp.x2 !== false, steal:hp.steal !== false, swap:hp.swap !== false };
+    out.mc = { secs:ci(mc.secs, 5, 120, PLAY_DEF.mc.secs), bonus:ci(mc.bonus, 0, 999, PLAY_DEF.mc.bonus) };
     return out;
   }
   function loadGames(){
@@ -1604,7 +1725,15 @@ document.addEventListener("DOMContentLoaded", function(){
       + '<span>📞 وقت «اتصل بصديق» (ثانية)</span>' + num("m_friend", p.million.friend_secs, 10, 180)
       + '</div><div class="lbl-s">المساعدات بالكرسي الحار (المطفية ما تطلع)</div><div class="lf-grid">' + ML_LIFE.map(function(l){
         return '<label class="lf-t"><span class="switch"><input type="checkbox" data-pl="lf_' + l[0] + '"' + (p.million.life[l[0]] ? " checked" : "") + ' aria-label="' + esc(l[1]) + '"><span></span></span>' + esc(l[1]) + '</label>';
-      }).join("") + '</div></div>';
+      }).join("") + '</div></div>'
+      + '<div class="card"><h3>🃏 وسائل سين جيم</h3><p class="hint">كل فريق يستخدم كل وسيلة مرة وحدة باللوحة. ×2: صح = ضعف النقاط، وغلط = تنخصم نقاط السؤال. 🦹 سرقة: لو جاوبوا صح تنخصم نفس النقاط من فريق يختارونه. 🔄 تبديل: سؤال ثاني من نفس الفئة والنقاط. المطفية ما تطلع.</p><div class="lf-grid">'
+      + TRIV_HELPS.map(function(l){
+        return '<label class="lf-t"><span class="switch"><input type="checkbox" data-pl="th_' + l[0] + '"' + (p.helps[l[0]] ? " checked" : "") + ' aria-label="' + esc(l[1]) + '"><span></span></span>' + esc(l[1]) + '</label>';
+      }).join("") + '</div></div>'
+      + '<div class="card"><h3>📱 الإجابة من الجوال (حزر العلم وتحدي الصور)</h3><p class="hint">لما المقدّم يشغّلها: كل فريق يختار من 4 خيارات بجواله، والصح ياخذ نقاط اللعبة (فوق). وأسرع فريق صح ياخذ البونص لو جاوب فريقين أو أكثر من الجوال.</p><div class="kv">'
+      + '<span>⏱️ وقت السؤال (ثانية)</span>' + num("mc_secs", p.mc.secs, 5, 120)
+      + '<span>⚡ بونص أسرع فريق جاوب صح (0 = بدون)</span>' + num("mc_bonus", p.mc.bonus, 0, 999)
+      + '</div></div>';
   }
   function readPlay(){
     var v = function(id){ var el = document.querySelector('[data-pl="' + id + '"]'); return el ? toInt(el.value) : null; };
@@ -1615,7 +1744,9 @@ document.addEventListener("DOMContentLoaded", function(){
       win_target:v("win"), emoji_secs:v("es"), char_secs:v("cs"), heads_dur:v("hd"),
       buzz_pen_timeout:v("bpt"), buzz_pen_wrong:v("bpw"), buzz_steal_secs:v("bst"),
       million:{ step_pts:v("m_step"), lv_pts:[v("m_l0"), v("m_l1"), v("m_l2")], speed_bonus:v("m_bonus"), all_secs:v("m_all"), vote_secs:v("m_vote"), friend_secs:v("m_friend"),
-                life:{ fifty:ck("lf_fifty"), aud:ck("lf_aud"), friend:ck("lf_friend"), swap:ck("lf_swap") } }
+                life:{ fifty:ck("lf_fifty"), aud:ck("lf_aud"), friend:ck("lf_friend"), swap:ck("lf_swap") } },
+      helps:{ x2:ck("th_x2"), steal:ck("th_steal"), swap:ck("th_swap") },
+      mc:{ secs:v("mc_secs"), bonus:v("mc_bonus") }
     };
   }
   function playErr(p){
@@ -1630,6 +1761,8 @@ document.addEventListener("DOMContentLoaded", function(){
     if(m.all_secs == null || m.all_secs < 5 || m.all_secs > 300) return "وقت سؤال «الكل يجاوب» لازم من 5 لين 300 ثانية";
     if(m.vote_secs == null || m.vote_secs < 5 || m.vote_secs > 120) return "وقت تصويت الجمهور لازم من 5 لين 120 ثانية";
     if(m.friend_secs == null || m.friend_secs < 10 || m.friend_secs > 180) return "وقت «اتصل بصديق» لازم من 10 لين 180 ثانية";
+    if(p.mc.secs == null || p.mc.secs < 5 || p.mc.secs > 120) return "وقت سؤال «الإجابة من الجوال» لازم من 5 لين 120 ثانية";
+    if(p.mc.bonus == null || p.mc.bonus < 0 || p.mc.bonus > 999) return "بونص الأسرع لازم من 0 لين 999";
     return "";
   }
   $("playGrid").addEventListener("input", updDirty);
