@@ -24,9 +24,8 @@
   *{ box-sizing:border-box; margin:0; padding:0; }
   [hidden]{ display:none !important; }
   html, body{ height:100%; overflow:hidden; background:var(--ink); color:var(--text); font-family:var(--f-body); }
-  body{ background:radial-gradient(ellipse 120% 55% at 50% -12%, rgba(124,92,255,.26), transparent 62%), var(--stars-a) 0 0/260px 260px, var(--ink); }
+  body{ background:radial-gradient(ellipse 120% 55% at 50% -12%, rgba(124,92,255,.26), transparent 62%), var(--stars-a) 0 0/260px 260px, var(--ink); touch-action:manipulation; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; -webkit-tap-highlight-color:transparent; }
   .top-row h1, .msg, .word, .count-num, .res-title, .turn-info .big, .big-btn, .team-badge, .tb{ font-family:var(--f-display); }
-  body{ touch-action:manipulation; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; -webkit-tap-highlight-color:transparent; }
   button{ font-family:inherit; cursor:pointer; }
 
   /* المسرح: يتدوّر لو الجوال بالعرض وقفل الدوران شغّال */
@@ -52,8 +51,6 @@
   .team-badge small{ font-size:.78rem; font-weight:700; color:var(--dim); }
   .how{ color:var(--dim); font-size:.92rem; line-height:1.85; max-width:40ch; }
   .how b{ color:var(--text); }
-  .lbl{ width:100%; max-width:520px; text-align:right; font-size:.92rem; font-weight:700; color:#a28dff; margin-top:4px; }
-  .decks{ display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; width:100%; max-width:520px; }
   .deck{
     background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:10px 4px; color:var(--text);
     font-weight:800; font-size:.84rem; display:flex; flex-direction:column; align-items:center; gap:3px;
@@ -61,12 +58,6 @@
   .deck .ic{ font-size:1.55rem; line-height:1.2; }
   .deck small{ color:var(--faint); font-weight:700; font-size:.68rem; }
   .deck.on{ border-color:var(--gold); background:rgba(124,92,255,.18); box-shadow:0 0 0 2px var(--gold) inset; }
-  .durs{ display:flex; gap:8px; }
-  .durs button{
-    background:var(--panel); border:1px solid var(--border); color:var(--text); border-radius:999px;
-    padding:8px 18px; font-weight:800; font-size:.95rem;
-  }
-  .durs button.on{ background:var(--gold); color:#fff; border-color:#a28dff; }
   .big-btn{
     width:100%; max-width:420px; background:linear-gradient(180deg, #8a6dff, #6c4cff); color:#fff;
     border:1px solid rgba(255,255,255,.18); border-radius:999px; padding:15px; font-size:1.2rem; font-weight:700; flex-shrink:0;

@@ -12,33 +12,9 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap"></noscript>
 <link rel="stylesheet" href="theme.css?v=7">
+<link rel="stylesheet" href="pages.css?v=1">
 <style>
-  main{ position:relative; z-index:1; max-width:820px; margin:0 auto; padding:30px 18px 70px; }
-  .head{ text-align:center; margin:14px 0 30px; }
-  .logo{ display:flex; justify-content:center; }
-  .logo .logo-mark{ width:56px; height:56px; border-radius:17px; }
-  h1{ font-family:var(--f-display); font-weight:800; font-size:clamp(2rem, 6vw, 2.8rem); line-height:1.2; margin:16px 0 6px; }
-  .meta{ color:var(--tx-3); font-size:.88rem; }
-  .card{ padding:22px 24px; margin-bottom:14px; }
-  .card.key{ border-color:var(--v-line); background:radial-gradient(ellipse 80% 70% at 100% 0%, rgba(124,92,255,.16), transparent 70%), linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.015)); }
-  h2{ font-family:var(--f-display); font-weight:700; font-size:1.12rem; margin:0 0 8px; color:#fff; }
-  p{ margin:0 0 10px; color:var(--tx-2); line-height:1.9; }
-  p:last-child{ margin-bottom:0; }
-  ul, ol{ margin:0; padding-inline-start:22px; color:var(--tx-2); line-height:1.9; }
-  ul{ list-style:disc; }
-  li{ margin-bottom:6px; } li::marker{ color:var(--v); }
-  b{ color:var(--tx); }
-  .dim{ color:var(--tx-3); }
-  .en{ direction:ltr; text-align:left; } .en h2{ font-size:1rem; }
-  .contact{ display:flex; flex-wrap:wrap; gap:10px; margin-top:8px; }
-  .wa{ display:inline-flex; align-items:center; gap:8px; text-decoration:none; font-weight:700; font-size:.92rem; color:#062814; background:#34d399; border-radius:999px; padding:9px 18px; }
-  .wa:hover{ color:#062814; filter:brightness(1.05); }
-  .seller{ color:var(--tx-2); font-size:.92rem; white-space:pre-line; }
-  .back{ display:inline-flex; align-items:center; gap:8px; margin-top:12px; text-decoration:none; font-weight:700; font-size:.92rem; color:var(--tx); border:1px solid var(--line-2); border-radius:999px; padding:9px 20px; background:var(--glass); }
-  .back:hover{ color:#fff; background:var(--glass-2); }
-  footer{ text-align:center; margin-top:28px; }
-  .links, footer > div{ color:var(--tx-3); font-size:.88rem; margin-top:14px; }
-  footer a:not(.back){ color:var(--tx-2); }
+  footer > div{ color:var(--tx-3); font-size:.88rem; margin-top:14px; }
 </style>
 </head>
 <body>
@@ -47,7 +23,7 @@
   <div class="head">
     <div class="logo"><span class="logo-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.2 3.6a8.6 8.6 0 1 0 5.2 14.1A9.6 9.6 0 0 1 15.2 3.6z" fill="#fff"/><path d="m18.6 4 .55 1.45 1.45.55-1.45.55-.55 1.45-.55-1.45-1.45-.55 1.45-.55z" fill="#fff"/></svg></span></div>
     <h1>سياسة الخصوصية</h1>
-    <div class="meta">طاولة السهرة · آخر تحديث: 24 أكتوبر 2026</div>
+    <div class="meta">طاولة السهرة · آخر تحديث: 1 نوفمبر 2026</div>
   </div>
 
   <section class="card">
@@ -70,6 +46,7 @@
       <li><b>قراءة الأسئلة بالصوت:</b> يقرأها متصفحك نفسه. بعض المتصفحات (مثل Edge وChrome) ترسل نص السؤال لخدمة الصوت عندها عشان تنطقه — نص السؤال بس، بدون أي معلومة عنك. وتقدر توقف القراءة من زر 🔊 فوق.</li>
       <li><b>الإجابات بجوال المقدّم (الباركود):</b> لما تفتح إجابات الجولة بجوالك من الباركود، ينحفظ مع الجولة رقم عشوائي لجوالك (عشان ما يفتحها جوال ثاني) و«بصمة» (sha256) للمفتاح اللي بالباركود — المفتاح نفسه ما ينحفظ عندنا. والشاشة ترسل لجوالك السؤال اللي عليها لحظيًا وما ينحفظ. الرابط يشتغل 12 ساعة من بداية الجولة بس.</li>
       <li><b>«السؤال فيه غلط» 🚩:</b> لما تبلّغ عن سؤال من صفحة الإجابات، ينحفظ نص السؤال وجوابه، والسبب اللي اخترته، والملاحظة اللي كتبتها (لو كتبت)، مربوطة بحسابك — عشان نراجع السؤال ونصلّحه. وما يشوفها إلا صاحب الموقع.</li>
+      <li><b>«🔁 إعادة آخر ثواني» بأسرع إصبع (اختيارية):</b> لو شغّلها المقدّم، جوال الفريق اللي ضغط (بعد ما تسمحون له بالمايك) يسجّل الصوت وقت جوابكم بس، ويرسل آخر 6 ثواني بالكثير لشاشة اللعبة عن طريق قناة الغرفة اللحظية (Supabase Realtime) — ما ينحفظ بأي مكان، وينمسح من الجوال أول ما ينرسل. ولو جهاز الشاشة فيه مايك، يسجّل هو بعد وقت الجواب بس كاحتياط، بذاكرة المتصفح وما ينرسل لأحد. المقطع يبقى بالشاشة لين يقرر المقدّم «صح ولا غلط»، وبعدها ينمسح. والمقدّم يقدر يطفيها بأي وقت من ⚙️ «أسرع إصبع»، وكل لاعب يقدر يرفض المايك أو يطفيه من جواله.</li>
       <li><b>ملخص السهرة 🏆:</b> الصورة والنص يتجهّزون بجهازك من نتائج السهرة، وما ينرسلون لنا. ولو شاركتها، تنرسل للتطبيق اللي تختاره أنت (مثل واتساب).</li>
     </ul>
   </section>
@@ -110,7 +87,7 @@
 
   <section class="card en" lang="en" dir="ltr">
     <h2>Privacy Policy (English summary)</h2>
-    <p>Sahra Table (طاولة السهرة) is an Arabic party-games website with a free trial of each game and paid game rounds. When you sign in with Google we receive only your name, email address and profile picture; we never see your password. We also store your sign-up date, last visit, account status, round balance, which free trials you used, the rounds you played (so questions do not repeat), your orders (package, amount, payment status, Moyasar invoice id) and which games were opened, for simple statistics shown to the site owner. Card payments happen on the Moyasar payment page; we never receive your card details. Names typed on phone buzzers (and the look you pick for your character in the rope game) are sent live to the game screen and are not stored in our database. For faster controls in the rope game, your phone may connect directly to the game device (WebRTC) when both are on the same network; button presses go straight to the screen and are not stored. To find each other, the devices use a public STUN server (Cloudflare or Google), which sees only your IP address. Online Mafia: when you join a room we store your in-room name, the character you picked, your role and game results, and a sha256 fingerprint of your seat's secret token (the token itself stays on your device); rooms are deleted automatically after 12 hours of inactivity or when the host closes them. Voice goes directly between players' devices (WebRTC) and is never recorded or stored; if a network blocks direct connections, the encrypted audio is relayed through Cloudflare's TURN service without being stored. Chat messages are delivered live to the room (Supabase Realtime) and are not stored on our servers; the mafia and ghost chats are encrypted with keys only their members receive. An optional photo is resized on your device and sent only to the players in your room, and is not stored by us. Reading questions aloud uses your browser's built-in speech feature; some browsers (such as Edge and Chrome) send the question text — and nothing about you — to their own speech service to pronounce it. You can turn it off from the 🔊 button. If the host opens a round's answers on their phone by scanning the QR code, we store with that round a random id for the phone (so no other phone can open it) and a sha256 fingerprint of the QR key — not the key itself; the screen sends the current question to that phone live and it is not stored. The link works for 12 hours from the start of the round.</p>
+    <p>Sahra Table (طاولة السهرة) is an Arabic party-games website with a free trial of each game and paid game rounds. When you sign in with Google we receive only your name, email address and profile picture; we never see your password. We also store your sign-up date, last visit, account status, round balance, which free trials you used, the rounds you played (so questions do not repeat), your orders (package, amount, payment status, Moyasar invoice id) and which games were opened, for simple statistics shown to the site owner. Card payments happen on the Moyasar payment page; we never receive your card details. Names typed on phone buzzers (and the look you pick for your character in the rope game) are sent live to the game screen and are not stored in our database. For faster controls in the rope game, your phone may connect directly to the game device (WebRTC) when both are on the same network; button presses go straight to the screen and are not stored. To find each other, the devices use a public STUN server (Cloudflare or Google), which sees only your IP address. Online Mafia: when you join a room we store your in-room name, the character you picked, your role and game results, and a sha256 fingerprint of your seat's secret token (the token itself stays on your device); rooms are deleted automatically after 12 hours of inactivity or when the host closes them. Voice goes directly between players' devices (WebRTC) and is never recorded or stored; if a network blocks direct connections, the encrypted audio is relayed through Cloudflare's TURN service without being stored. Chat messages are delivered live to the room (Supabase Realtime) and are not stored on our servers; the mafia and ghost chats are encrypted with keys only their members receive. An optional photo is resized on your device and sent only to the players in your room, and is not stored by us. Reading questions aloud uses your browser's built-in speech feature; some browsers (such as Edge and Chrome) send the question text — and nothing about you — to their own speech service to pronounce it. You can turn it off from the 🔊 button. If the host opens a round's answers on their phone by scanning the QR code, we store with that round a random id for the phone (so no other phone can open it) and a sha256 fingerprint of the QR key — not the key itself; the screen sends the current question to that phone live and it is not stored. The link works for 12 hours from the start of the round. If the host turns on the optional «🔁 replay» in the fastest-finger game, the phone of the team that pressed (after you allow the microphone) records only during your answer time and sends at most the last 6 seconds to the game screen through the room's live channel (Supabase Realtime); it is not stored anywhere and is deleted from the phone once sent. If the game device has a microphone, it also records the answer time as a backup, kept only in the browser's memory and never sent. The clip stays on the screen until the host decides right or wrong, then it is deleted. Players can decline or turn off the microphone on their phone.</p>
     <p>Data is kept in a protected Supabase database; game scores and your sign-in session stay in your browser's local storage. We do not sell or share your data or use it for advertising (only the amount and order number are shared with Moyasar to process a payment). You can ask the site owner (see the contact options on the <a href="terms.html#contact">terms page</a>) to delete your account and data at any time; payment records may be kept as long as required by law.</p>
     <p>The site's use of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy" rel="noopener">Google API Services User Data Policy</a>, including the Limited Use requirements.</p>
   </section>

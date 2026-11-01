@@ -195,6 +195,18 @@
   .clock.win2{ background:color-mix(in srgb, var(--c) 30%, transparent); border-color:var(--c); }
   .foot{ font-size:.72rem; color:var(--faint); text-align:center; }
   .foot b{ font-family:ui-monospace, monospace; direction:ltr; unicode-bidi:isolate; }
+  /* ===== (v12) 🎙️ مايك «الإعادة» ===== */
+  .mic{ display:inline-flex; align-items:center; justify-content:center; gap:8px; max-width:min(100%, 460px); margin:2px auto 8px; padding:8px 16px; border-radius:999px;
+    font-family:var(--f-display); font-weight:800; font-size:.86rem; line-height:1.35; color:var(--text); text-align:center; cursor:pointer;
+    background:rgba(124,92,255,.2); border:1.5px solid rgba(162,141,255,.65); -webkit-tap-highlight-color:transparent; }
+  .mic.need{ background:linear-gradient(180deg, #8a6dff, #6c4cff); border-color:rgba(255,255,255,.3); color:#fff; box-shadow:0 10px 26px -10px rgba(124,92,255,.8); }
+  .mic.ok{ background:rgba(34,197,94,.14); border-color:rgba(134,239,172,.5); color:#dcfce7; font-weight:700; }
+  .mic.rec{ background:rgba(229,72,77,.24); border-color:#ff8a8a; color:#fff; }
+  .mic.rec i{ width:10px; height:10px; border-radius:50%; background:#ff4d4d; box-shadow:0 0 10px #ff4d4d; flex:0 0 auto; animation:micBlink .8s ease-in-out infinite alternate; }
+  .mic.bad{ background:rgba(229,72,77,.14); border-color:rgba(255,120,120,.5); color:#ffd7d7; }
+  .mic.off{ background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.22); color:var(--dim); font-weight:700; }
+  @keyframes micBlink{ from{ opacity:1; } to{ opacity:.3; } }
+  body.st-win .mic.ok, body.st-win .mic.off{ background:rgba(0,0,0,.24); border-color:rgba(255,255,255,.5); color:#fff; }
   @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
 </style>
 </head>
@@ -224,6 +236,7 @@
     <button class="reload" id="reload" type="button" data-nopress hidden>🔄 تحديث الصفحة</button>
   </div>
 
+  <button class="mic" id="mic" type="button" data-nopress hidden></button>
   <p class="foot" id="foot">طاولة السهرة · أسرع إصبع</p>
 
 <script>
@@ -239,7 +252,7 @@ document.addEventListener("DOMContentLoaded", function(){
               meName:$("meName"), editIcon:$("editIcon"), nameForm:$("nameForm"), nameInput:$("nameInput"),
               qcard:$("qcard"), clock:$("clock"), clockN:$("clockN"), clockW:$("clockW"),
               pen:$("pen"), penN:$("penN"), penT:$("penT"), mq:$("mq"),
-              who:$("who"), whoK:$("whoK"), whoN:$("whoN"), whoT:$("whoT") };
+              who:$("who"), whoK:$("whoK"), whoN:$("whoN"), whoT:$("whoT"), mic:$("mic") };
 
   var pid;
   try{
@@ -324,7 +337,7 @@ document.addEventListener("DOMContentLoaded", function(){
   function hello(){ send("hello", { team:teamId, pid:pid }); }
   function track(){
     if(!ch || S.conn !== "on") return;
-    try{ var p = ch.track({ team:teamId, pid:pid, name:myName }); if(p && p.catch) p.catch(function(){}); }catch(e){}
+    try{ var p = ch.track({ team:teamId, pid:pid, name:myName, mic: R && R.ok ? 1 : 0 }); if(p && p.catch) p.catch(function(){}); }catch(e){}
   }
 
   /* نموذج الاسم */
@@ -360,9 +373,17 @@ document.addEventListener("DOMContentLoaded", function(){
     }
     /* مؤقت الجواب: الشاشة ترسل الباقي بالثواني — نعدّ هنا لحالنا ونتزامن مع كل رسالة */
     var left = +p.left, wl = +p.wleft;
-    S.endAt = (p.state === "locked" && isFinite(left) && left > 0) ? Date.now() + Math.min(left, 600) * 1000 : 0;
+    /* (v12) العدّاد يخلص مع الشاشة: فرق ساعة الجوال عن ساعة الشاشة = أقل تأخير شفناه بآخر دقيقتين،
+       فالعدّاد هنا يخلص مع الشاشة (أو بعدها بجزء صغير من الثانية) — وما يخلص قبلها أبد، حتى لو ساعة اللابتوب مو مضبوطة */
+    var nowL = Date.now(), sent = +p.ts, off = (isFinite(sent) && sent > 0) ? clockOff(nowL - sent, nowL) : null;
+    var base = off === null ? nowL : sent + off;
+    S.endAt = (p.state === "locked" && isFinite(left) && left > 0) ? base + Math.min(left, 600) * 1000 : 0;
     /* فرصة الفريق الخصم (بعد ما خلص وقت اللي ضغط): عدّاد هنا لحاله */
-    S.wEnd = (p.state === "armed" && Array.isArray(p.only) && isFinite(wl) && wl > 0) ? Date.now() + Math.min(wl, 120) * 1000 : 0;
+    S.wEnd = (p.state === "armed" && Array.isArray(p.only) && isFinite(wl) && wl > 0) ? base + Math.min(wl, 120) * 1000 : 0;
+    /* (v12) 🎙️ «الإعادة»: نبدأ أو نوقف تسجيل وقت جوابنا */
+    micOnState(p);
+    /* (v12) خلص وقت اللي ضغط (المقدّم يقرر) — جواله يهتز (وبدون صوت لو يسجّل، عشان ما يلخبط الإعادة) */
+    if(p.state === "locked" && p.tup && !(prev && prev.tup && prev.qid === p.qid) && p.winner === teamId){ vibrate([200, 80, 200]); if(!R.active) timeUpSound(); }
     clearInterval(S.clockT); S.clockT = null;
     if(S.endAt || S.wEnd) S.clockT = setInterval(renderClock, 250);
     if(S.wEnd){
@@ -419,6 +440,225 @@ document.addEventListener("DOMContentLoaded", function(){
     }
     render();
   }
+  /* (v12) فرق ساعة الجوال عن ساعة الشاشة: التأخير ما ينقص عن الصفر، فأقل فرق شفناه (وقت الوصول − وقت الإرسال)
+     هو فرق الساعتين + أقل تأخير للشبكة. لو الفرق كبر فجأة أكثر من 3 ثواني (ساعة الشاشة رجعت ورا) نبدأ من جديد */
+  function clockOff(lag, now){
+    if(!isFinite(lag) || Math.abs(lag) > 3600000) return null;
+    var L = (S.lags || []).filter(function(x){ return now - x[1] < 120000; });
+    var m = Infinity; L.forEach(function(x){ if(x[0] < m) m = x[0]; });
+    if(L.length && lag - m > 3000) L = [];
+    L.push([lag, now]); if(L.length > 40) L.shift();
+    S.lags = L;
+    m = Infinity; L.forEach(function(x){ if(x[0] < m) m = x[0]; });
+    return m;
+  }
+
+  /* ======================================================================
+     (v12) 🎙️ «إعادة آخر ثواني»: لو المقدّم شغّلها، جوال اللي ضغط يسجّل وقت جوابه بس (بذاكرة الصفحة)،
+     ويرسل للشاشة آخر 6 ثواني بالكثير حول الصفارة (4.5 قبل + 1.5 بعد) — وينمسح من الجوال أول ما ينرسل.
+     الصوت ما ينحفظ بأي مكان، ويختفي من الشاشة أول ما يقرر المقدّم.
+     ====================================================================== */
+  var MIC_KEY = "sahra-buzz-mic", ULAW_SR = 12000, RP_CH = 15000;   /* 12 ألف عيّنة بالثانية (صوت واضح) · كل رسالة ≈ 20KB */
+  var R = { stream:null, src:null, node:null, sink:null, ctx:null, wk:false, sr:0, ring:null, w:0, total:0, lastD:0,
+            active:false, key:"", qid:"", turn:0, endAt:0, mark:-1, markT:null, finT:null,
+            ok:false, busy:false, err:"", off:false, granted:false, sentAt:0, offAsk:0 };
+  try{ R.off = localStorage.getItem(MIC_KEY) === "off"; }catch(e){}
+  var REC_WK = "class SahraRec extends AudioWorkletProcessor{constructor(){super();this.b=new Float32Array(2048);this.n=0;}"
+    + "process(i){var c=i[0]&&i[0][0];if(c){for(var k=0;k<c.length;k++){this.b[this.n++]=c[k];if(this.n===2048){this.port.postMessage(this.b,[this.b.buffer]);this.b=new Float32Array(2048);this.n=0;}}}return true;}}"
+    + "registerProcessor('sahra-rec',SahraRec);";
+  function micSupported(){ return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && (window.AudioContext || window.webkitAudioContext)); }
+  function micWanted(){ return !!(S.host && S.host.rec) && !R.off; }
+  function micEnsure(){
+    if(R.stream || R.busy) return;
+    if(!micSupported()){ R.err = "nosupport"; micRender(); return; }
+    R.busy = true; R.err = ""; micRender();
+    unlockAudio();
+    navigator.mediaDevices.getUserMedia({ audio: { echoCancellation:false, noiseSuppression:false, autoGainControl:false } }).then(function(st){
+      R.busy = false;
+      if(!micWanted()){ st.getTracks().forEach(function(t){ try{ t.stop(); }catch(x){} }); micRender(); return; }
+      R.stream = st; R.granted = true;
+      st.getTracks().forEach(function(t){ t.addEventListener("ended", function(){ if(R.stream === st){ micRelease(); R.err = "ended"; micRender(); track(); } }); });
+      return micWire().then(function(){ micRender(); track(); });
+    }).catch(function(e){
+      R.busy = false; micRelease();
+      var n = e && e.name;
+      R.err = (n === "NotAllowedError" || n === "SecurityError") ? "denied" : (n === "NotFoundError" || n === "OverconstrainedError") ? "nomic" : "fail";
+      micRender(); track();
+    });
+  }
+  function micWire(){
+    unlockAudio();
+    var a = S.audio;
+    if(!a || !R.stream) return Promise.reject(new Error("no_audio"));
+    if(R.ctx !== a){ R.ctx = a; R.wk = false; }
+    R.sr = a.sampleRate; R.ring = new Float32Array(Math.round(a.sampleRate * 14)); R.w = 0; R.total = 0;
+    R.src = a.createMediaStreamSource(R.stream);
+    R.sink = a.createGain(); R.sink.gain.value = 0; R.sink.connect(a.destination);   /* صامت — بس عشان المعالجة تشتغل */
+    var useSP = function(){
+      if(!a.createScriptProcessor) throw new Error("no_capture");
+      var sp = a.createScriptProcessor(2048, 1, 1);
+      sp.onaudioprocess = function(ev){ micPush(ev.inputBuffer.getChannelData(0)); };
+      R.node = sp; R.src.connect(sp); sp.connect(R.sink); R.ok = true;
+    };
+    var useWK = function(){
+      var n = new AudioWorkletNode(a, "sahra-rec", { numberOfInputs:1, numberOfOutputs:1, channelCount:1, channelCountMode:"explicit" });
+      n.port.onmessage = function(ev){ micPush(ev.data); };
+      R.node = n; R.src.connect(n); n.connect(R.sink); R.ok = true;
+    };
+    if(a.audioWorklet && window.AudioWorkletNode){
+      if(R.wk){ try{ useWK(); return Promise.resolve(); }catch(x){} }
+      var url = URL.createObjectURL(new Blob([REC_WK], { type:"application/javascript" }));
+      return a.audioWorklet.addModule(url).then(function(){
+        URL.revokeObjectURL(url); R.wk = true;
+        if(R.stream && !R.node){ try{ useWK(); }catch(x){ useSP(); } }
+      }, function(){
+        URL.revokeObjectURL(url);
+        if(R.stream && !R.node) useSP();
+      });
+    }
+    try{ useSP(); return Promise.resolve(); }catch(x){ return Promise.reject(x); }
+  }
+  function micPush(ch){
+    R.lastD = Date.now();
+    if(!R.active || !R.ring || !ch) return;
+    var B = R.ring, L = B.length, n = ch.length, w = R.w;
+    for(var i = 0; i < n; i++){ B[w] = ch[i]; w = w + 1 === L ? 0 : w + 1; }
+    R.w = w; R.total += n;
+    if(R.mark >= 0 && R.total >= R.mark + Math.round(1.5 * R.sr)) micFinish();
+  }
+  function micClear(){
+    R.active = false; R.mark = -1; R.endAt = 0; clearTimeout(R.markT); clearTimeout(R.finT);
+    R.total = 0; R.w = 0; if(R.ring) R.ring.fill(0);
+  }
+  function micRelease(){
+    micClear(); R.ok = false;
+    try{ if(R.node){ if(R.node.port) R.node.port.onmessage = null; else R.node.onaudioprocess = null; R.node.disconnect(); } }catch(x){}
+    try{ if(R.src) R.src.disconnect(); }catch(x){}
+    try{ if(R.sink) R.sink.disconnect(); }catch(x){}
+    if(R.stream) R.stream.getTracks().forEach(function(t){ try{ t.stop(); }catch(x){} });
+    R.node = R.src = R.sink = R.stream = null; R.ring = null;
+  }
+  function micStart(){
+    if(!R.ok || !R.ring) return;
+    micClear();
+    R.active = true; R.lastD = Date.now();
+    unlockAudio();
+  }
+  /* لحظة الصفارة عندنا = نهاية العدّاد (مضبوطة على ساعة الشاشة) */
+  function micAt(endAt){
+    if(!R.active || R.mark >= 0 || !(endAt > 0)) return;
+    R.endAt = endAt;
+    clearTimeout(R.markT);
+    R.markT = setTimeout(function(){ micMark(R.endAt); }, Math.max(0, endAt - Date.now()));
+  }
+  function micMark(at){
+    if(!R.active || R.mark >= 0) return;
+    clearTimeout(R.markT);
+    R.mark = Math.max(0, R.total + Math.round((at - R.lastD) / 1000 * R.sr));
+    clearTimeout(R.finT); R.finT = setTimeout(micFinish, Math.max(0, at - Date.now()) + 2500);   /* احتياط لو وقف التسجيل */
+  }
+  function micFinish(){
+    if(!R.active) return;
+    R.active = false; clearTimeout(R.finT); clearTimeout(R.markT);
+    var sr = R.sr, B = R.ring, L = B.length, first = Math.max(0, R.total - L);
+    var start = Math.max(first, R.mark - Math.round(4.5 * sr)), end = Math.min(R.total, R.mark + Math.round(1.5 * sr));
+    if(R.mark < 0 || end - start < sr * 0.6){ micClear(); micRender(); return; }
+    var d = new Float32Array(end - start);
+    for(var i = start, k = 0; i < end; i++, k++) d[k] = B[i % L];
+    var mk = Math.min(d.length, R.mark - start);
+    micClear();   /* التسجيل ينمسح من الذاكرة — يبقى بس المقطع اللي بينرسل */
+    micSend(d, sr, mk);
+  }
+  function ulaw(x){
+    var v = Math.round((x > 1 ? 1 : x < -1 ? -1 : x) * 32635), mask;
+    if(v < 0){ v = 132 - v; mask = 0x7F; } else { v += 132; mask = 0xFF; }
+    if(v > 32767) v = 32767;
+    var seg = 0; while(seg < 8 && v > (256 << seg) - 1) seg++;
+    return seg >= 8 ? (0x7F ^ mask) : ((((seg << 4) | ((v >> (seg + 3)) & 15)) ^ mask) & 255);
+  }
+  function b64(u){ var t = ""; for(var i = 0; i < u.length; i += 8192) t += String.fromCharCode.apply(null, u.subarray(i, i + 8192)); return btoa(t); }
+  function micSend(d, sr, mk){
+    var tr = sr > ULAW_SR ? ULAW_SR : sr, ratio = sr / tr, n = Math.floor(d.length / ratio), x = new Float32Array(n), pk = 0;
+    for(var i = 0; i < n; i++){
+      var a = Math.floor(i * ratio), b = Math.max(a + 1, Math.min(d.length, Math.floor((i + 1) * ratio))), sum = 0;
+      for(var k = a; k < b; k++) sum += d[k];
+      x[i] = sum / (b - a); var v = Math.abs(x[i]); if(v > pk) pk = v;
+    }
+    var g = pk > 0.0005 ? Math.min(8, 0.95 / pk) : 1, u = new Uint8Array(n);
+    for(var j = 0; j < n; j++) u[j] = ulaw(x[j] * g);
+    var id = Math.random().toString(36).slice(2, 10), kk = Math.ceil(n / RP_CH);
+    var head = { team:teamId, pid:pid, qid:R.qid, turn:R.turn, id:id, k:kk, sr:tr, n:n, mark:Math.min(n, Math.round(mk / ratio)) };
+    for(var c = 0; c < kk; c++){
+      (function(c, part){
+        setTimeout(function(){
+          var m = {}; for(var key in head) m[key] = head[key];
+          m.i = c; m.d = part; send("rp", m);
+        }, c * 40);
+      })(c, b64(u.subarray(c * RP_CH, Math.min(n, (c + 1) * RP_CH))));
+    }
+    R.sentAt = Date.now(); micRender();
+    setTimeout(micRender, 4200);
+  }
+  function micOnState(p){
+    if(!p.rec){ if(R.stream || R.busy || R.active){ micRelease(); track(); } micRender(); return; }
+    if(!R.off && !R.stream && !R.busy && !R.err && R.granted) micEnsure();   /* المايك مسموح من قبل — يشتغل لحاله */
+    var mine = p.state === "locked" && p.winner === teamId && (!p.winnerPid || p.winnerPid === pid);
+    var key = mine ? String(p.qid) + "|" + (+p.turn || 0) : "";
+    if(R.active && R.key !== key) micClear();   /* انحل السؤال قبل الصفارة — نمسح */
+    if(mine && R.ok && !p.tup && S.endAt && key !== R.key){ R.key = key; R.qid = String(p.qid); R.turn = +p.turn || 0; micStart(); }
+    if(R.active && R.key === key){
+      if(S.endAt) micAt(S.endAt);
+      else if(p.tup) micMark(R.endAt || Date.now());   /* خلص الوقت بالشاشة قبل ما يخلص عندنا */
+    }
+    micRender();
+  }
+  function micCheck(){
+    var t = R.stream && R.stream.getAudioTracks()[0];
+    if(R.stream && (!t || t.readyState === "ended")){ micRelease(); R.err = "ended"; track(); }
+    micRender();
+  }
+  function micRender(){
+    var el = els.mic; if(!el) return;
+    if(!(S.host && S.host.rec) || !hostAlive() || editing){ if(!el.hidden) el.hidden = true; return; }
+    var cls, html;
+    if(R.active){ cls = "rec"; html = "<i></i> يسجّل وقت جوابكم — يوصل الشاشة بس"; }
+    else if(R.sentAt && Date.now() - R.sentAt < 4000){ cls = "ok"; html = "📤 وصلت آخر ثواني جوابكم للشاشة — وانمسحت من الجوال"; }
+    else if(R.ok && R.offAsk && Date.now() - R.offAsk < 3500){ cls = "off"; html = "اضغطوا مرة ثانية عشان تطفون المايك"; }
+    else if(R.ok){ cls = "ok"; html = "🎙️ المايك جاهز للإعادة — يسجّل وقت جوابكم بس"; }
+    else if(R.busy){ cls = "need"; html = "⏳ نطلب المايك… اضغطوا «سماح»"; }
+    else if(R.off){ cls = "off"; html = "🎙️ المايك طافي — اضغطوا لو تبون «الإعادة»"; }
+    else if(R.err === "denied"){ cls = "bad"; html = "⚠️ المايك مرفوض — اسمحوا له من إعدادات المتصفح واضغطوا هنا"; }
+    else if(R.err === "nomic"){ cls = "bad"; html = "⚠️ ما لقينا مايك بهالجوال"; }
+    else if(R.err === "nosupport"){ cls = "bad"; html = "⚠️ المتصفح هذا ما يدعم المايك"; }
+    else if(R.err === "ended"){ cls = "need"; html = "🎙️ المايك وقف — اضغطوا عشان يرجع"; }
+    else if(R.err){ cls = "bad"; html = "⚠️ ما اشتغل المايك — اضغطوا وجرّبوا مرة ثانية"; }
+    else { cls = "need"; html = "🎙️ اسمحوا بالمايك — عشان «الإعادة» لو اختلفتوا على الوقت"; }
+    if(el._h !== html){ el._h = html; el.innerHTML = html; }
+    if(el.className !== "mic " + cls) el.className = "mic " + cls;
+    el.hidden = false;
+  }
+  els.mic.addEventListener("click", function(){
+    unlockAudio(); keepAwake();
+    if(R.active || R.busy) return;
+    if(R.ok){   /* إطفاء المايك: ضغطتين عشان ما ينطفي بالغلط وسط الحماس */
+      if(R.offAsk && Date.now() - R.offAsk < 3500){
+        R.offAsk = 0; R.off = true; try{ localStorage.setItem(MIC_KEY, "off"); }catch(e){}
+        micRelease(); track();
+      } else { R.offAsk = Date.now(); setTimeout(micRender, 3600); }
+      micRender(); return;
+    }
+    R.off = false; R.offAsk = 0; try{ localStorage.removeItem(MIC_KEY); }catch(e){}
+    R.err = ""; micEnsure();
+  });
+  /* المايك مسموح لهالموقع من قبل؟ يشتغل لحاله لما المقدّم يشغّل «الإعادة» */
+  try{
+    if(navigator.permissions && navigator.permissions.query) navigator.permissions.query({ name:"microphone" }).then(function(st){
+      R.granted = st.state === "granted";
+      if(R.granted && micWanted() && !R.stream && !R.busy && !R.err) micEnsure();
+      micRender();
+    }, function(){});
+  }catch(e){}
+
   function myPen(){
     var all = S.host && S.host.pens, x = all && typeof all === "object" ? all[teamId] : null;
     return x && typeof x === "object" && (num(x.n, 0, 999) | 0) > 0 ? x : null;
@@ -629,7 +869,7 @@ document.addEventListener("DOMContentLoaded", function(){
     LASTV = v;
     renderMq(v);
     var hasQ = renderQ(v);   /* (v11) بشاشة الخيارات (mq) تنخفي بطاقة السؤال القديمة — العلم أو اللغز داخل بطاقة الخيارات */
-    renderClock();
+    renderClock(); micRender();
     var key = v + "|" + btn + "|" + msg + "|" + sub + "|" + color + "|" + els.teamName.textContent + "|" + myName + "|" + hasQ + "|" + big + "|" + noBtn + "|" + (who ? who.k + who.n + who.t + who.c : "");
     if(key === LAST) return;
     LAST = key;
@@ -806,6 +1046,7 @@ document.addEventListener("DOMContentLoaded", function(){
     keepAwake();
     /* رجعنا للصفحة بعد ما طفت الشاشة — الاتصال غالبًا انقطع */
     if(S.conn !== "on") reconnect(); else hello();
+    micCheck();
     render();
   });
 

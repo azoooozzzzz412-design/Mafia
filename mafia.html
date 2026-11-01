@@ -48,12 +48,13 @@ button{ cursor:pointer; }
 .sr{ position:absolute !important; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
 
 /* ---------- المشهد ---------- */
-.scene{ position:fixed; inset:0; height:var(--vh); overflow:hidden; isolation:isolate; }
+.scene{ position:fixed; inset:0; height:var(--vh); overflow:hidden; isolation:isolate; background:
+  radial-gradient(ellipse 60% 46% at 50% 8%, rgba(241,190,110,.16), transparent 70%),
+  radial-gradient(ellipse 90% 70% at 50% 55%, #2b1a10 0%, #170e09 55%, #0b0705 100%); }
 .bg{ position:absolute; inset:0; background-size:cover; background-position:center; background-repeat:no-repeat; transition:opacity 1.6s var(--ease), filter 1.6s var(--ease); }
 .bg.night{ opacity:0; }
 body.ph-night .bg.night{ opacity:1; }
 body.ph-night .bg.day{ opacity:.0; }
-.scene.drift .bg{ transform:scale(1.06); }
 .shade{ position:absolute; inset:0; pointer-events:none;
   background:
     radial-gradient(ellipse 72% 62% at 50% 52%, transparent 30%, rgba(8,4,2,.38) 66%, rgba(5,3,2,.86) 100%),
@@ -104,7 +105,9 @@ body.ph-end .tint{ opacity:1; background:rgba(120,90,30,.18); }
 .ring{ position:relative; width:var(--seat); height:var(--seat); border-radius:50%; padding:4px; background:linear-gradient(160deg, rgba(241,207,140,.5), rgba(156,116,54,.25) 45%, rgba(20,12,8,.7));
   box-shadow:0 14px 30px -12px rgba(0,0,0,.95), 0 0 0 1px rgba(0,0,0,.6); transition:box-shadow .4s var(--ease), background .4s; }
 .av{ width:100%; height:100%; border-radius:50%; overflow:hidden; display:grid; place-items:center; background-size:cover; background-position:center;
-  box-shadow:inset 0 1px 1px rgba(255,240,210,.18), inset 0 -10px 18px rgba(0,0,0,.45); position:relative; }
+  box-shadow:inset 0 1px 1px rgba(255,240,210,.18), inset 0 -10px 18px rgba(0,0,0,.45); position:relative;
+  background-color:var(--c, #5a3a24); background-image:linear-gradient(160deg, color-mix(in srgb, var(--c, #5a3a24) 82%, #fff 18%), color-mix(in srgb, var(--c, #5a3a24) 70%, #000 30%));
+}
 .av .ini{ font-family:var(--f-disp); font-weight:700; font-size:calc(var(--seat) * .42); color:rgba(244,232,206,.92); text-shadow:0 2px 8px rgba(0,0,0,.6); line-height:1; }
 .av::after{ content:""; position:absolute; inset:0; border-radius:50%; background:radial-gradient(circle at 50% 18%, rgba(255,240,210,.16), transparent 55%); pointer-events:none; }
 .nm{ max-width:calc(var(--seat) + 46px); font-weight:700; font-size:.86rem; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
@@ -117,9 +120,8 @@ body.ph-end .tint{ opacity:1; background:rgba(120,90,30,.18); }
   animation:pop .5s var(--spring); }
 .seat .mark{ position:absolute; top:calc(var(--seat) * .62); inset-inline-end:calc(50% - var(--seat) / 2 - 10px); width:28px; height:28px; border-radius:50%; display:grid; place-items:center;
   background:var(--esp); border:1px solid var(--line-2); font-size:.82rem; z-index:2; box-shadow:0 6px 14px rgba(0,0,0,.6); }
-.seat.me .nm{ border-color:var(--line-3); color:var(--gold-hi); }
+.seat.me .nm{ border-color:var(--line-3); color:var(--gold-hi); transition:opacity .35s var(--ease); }
 .seat.me .stl{ display:none; }
-.seat.me .nm{ transition:opacity .35s var(--ease); }
 body.subs-on .seat.me .nm{ opacity:0; }   /* سطر الراوي ينزل مكان اسمي — نخفي الاسم وقتها */
 .seat.off .ring{ filter:saturate(.35) brightness(.62); }
 .seat.off .nm{ opacity:.7; }
@@ -284,7 +286,6 @@ body.subs-on .seat.me .nm{ opacity:0; }   /* سطر الراوي ينزل مكا
 .rc-front{ transform:rotateY(180deg); background:linear-gradient(180deg, #f6ecd5, #e3d1ab); color:#24150c; border:2px solid #b89557; }
 .rc-front::before{ content:""; position:absolute; inset:10px; border:1px solid rgba(120,86,40,.45); border-radius:14px; pointer-events:none; }
 .rc-front .lat{ color:#7a5320; font-size:.8rem; letter-spacing:.38em; }
-.rc-front .big{ font-size:4.2rem; line-height:1; margin:18px 0 8px; filter:drop-shadow(0 6px 10px rgba(0,0,0,.25)); }
 .rc-front h3{ font-family:var(--f-disp); font-size:2.2rem; margin:0; line-height:1.2; color:#3a160e; }
 .rc-front p{ color:#5a4126; font-size:.95rem; margin:10px 0 0; line-height:1.7; }
 .rc-front .team{ margin-top:12px; font-size:.86rem; color:#7a1e12; font-weight:800; }
@@ -301,9 +302,6 @@ body.subs-on .seat.me .nm{ opacity:0; }   /* سطر الراوي ينزل مكا
 .feat{ display:flex; flex-wrap:wrap; gap:8px; }
 .join-form .core{ display:block; padding:22px; border-radius:26px; background:var(--glass-2); }
 .join-form .shell{ border-radius:30px; padding:5px; }
-.avatar-pick{ display:flex; align-items:center; gap:14px; margin:6px 0 4px; }
-.avatar-pick .ring{ --seat:84px; flex-shrink:0; }
-.avatar-pick .btns{ display:flex; flex-direction:column; gap:8px; align-items:flex-start; }
 .mic-opt{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; border-radius:16px; background:rgba(244,232,206,.04); border:1px solid var(--line); margin:14px 0 4px; }
 .mic-opt b{ display:block; font-size:.92rem; }
 .mic-opt small{ display:block; color:var(--faint); font-size:.75rem; }
@@ -346,9 +344,6 @@ body.subs-on .seat.me .nm{ opacity:0; }   /* سطر الراوي ينزل مكا
 @keyframes shake{ 25%{ transform:translateX(-7px); } 75%{ transform:translateX(7px); } }
 
 /* ---------- الغرفة والطاولة المرسومة (تظهر لين ما توصل رسمة الخلفية) ---------- */
-.scene{ background:
-  radial-gradient(ellipse 60% 46% at 50% 8%, rgba(241,190,110,.16), transparent 70%),
-  radial-gradient(ellipse 90% 70% at 50% 55%, #2b1a10 0%, #170e09 55%, #0b0705 100%); }
 .table-art{ position:absolute; left:50%; top:52%; width:0; height:0; pointer-events:none; --trx:30vw; --try:16vh; }
 .table-art i{ position:absolute; left:0; top:0; border-radius:50%; transform:translate(-50%, -50%); }
 .table-art .glow{ width:calc(var(--trx) * 3.6); height:calc(var(--try) * 4.2); background:radial-gradient(ellipse at center, rgba(241,190,110,.22), rgba(160,90,40,.07) 45%, transparent 70%); }
@@ -368,7 +363,6 @@ body.ph-night .table-art .glow{ background:radial-gradient(ellipse at center, rg
 @keyframes flick{ 0%,100%{ opacity:1; transform:translate(-50%, -50%) scale(1); } 40%{ opacity:.82; transform:translate(-50%, -50%) scale(.9); } 70%{ opacity:.95; transform:translate(-50%, -50%) scale(1.06); } }
 
 /* ---------- تفاصيل المقاعد ---------- */
-.av{ background-color:var(--c, #5a3a24); background-image:linear-gradient(160deg, color-mix(in srgb, var(--c, #5a3a24) 82%, #fff 18%), color-mix(in srgb, var(--c, #5a3a24) 70%, #000 30%)); }
 .av.pic{ background-size:cover; background-position:center; }
 .av.pic .ini{ display:none; }
 .av.sp{ background-repeat:no-repeat; }
@@ -383,7 +377,6 @@ body.ph-night .table-art .glow{ background:radial-gradient(ellipse at center, rg
 .seat.ghost{ opacity:.82; }
 .seat.voted .stl{ color:var(--cream-2); }
 .seat:disabled{ cursor:default; }
-.seat-stage-empty{ position:absolute; left:50%; top:50%; transform:translate(-50%, -50%); }
 
 /* ---------- الرسمة على الجوال: الطاولة بعرض الشاشة، والباقي ضبابي من نفس الصورة ---------- */
 .bg-ext{ position:absolute; inset:-40px; background-size:cover; background-position:center; filter:blur(26px) brightness(.42) saturate(1.1); opacity:0; transition:opacity .8s var(--ease), filter 1.6s var(--ease); }
@@ -555,6 +548,8 @@ body.is3d .seat{ transition:opacity .45s var(--ease); }
 .edge3d button.turn{ border-color:var(--gold-hi); color:var(--gold-hi); }
 .pill.now{ background:rgba(213,170,98,.2); border-color:var(--line-3); color:var(--gold-hi); }
 .pill.now b{ color:var(--gold-hi); }
+.pill.maf{ background:rgba(143,47,33,.32); border-color:rgba(196,70,47,.6); color:#ffd2c4; }
+.pill.maf b{ color:#ffe4dc; }
 .plist{ list-style:none; margin:10px 0 0; padding:0; display:grid; gap:8px; }
 .pl{ display:grid; grid-template-columns:auto minmax(0, 1fr) auto; gap:10px; align-items:center; padding:8px 10px; border-radius:18px;
   background:rgba(244,232,206,.04); border:1px solid var(--line); transition:background-color .3s, border-color .3s; }
@@ -975,6 +970,17 @@ var sb = null, ch = null;
 function seatById(id){ var a = S.st && S.st.seats || []; for(var i = 0; i < a.length; i++) if(a[i].id === id) return a[i]; return null; }
 function mySeat(){ return seatById(S.seat); }
 function seatName(id){ var s = seatById(id); return s ? s.name : (S.names[id] || "لاعب"); }
+/* متصل؟ حاضر بالقناة الحية، أو جهازه سأل القاعدة عن الحالة خلال آخر 20 ثانية (لو الاتصال الحي تقطّع عنده) */
+function isOn(s){
+  if(!s) return false;
+  if(s.id === S.seat || S.online[s.id]) return true;
+  return typeof s.seen === "number" && serverNow() - s.seen < 20000;
+}
+/* جماعتي المافيا الأحياء (غيري) — لو فيه واحد أو أكثر، بالليل تنفتح لنا قناة صوت خاصة */
+function mafiaMates(){
+  var me = S.me; if(!me || me.role !== "mafia" || !Array.isArray(me.team)) return [];
+  return me.team.filter(function(id){ if(id === S.seat) return false; var s = seatById(id); return !!(s && s.alive); });
+}
 /* النقاش بالأدوار: مين دوره الحين؟ والباقين بالترتيب (من صاحب الدور وطالع) */
 function curTurn(){ var d = S.st; if(!d || d.phase !== "day" || !d.turn || !Array.isArray(d.turn.order)) return null; return d.turn.order[d.turn.i] || null; }
 function turnList(){
@@ -1000,47 +1006,126 @@ function rpc(op, p){
 /* =====================================================================
    قناة الغرفة (Realtime): تنبيه التغيير، الشات، تعارف الصوت، الصور، ومين متصل
    ===================================================================== */
-var RC = { tries: 0, t: 0 };
-function connect(){
-  if(!S.code || !S.seat || S.gone) return;
-  var c = sb.channel("sahra-mafia-" + S.code.toLowerCase(), { config: { broadcast: { self: false }, presence: { key: S.seat } } });
-  c.on("broadcast", { event: "v" }, function(){ if(ch === c) refreshSoon(60 + Math.random() * 240); });
-  c.on("broadcast", { event: "chat" }, function(m){ if(ch === c) onChat(m && m.payload); });
-  c.on("broadcast", { event: "rtc" }, function(m){ if(ch === c) V.onSignal(m && m.payload); });
-  c.on("broadcast", { event: "pic" }, function(m){ if(ch === c) onPic(m && m.payload); });
-  c.on("broadcast", { event: "picq" }, function(m){ if(ch === c) sendPic(m && m.payload); });
-  c.on("presence", { event: "sync" }, function(){ if(ch === c) onPresence(c.presenceState()); });
-  c.subscribe(function(st){
-    if(ch !== c) return;
-    if(st === "SUBSCRIBED"){ S.conn = "on"; RC.tries = 0; presTrack(); sendPic(); bcast("picq", { s: S.seat }); refresh(); V.sync(); }
-    else if(st === "CHANNEL_ERROR" || st === "TIMED_OUT" || st === "CLOSED"){ S.conn = "error"; reconnectLater(); }
-    renderNet();
+var RC = { tries: 0, t: 0, badAt: 0, busy: false, gen: 0, dead: 0 };
+function topicName(){ return "sahra-mafia-" + S.code.toLowerCase(); }
+function chanList(){ try{ var l = sb.getChannels ? sb.getChannels() : (sb.realtime && sb.realtime.channels); return Array.isArray(l) ? l : []; }catch(e){ return []; } }
+function sameTopic(){ var t = "realtime:" + topicName(); return chanList().filter(function(c){ return c && c.topic === t; }); }
+function capWait(p, ms){ return Promise.race([Promise.resolve(p).then(null, function(){}), new Promise(function(r){ setTimeout(r, ms); })]); }
+function rtIs(rt, f){ try{ return !!(rt && typeof rt[f] === "function" && rt[f]()); }catch(e){ return false; } }
+/* نستنى لين المكتبة تخلص قفل السوكت (لو كانت تقفله لحالها) — بالكثير ms */
+function idleWait(rt, ms){
+  return new Promise(function(res){
+    var t0 = Date.now();
+    (function chk(){ if(!rtIs(rt, "isDisconnecting") || Date.now() - t0 > ms) return res(); setTimeout(chk, 100); })();
   });
-  ch = c;
 }
-function reconnectLater(){
-  clearTimeout(RC.t);
-  if(S.gone || !S.inTable) return;
-  RC.tries++;
+/* ملاحظات من كود مكتبة Supabase نفسها (النسخة اللي يحمّلها الموقع):
+   - channel(الاسم) يرجّع القناة القديمة لو لسا بقايمتها، وما ينضم إلا لو كانت مسكّرة.
+   - لما تتسكّر قناة، تطلع من القايمة كل القنوات اللي بنفس الاسم (حتى الجديدة!).
+   - لو انقطع الاتصال، المكتبة ترجع لحالها وتعطينا SUBSCRIBED من جديد (ونرجّع حضورنا وقتها).
+   فما نسوي قناة جديدة إلا بعد ما القديمة تطلع من القايمة فعلًا. */
+function connect(){
+  if(!S.code || !S.seat || S.gone || RC.busy) return;
+  if(sameTopic().length){ resetLive(); return; }   // رجعت للطاولة بنفس الصفحة والقديمة لسا موجودة
+  openChannel();
+}
+function openChannel(){
+  var c = null;
+  try{
+    c = sb.channel(topicName(), { config: { broadcast: { self: false, ack: true }, presence: { key: S.seat } } });
+    ch = c;
+    c.on("broadcast", { event: "v" }, function(){ if(ch === c) refreshSoon(60 + Math.random() * 240); });
+    c.on("broadcast", { event: "chat" }, function(m){ if(ch === c) onChat(m && m.payload); });
+    c.on("broadcast", { event: "rtc" }, function(m){ if(ch === c) V.onSignal(m && m.payload); });
+    c.on("broadcast", { event: "pic" }, function(m){ if(ch === c) onPic(m && m.payload); });
+    c.on("broadcast", { event: "picq" }, function(m){ if(ch === c) sendPic(m && m.payload); });
+    c.on("presence", { event: "sync" }, function(){ if(ch === c) onPresence(c.presenceState()); });
+    c.subscribe(function(st){
+      if(ch !== c) return;
+      if(st === "SUBSCRIBED"){ S.conn = "on"; RC.gen++; RC.tries = 0; RC.badAt = 0; presTrack(); sendPic(); bcast("picq", { s: S.seat }); refresh(); V.sync(); }
+      else {
+        // CHANNEL_ERROR / TIMED_OUT: المكتبة ترجع لحالها — والمراقب تحت يتدخّل لو طوّلت. CLOSED: ما ترجع، نسوي جديدة.
+        S.conn = "error"; if(!RC.badAt) RC.badAt = Date.now();
+        if(st === "CLOSED") liveLater(1200);
+      }
+      renderNet();
+    });
+    // احتياط: لو بعد ثانية ونص السوكت مو متصل ولا يحاول (المكتبة كانت تقفل وقت اشتركنا)، نطلب الاتصال
+    setTimeout(function(){
+      if(ch !== c || S.conn === "on" || S.gone) return;
+      var rt = sb && sb.realtime;
+      if(rt && rt.connect && !rtIs(rt, "isConnected") && !rtIs(rt, "isConnecting") && !rtIs(rt, "isDisconnecting")){ try{ rt.connect(); }catch(e){} }
+    }, 1500);
+  }catch(e){
+    try{ console.warn("mafia realtime:", e && e.message ? e.message : e); }catch(x){}
+    if(c && ch === c) ch = null;
+    S.conn = "error"; if(!RC.badAt) RC.badAt = Date.now();
+    liveLater(2000); renderNet();
+  }
+}
+/* نرجّع الاتصال الحي من الصفر، بالترتيب الآمن:
+   1) نقفل السوكت (عشان الخروج من القناة القديمة يصير فوري — حتى لو الاتصال ميت ويبان مفتوح)
+   2) نطلع من القناة القديمة ونستنى لين تطلع من قايمة المكتبة
+   3) قناة جديدة (المكتبة تفتح اتصال جديد لحالها) */
+function resetLive(){
+  if(RC.busy || S.gone || !S.inTable) return;
+  RC.busy = true; RC.tries++;
+  var rt = sb && sb.realtime;
+  ch = null; S.conn = "off"; renderNet();
+  capWait(rt && rt.disconnect ? rt.disconnect() : null, 4000)
+    .then(function(){ return idleWait(rt, 4000); })
+    .then(function(){ return capWait(Promise.all(sameTopic().map(function(c){ return sb.removeChannel(c); })), 3000); })
+    .then(function(){
+      RC.busy = false;
+      if(S.gone || !S.inTable || ch) return;
+      if(sameTopic().length){ if(!RC.badAt) RC.badAt = Date.now(); return; }   // نادر: المراقب يحاول بعد شوي
+      openChannel(); renderNet();
+    });
+}
+function liveLater(ms, force){
+  if(RC.t || S.gone || !S.inTable) return;
   RC.t = setTimeout(function(){
-    var o = ch; ch = null;
-    if(o){ try{ sb.removeChannel(o); }catch(e){} }
-    if(!S.gone && S.inTable) connect();
-  }, Math.min(15000, 900 * Math.pow(1.7, RC.tries)));
+    RC.t = 0;
+    if(S.gone || !S.inTable || (!force && S.conn === "on" && ch)) return;
+    resetLive();
+  }, ms || 0);
 }
+/* مراقب: لو الاتصال الحي مو شغّال من فترة (والمكتبة ما رجّعته)، نرجّعه من الصفر */
+setInterval(function(){
+  if(!S.inTable || S.gone || !sb || RC.busy) return;
+  if(!ch){ liveLater(300); return; }
+  if(S.conn === "on"){ RC.badAt = 0; return; }
+  if(!RC.badAt) RC.badAt = Date.now();
+  if(Date.now() - RC.badAt > Math.min(30000, 10000 * Math.pow(1.5, RC.tries))){ RC.badAt = Date.now(); liveLater(0); }
+}, 2000);
 function disconnect(){
-  clearTimeout(RC.t);
+  clearTimeout(RC.t); RC.t = 0; RC.badAt = 0;
   var o = ch; ch = null; S.conn = "off";
-  if(o){ try{ o.untrack(); }catch(e){} try{ sb.removeChannel(o); }catch(e){} }
+  if(o){ try{ o.untrack(); }catch(e){} try{ var pr = sb.removeChannel(o); if(pr && pr.catch) pr.catch(function(){}); }catch(e){} }
 }
+/* السيرفر ما ردّ على رسالة وإحنا «متصلين»؟ يعني الاتصال ميت بس يبان مفتوح (يصير بالجوال لما يتغير النت) → نرجّعه من الصفر */
+function deadCheck(r){
+  if(!r || !r.then) return;
+  var c0 = ch, g = RC.gen;
+  r.then(function(x){
+    if(x !== "timed out" || ch !== c0 || RC.gen !== g || S.conn !== "on" || S.gone) return;
+    RC.dead++; try{ console.warn("mafia realtime: no reply from server — reconnecting"); }catch(e){}
+    liveLater(0, true);
+  }, function(){});
+}
+/* البث: السيرفر يأكّد الاستلام (ack). لو القناة مو جاهزة، المكتبة نفسها ترسله عن طريق REST (يرجع وعد بـ 'ok' أو 'error') */
 function bcast(ev, p){
-  if(!ch || S.conn !== "on") return false;
-  try{ var r = ch.send({ type: "broadcast", event: ev, payload: p || {} }); if(r && r.catch) r.catch(function(){}); return true; }catch(e){ return false; }
+  if(!ch) return false;
+  try{ var r = ch.send({ type: "broadcast", event: ev, payload: p || {} }); if(ev !== "pic") deadCheck(r); if(r && r.catch) r.catch(function(){}); return r || true; }catch(e){ return false; }
+}
+function chatSent(r){
+  var bad = function(){ toast("ما وصلت رسالتك — نرجّع الاتصال، جرّب بعد شوي", 3000); };
+  if(!r) bad(); else if(r.then) r.then(function(x){ if(x && x !== "ok") bad(); }, bad);
 }
 function presTrack(){
   if(!ch || S.conn !== "on") return;
   var me = mySeat();
-  try{ var r = ch.track({ n: me ? me.n : -1, mic: V.micState(), at: S.enterAt || 0 }); if(r && r.catch) r.catch(function(){}); }catch(e){}
+  try{ var r = ch.track({ n: me ? me.n : -1, mic: V.micState(), at: S.enterAt || 0 }, { timeout: 8000 }); deadCheck(r); if(r && r.catch) r.catch(function(){}); }catch(e){}
 }
 function onPresence(st){
   var on = {};
@@ -1110,6 +1195,7 @@ function applyMe(m){
     setTimeout(function(){ if(S.inTable) openRole(true); }, 700);
   }
   if(d && d.phase === "night" && m.role === "mafia" && S.chatScope === "all" && !S.chatTouched) S.chatScope = "maf";
+  mafiaNotice();
   V.gate();
   render();
 }
@@ -1197,6 +1283,20 @@ function onPhase(prev, d, first){
   if(ph === "lobby" && S.me) S.me.role = null;
 }
 
+/* قناة المافيا: أول ما يجي الليل (ونعرف إني مافيا ومعي أحد) — تنبيه + سطر بصوت الراوي، بجهازي أنا بس */
+function mafiaNotice(){
+  var d = S.st, my = mySeat(); if(!d || d.phase !== "night" || !my || !my.alive || myRole() !== "mafia") return;
+  if(S.me && S.me.game != null && S.me.game !== d.game) return;          // ورقة لعبة قديمة (لعبة جديدة من النهاية على طول)
+  var k = d.game + ":" + d.day; if(S.mafNote === k) return;
+  var mates = mafiaMates(); if(!mates.length) return;
+  S.mafNote = k;
+  setTimeout(function(){
+    if(!S.inTable || phase() !== "night") return;
+    toast("🔪 قناة المافيا مفتوحة — معك " + mates.map(seatName).join("، ") + "، تسمعون بعض بس", 3800);
+    NARR.say(["يا المافيا… قناتكم مفتوحة، تكلّموا واتفقوا على الضحية."]);
+    vibrate([30, 30, 30]);
+  }, 1400);
+}
 /* كتم المقدّم (لي: تنبيه، وللكل: سطر بالشات) */
 function watchMods(prev, d, first){
   var me = mySeat(), mu = !!(me && me.muted);
@@ -1418,7 +1518,7 @@ function spriteAv(av, i){
   if(mouth) mouth.style.cssText = m && m.m ? "left:" + (m.m[0] * 100) + "%;top:" + (m.m[1] * 100) + "%;width:" + (m.m[2] * 100) + "%;height:" + (m.m[3] * 100) + "%" : "display:none";
 }
 function seatStatus(s, X){
-  var d = S.st, ph = d.phase, on = !!S.online[s.id] || s.id === S.seat;
+  var d = S.st, ph = d.phase, on = isOn(s);
   if(ph === "end") return s.role ? ROLE[s.role].ic + " " + ROLE[s.role].one : "";
   if(ph !== "lobby" && !s.alive) return s.role ? "👻 " + ROLE[s.role].one : "👻 طلع";
   if(ph === "day" && X.cur === s.id) return "🎙️ دوره يتكلم" + (on ? "" : " · غير متصل");
@@ -1446,7 +1546,7 @@ function renderSeats(){
   if(G3.on()) G3.sync(list);
   list.forEach(function(s, k){
     keep[s.id] = 1;
-    var el = seatEl(s), p = seatPos(k, N), on = !!S.online[s.id] || s.id === S.seat, pres = S.online[s.id];
+    var el = seatEl(s), p = seatPos(k, N), on = isOn(s), pres = S.online[s.id];
     var w = L.seat + 50;
     if(!G3.on()){
       el.style.transform = "translate(" + Math.round(p.x - w / 2) + "px," + Math.round(p.y - L.seat / 2 - 4) + "px) scale(" + p.sc.toFixed(3) + ")";
@@ -1498,7 +1598,9 @@ function renderHud(){
     sub = n < 4 ? "لازم 4 لاعبين على الأقل — ادعُ أصحابك بالرابط." : host ? "لما تجهزون، اضغط «ابدأ اللعبة» تحت." : "بانتظار المقدّم يبدأ اللعبة…";
   } else if(ph === "night"){
     eye = "الليلة " + d.day; title = "الليل";
-    sub = !alive ? "أنت شبح 👻 تتفرّج بس" : role === "mafia" ? "اتفقوا واختاروا ضحيتكم بهدوء" : role === "doctor" ? "اختر مين تحمي الليلة" :
+    var mates = alive ? mafiaMates() : [];
+    if(alive && role === "mafia" && mates.length) pills.push('<span class="pill maf"><b>🔪</b> معك: ' + mates.map(function(id){ return "<b>" + esc(seatName(id)) + "</b>"; }).join("، ") + "</span>");
+    sub = !alive ? "أنت شبح 👻 تتفرّج بس" : role === "mafia" ? (mates.length ? "🔪 قناة المافيا مفتوحة: تسمعون بعض بس" : "أنت المافيا الوحيد الليلة — اختر ضحيتك بهدوء") : role === "doctor" ? "اختر مين تحمي الليلة" :
           role === "detective" ? (checkedTonight() ? "حققت الليلة — النتيجة على اللاعب" : "اختر لاعب تحقق معه") : role === "citizen" ? "أنت نايم… انتظر الصباح" : "الكل نايم…";
   } else if(ph === "day"){
     eye = "اليوم " + d.day; title = "النهار";
@@ -1539,7 +1641,10 @@ function renderDock(){
     h += btnH("share", "ادعُ أصحابك", "ghost") + btnH("look", "شكلي", "ghost");
   } else if(ph === "night"){
     if(!alive) hint = "👻 تتفرّج";
-    else if(role === "mafia") hint = sel ? "ضحيتكم: <b>" + esc(seatName(sel)) + "</b>" : "اضغط على ضحية";
+    else if(role === "mafia"){
+      hint = sel ? "ضحيتكم: <b>" + esc(seatName(sel)) + "</b>" : "اضغط على ضحية";
+      if(mafiaMates().length && V.micState() !== "on") hint += " · 🎙️ شغّل المايك عشان جماعتك يسمعونك";
+    }
     else if(role === "doctor") hint = sel ? "تحمي: <b>" + esc(seatName(sel)) + "</b>" : "اضغط على اللي تبي تحميه";
     else if(role === "detective"){ var c = lastCheck(); hint = c ? "🔎 " + esc(seatName(c.t)) + (c.mafia ? " <b>مافيا!</b>" : " <b>بريء</b>") : "اضغط على اللي تبي تحقق معه"; }
     else hint = "😴 نايم… انتظر الصباح";
@@ -1568,7 +1673,7 @@ function renderDock(){
 }
 function renderTop(){
   var d = S.st, on = 0, n = d ? d.seats.length : 0;
-  if(d) d.seats.forEach(function(s){ if(S.online[s.id] || s.id === S.seat) on++; });
+  if(d) d.seats.forEach(function(s){ if(isOn(s)) on++; });
   if(els.roomCode.textContent !== S.code) els.roomCode.textContent = S.code || "------";
   var t = n ? on + "/" + n + " متصلين" : ""; if(els.roomCount.textContent !== t) els.roomCount.textContent = t;
   els.narrBtn.classList.toggle("on", !!PREF.narr); els.narrBtn.setAttribute("aria-pressed", PREF.narr ? "true" : "false");
@@ -1826,7 +1931,7 @@ setInterval(function(){
    القوانين: اللوبي/النهاية الكل يسمع الكل · الليل: المافيا الأحياء بينهم بس · النهار/التصويت: الأحياء للكل · الأموات للأموات بس.
    ===================================================================== */
 var V = (function(){
-  var peers = {}, local = null, track = null, want = PREF.mic !== false, denied = false, asking = false;
+  var peers = {}, local = null, track = null, want = PREF.mic !== false, denied = false, asking = false, askAt = {}, askN = {}, seenAt = {};
   var ice = null, iceAt = 0, iceP = null, an = {}, localAn = null, lv = {};
   var STUN = [{ urls: ["stun:stun.cloudflare.com:3478", "stun:stun.l.google.com:19302"] }];
   function micState(){ return !track ? "none" : want ? "on" : "muted"; }
@@ -1899,7 +2004,8 @@ var V = (function(){
       pc.onconnectionstatechange = function(){
         if(p.pc !== pc) return;
         p.state = pc.connectionState;
-        if(p.state === "connected") p.tries = 0;
+        if(p.state === "connected"){ p.tries = 0; p.badAt = 0; }
+        else if(p.state === "disconnected"){ if(!p.badAt) p.badAt = Date.now(); }   // ممكن يعلق كذا للأبد (لو الثاني سكّر) — المزامنة تتصرف
         if(p.state === "failed" || p.state === "closed") drop(p.id, true);
       };
       return pc;
@@ -1908,7 +2014,7 @@ var V = (function(){
   function connectTo(id){
     var p = peers[id] || (peers[id] = { id: id, tries: 0 });
     closePeer(p);
-    p.init = true; p.sid = rid(5); p.state = "connecting"; p.at = Date.now(); p.remoteAt = S.online[id] ? S.online[id].at : 0;
+    p.init = true; p.sid = rid(5); p.state = "connecting"; p.at = Date.now(); p.badAt = 0; p.remoteAt = S.online[id] ? S.online[id].at : 0;
     var sid = p.sid;
     newPC(p, true).then(function(pc){
       applyGate(p);
@@ -1937,6 +2043,9 @@ var V = (function(){
       p.pc.setRemoteDescription({ type: "answer", sdp: m.sdp }).catch(function(){ drop(id, true); });
     } else if(m.k === "bye"){
       if(p){ closePeer(p); delete peers[id]; }
+    } else if(m.k === "req"){
+      // الثاني يطلب نبدأ من جديد (صوتنا انقطع) — إلا لو توّنا بادئين محاولة (أقل من 5 ثواني)
+      if(S.seat < id && !(p && (p.state === "connecting" || p.state === "new") && Date.now() - p.at < 8000)) connectTo(id);
     }
   }
   function attach(p, stream){
@@ -1970,12 +2079,24 @@ var V = (function(){
         if(!p) connectTo(id);
         else if(p.state === "wait"){ if(now >= p.nextAt) connectTo(id); }
         else if(p.state === "connecting" || p.state === "new"){ if(now - p.at > 15000) drop(id, true); }
+        else if(p.state === "disconnected"){ if(p.badAt && now - p.badAt > 6000) connectTo(id); }
         else if(!p.pc) connectTo(id);
-      } else if(p && !p.init && (p.state === "connecting" || p.state === "new") && now - p.at > 25000){ closePeer(p); delete peers[id]; }
+      } else {
+        if(p && !p.init && (p.state === "connecting" || p.state === "new") && now - p.at > 25000){ closePeer(p); delete peers[id]; p = null; }
+        // أنا مو اللي يبدأ: لو ما بيننا صوت شغّال (انقطع النت عند أحدنا مثلاً) أطلب منه يبدأ من جديد — احتياط بس
+        if(!seenAt[id]) seenAt[id] = now;
+        var fine = p && (p.state === "connected" ? !!p.pc : (p.state === "connecting" || p.state === "new") && now - p.at < 15000);
+        if(fine){ askAt[id] = 0; if(p.state === "connected") askN[id] = 0; }
+        else if(now - seenAt[id] < 8000){}                       // توّه ظهر: اللي يبدأ يبدأ لحاله
+        else if(!askAt[id]) askAt[id] = now;
+        else if(now - askAt[id] > (p ? 6000 : 2500) * Math.min(8, Math.pow(2, askN[id] || 0))){ askAt[id] = now; askN[id] = (askN[id] || 0) + 1; bcast("rtc", { f: S.seat, t: id, k: "req" }); }
+      }
     }
+    for(var id3 in seenAt) if(!on[id3]) delete seenAt[id3];
     for(var id2 in peers){
       var q = peers[id2];
-      if(!on[id2]){ if(!q.goneAt) q.goneAt = now; else if(now - q.goneAt > 8000){ closePeer(q); delete peers[id2]; } }
+      // غاب من القناة الحية 8 ثواني → نسكّر صوته. إلا لو الصوت بيننا لسا شغّال: يعني هو موجود واتصاله الحي بس يرجع
+      if(!on[id2] && !(q.pc && q.state === "connected")){ if(!q.goneAt) q.goneAt = now; else if(now - q.goneAt > 8000){ closePeer(q); delete peers[id2]; } }
       else q.goneAt = 0;
     }
   }
@@ -2029,7 +2150,9 @@ var V = (function(){
     if(b.className !== cls) b.className = cls;
     setHtml(b, svgUse(st === "on" && !gated ? "i-mic" : "i-micoff"));
     b.title = hm ? "المقدّم كاتمك — صوتك ما يوصل لأحد" : st === "denied" ? "المايك مقفل من المتصفح — اضغط عشان تحاول" : st === "none" ? "شغّل المايك" :
-      gated ? (phase() === "night" ? "الليل: المايك مقفل" : cur && cur !== S.seat ? "مو دورك — تتكلم لما يجي دورك" : "ما أحد يسمعك الحين") : st === "on" ? "المايك شغّال — اضغط عشان تسكّره" : "المايك مسكّر — اضغط عشان تشغّله";
+      gated ? (phase() === "night" ? "الليل: المايك مقفل" : cur && cur !== S.seat ? "مو دورك — تتكلم لما يجي دورك" : "ما أحد يسمعك الحين") :
+      phase() === "night" && myRole() === "mafia" ? (st === "on" ? "🔪 قناة المافيا: يسمعك جماعتك بس — اضغط عشان تسكّره" : "🔪 قناة المافيا: المايك مسكّر — اضغط عشان يسمعونك") :
+      st === "on" ? "المايك شغّال — اضغط عشان تسكّره" : "المايك مسكّر — اضغط عشان تشغّله";
   }
   function unlock(){
     audioCtx();
@@ -2135,10 +2258,10 @@ els.chatForm.addEventListener("submit", function(e){
   S.lastSent = Date.now(); els.chatIn.value = "";
   var me = mySeat(), msg = { id: rid(6), s: S.seat, n: me ? me.name : S.name, m: t };
   addLog({ id: msg.id, sc: sc, s: S.seat, n: msg.n, m: t, mine: true });
-  if(sc === "all"){ bcast("chat", { sc: "all", id: msg.id, s: S.seat, n: msg.n, m: t }); return; }
+  if(sc === "all"){ chatSent(bcast("chat", { sc: "all", id: msg.id, s: S.seat, n: msg.n, m: t })); return; }
   var key = sc === "maf" ? S.me && S.me.key : S.me && S.me.dkey;
   if(!key || !window.crypto || !crypto.subtle){ toast("المتصفح هذا ما يدعم الشات السرّي"); return; }
-  seal(key, msg).then(function(x){ bcast("chat", { sc: sc, iv: x.iv, ct: x.ct }); }, function(){ toast("ما قدرنا نرسل الرسالة"); });
+  seal(key, msg).then(function(x){ chatSent(bcast("chat", { sc: sc, iv: x.iv, ct: x.ct })); }, function(){ toast("ما قدرنا نرسل الرسالة"); });
 });
 function onChat(p){
   if(!p || typeof p !== "object" || !S.inTable) return;
@@ -2431,7 +2554,7 @@ function openRules(){
     '<ol class="how">' +
     "<li>المقدّم يفتح الغرفة ويرسل الرابط، وكل واحد يدخل باسمه من جواله أو كمبيوتره (4 إلى 12 لاعب).</li>" +
     "<li>لما يبدأ المقدّم، كل لاعب توصله ورقة دوره سرّية: <b>مافيا</b> أو <b>محقق</b> أو <b>طبيب</b> أو <b>مواطن</b>. حتى المقدّم ما يعرف الأدوار — هو لاعب مثلكم، والراوي يدير اللعبة.</li>" +
-    "<li><b>الليل 🌙</b>: الكل ينام والمايك يتسكّر. المافيا يسمعون بعض بس ويختارون ضحية، الطبيب يحمي واحد، والمحقق يكشف واحد.</li>" +
+    "<li><b>الليل 🌙</b>: الكل ينام والمايك يتسكّر. لو المافيا 2 أو أكثر تنفتح لهم <b>قناة صوت خاصة</b> (وشات سرّي) يسمعون فيها بعض بس، ويختارون ضحية. الطبيب يحمي واحد، والمحقق يكشف واحد.</li>" +
     "<li><b>النهار ☀️</b>: الراوي يعلن وش صار، وتتناقشون بالمايك والشات: مين المافيا؟ المقدّم يختار <b>كلام حر</b> (الكل يتكلم) أو <b>بالأدوار</b> (واحد واحد بالترتيب، وباقي المايكات تتسكّر لين يجي دورك).</li>" +
     "<li><b>التصويت ⚖️</b>: كل واحد يضغط على اللي يشك فيه. الأكثر أصوات يطلع (لو تعادل، محد يطلع).</li>" +
     "<li>تفوز القرية لما تطلع المافيا كلها، وتفوز المافيا لما يصير عددهم مثل الباقين. اللي يطلع يصير شبح 👻 يتفرّج ويسولف مع الأموات.</li>" +
@@ -2444,7 +2567,7 @@ function openRules(){
 function openSeat(id){
   var s = seatById(id), my = mySeat(); if(!s) return;
   if(id === S.seat){ openLook(); return; }
-  var host = !!(my && my.host), on = !!S.online[id];
+  var host = !!(my && my.host), on = isOn(s);
   openSheet("seat",
     '<div style="display:flex;align-items:center;gap:14px"><span class="ring" style="--seat:72px"><span class="av" id="seatAv"><span class="ini"></span><i class="lid"></i><i class="lid"></i><i class="mouth"></i></span></span>' +
     '<div><h2 id="shTitle" style="margin:0">' + esc(s.name) + "</h2><p style=\"margin:0\">" + (s.host ? "👑 المقدّم" : "لاعب") + " · " + (on ? "متصل" : "غير متصل") + (s.muted ? " · 🔇 مكتوم" : "") + "</p></div></div>" +
@@ -2472,7 +2595,7 @@ function renderPlayers(){
   if(ph === "vote" && Array.isArray(d.votes)) d.votes.forEach(function(v){ voted[v.f] = 1; });
   turnList().forEach(function(id, i){ order[id] = i; });
   var h = d.seats.slice().sort(function(a, b){ return a.n - b.n; }).map(function(s){
-    var me = s.id === S.seat, on = me || !!S.online[s.id], dead = game && !s.alive, st = [], acts = "";
+    var me = s.id === S.seat, on = isOn(s), dead = game && !s.alive, st = [], acts = "";
     if(s.host) st.push("👑 المقدّم" + (me ? " (أنت)" : "")); else if(me) st.push("أنت");
     if(dead) st.push("👻 طلع"); else if(!on) st.push("غير متصل");
     if(s.muted) st.push("🔇 مكتوم");
@@ -2691,10 +2814,20 @@ try{ BCH = new BroadcastChannel("sahra-mafia"); BCH.onmessage = function(e){ var
 function claimTab(){ try{ if(BCH) BCH.postMessage({ t: "here", seat: S.seat, tab: TAB }); }catch(e){} }
 var wake = null;
 function keepAwake(){ try{ if(!("wakeLock" in navigator) || wake || document.visibilityState !== "visible" || !S.inTable) return; navigator.wakeLock.request("screen").then(function(l){ wake = l; l.addEventListener("release", function(){ wake = null; }); }).catch(function(){}); }catch(e){} }
-document.addEventListener("visibilitychange", function(){ if(document.visibilityState === "visible" && S.inTable){ keepAwake(); refresh(); audioCtx(); } });
+document.addEventListener("visibilitychange", function(){
+  if(document.visibilityState === "hidden"){ S.hidAt = Date.now(); return; }
+  if(document.visibilityState === "visible" && S.inTable){
+    keepAwake(); refresh(); audioCtx();
+    // الجوال يقطع الاتصال الحي وهو بالخلفية: لو غبت أكثر من 45 ثانية أو القناة مو شغّالة، نرجّعها على طول
+    var away = S.hidAt ? Date.now() - S.hidAt : 0; S.hidAt = 0;
+    if(S.conn !== "on" || away > 45000){ RC.badAt = 0; liveLater(0, true); } else presTrack();
+  }
+});
+window.addEventListener("online", function(){ if(S.inTable && !S.gone){ refresh(); liveLater(300, true); } });
+window.addEventListener("pageshow", function(e){ if(e && e.persisted && S.inTable && !S.gone){ refresh(); liveLater(0, true); } });
 function enterTable(){
   S.inTable = true; S.gone = false; S.enterAt = Date.now(); S.st = null; S.me = null; S.phaseKey = ""; S.evInit = false; S.online = {}; S.presInit = false;
-  S.turnKey = ""; S.muted0 = null; S.names = {};
+  S.turnKey = ""; S.muted0 = null; S.names = {}; S.mafNote = ""; S.hidAt = 0;
   S.roleSeenGame = +readJ("sahra-mafia-seen-" + S.code) || 0;
   els.join.hidden = true; els.gate.hidden = true; els.top.hidden = false; els.dock.hidden = false; els.boot.classList.add("gone");
   els.roomCode.textContent = S.code; els.hud.style.visibility = "";
@@ -2771,7 +2904,7 @@ function boot(){
   var host = q.get("host") === "1";
   if(!window.supabase || !window.supabase.createClient){ showGate("nolib"); return; }
   if(!window.SAHRA_SUPABASE_URL || !window.SAHRA_SUPABASE_ANON_KEY){ showGate("error", "إعدادات الموقع ناقصة (config.js)."); return; }
-  sb = window.supabase.createClient(window.SAHRA_SUPABASE_URL, window.SAHRA_SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false } });
+  sb = window.supabase.createClient(window.SAHRA_SUPABASE_URL, window.SAHRA_SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false }, realtime: { heartbeatIntervalMs: 15000 } });
   if(/^[A-Z2-9]{6}$/.test(code)){
     S.code = code;
     var creds = readJ(credsKey(code));
@@ -2793,7 +2926,7 @@ function boot(){
 }
 if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot, { once: true });
 else boot();
-window.__mafia = { S: S, V: V, ART: ART, render: render , G3: G3, curTurn: curTurn };
+window.__mafia = { S: S, V: V, ART: ART, render: render , G3: G3, curTurn: curTurn, RC: RC, isOn: isOn };
 })();
 </script>
 </body>
