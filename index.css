@@ -1303,6 +1303,10 @@ body.on-landing .topbar, body.on-landing main{ display:none; }
 .ld-foot nav{ display:flex; gap:6px 18px; flex-wrap:wrap; }
 .ld-foot a{ color:var(--tx-2); text-decoration:none; }
 .ld-foot a:hover{ color:#fff; }
+/* (v13) بيانات البائع (الاسم · رقم وثيقة العمل الحر · التوثيق) — ميسّر ومنصة الأعمال يراجعونها */
+.ld-seller{ flex-basis:100%; margin:2px 0 0; color:var(--tx-3); font-size:.82rem; line-height:1.85; white-space:pre-line; overflow-wrap:anywhere; }
+.ld-seller[hidden]{ display:none; }
+.ld-seller a{ color:var(--tx-2); text-decoration:underline; text-underline-offset:3px; }
 /* ظهور عند التمرير */
 .ld-section, .ld-hero{ scroll-margin-top:84px; }
 .reveal{ opacity:0; transform:translateY(24px); transition:opacity .8s var(--ease), transform .8s var(--ease); }

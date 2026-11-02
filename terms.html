@@ -117,7 +117,19 @@ document.addEventListener("DOMContentLoaded", function(){
         box.appendChild(a);
       } else fallback();
       var seller = typeof d.seller === "string" ? d.seller.trim() : "";
-      if(seller){ sellerBox.textContent = seller; sellerBox.hidden = false; }
+      if(seller){   /* (v13) الروابط https بس تصير روابط، وكل شي ثاني نص */
+        sellerBox.textContent = "";
+        var re = /https:\/\/[^\s<>"'«»]+/g, last = 0, m;
+        while((m = re.exec(seller))){
+          var u = m[0].replace(/[.,،؛)]+$/, "");
+          sellerBox.appendChild(document.createTextNode(seller.slice(last, m.index)));
+          var a = document.createElement("a"); a.href = u; a.target = "_blank"; a.rel = "noopener nofollow"; a.textContent = u;
+          sellerBox.appendChild(a);
+          last = m.index + u.length;
+        }
+        sellerBox.appendChild(document.createTextNode(seller.slice(last)));
+        sellerBox.hidden = false;
+      }
     }, fallback);
   }catch(e){ fallback(); }
 });

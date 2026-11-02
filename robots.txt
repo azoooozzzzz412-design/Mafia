@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /answers.html
+Disallow: /buzz.html
+Disallow: /heads.html
+Disallow: /rope.html
+
+Sitemap: https://sahratable.com/sitemap.xml

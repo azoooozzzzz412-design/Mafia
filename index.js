@@ -5658,6 +5658,8 @@
     if(CATALOG && CATALOG.pay !== true) document.getElementById("ldPayFaq").textContent = "الشراء أونلاين قريب — وتقدر الحين تطلب الجولات من صاحب الطاولة مباشرة.";
     var cl = contactLink("السلام عليكم، عندي سؤال عن طاولة السهرة"), lc = document.getElementById("ldContact");
     lc.innerHTML = cl ? '<a href="' + escapeHtml(cl) + '" target="_blank" rel="noopener">الدعم الفني</a>' : "";
+    var sl = document.getElementById("ldSeller"), seller = String((CATALOG && CATALOG.seller) || "").trim();   /* (v13) */
+    if(sl){ var sh = seller ? sellerHtml(seller) : ""; if(sl._h !== sh){ sl._h = sh; sl.innerHTML = sh; } sl.hidden = !seller; }
     observeReveal();
   }
   /* ظهور ناعم للأقسام وقت التمرير + شريط التنقل يغمق بعد أول تمرير */
@@ -5703,6 +5705,17 @@
 
   /* ============ الشراء (ميسّر عن طريق دالة sahra-pay) ============ */
   var shopEls = { modal: document.getElementById("shopModal"), packs: document.getElementById("shopPacks"), note: document.getElementById("shopNote"), sub: document.getElementById("shopSub") };
+  /* (v13) نص البائع من الأدمن → HTML آمن: كل شي ينهرب، والروابط https بس تصير روابط */
+  function sellerHtml(t){
+    t = String(t || "").trim();
+    var out = "", re = /https:\/\/[^\s<>"'«»]+/g, last = 0, m;
+    while((m = re.exec(t))){
+      var u = m[0].replace(/[.,،؛)]+$/, "");
+      out += escapeHtml(t.slice(last, m.index)) + '<a href="' + escapeHtml(u) + '" target="_blank" rel="noopener nofollow">' + escapeHtml(u) + '</a>';
+      last = m.index + u.length;
+    }
+    return out + escapeHtml(t.slice(last));
+  }
   function contactLink(text){
     var c = String((CATALOG && CATALOG.contact) || "").trim();
     if(!c) return "";
