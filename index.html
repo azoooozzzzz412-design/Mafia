@@ -34,7 +34,7 @@
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script defer src="config.js"></script>
 <!-- صفحة اللعب 3 ملفات: هذي الصفحة + الشكل (index.css) + الكود (index.js آخر الصفحة). ارفعهم الثلاثة مع بعض -->
-<link rel="stylesheet" href="index.css?v=13">
+<link rel="stylesheet" href="index.css?v=14">
 </head>
 
 <body>
@@ -250,7 +250,7 @@
         <details><summary>وش هو مخطط السهرة؟</summary><p>تختارون الفرق ووقت السهرة والألعاب اللي تحبونها، والمخطط يقترح ترتيب جولات يناسب وقتكم (وتقدرون تعدلونه). بعدها يمشي معكم جولة جولة، يعرض النتائج بين كل جولة، ويعلن الفائز بالنهاية.</p></details>
         <details><summary>كم جهاز نحتاج؟</summary><p>شاشة وحدة تكفي. الجوالات الثانية اختيارية: تصير أزرار «أسرع إصبع» أو جوال «حطها على راسك» بمسح باركود، وأصحابها ما يحتاجون حساب.</p></details>
         <details><summary>الأسئلة تتكرر؟</summary><p>كل جولة تجيب لك أسئلة ما طلعت لك قبل، لين تخلص كل الأسئلة اللي عندنا.</p></details>
-        <details><summary>كيف أدفع؟</summary><p id="ldPayFaq">مدى أو فيزا أو ماستركارد أو Apple Pay عن طريق بوابة ميسّر، والجولات تنضاف لرصيدك أول ما يتم الدفع.</p></details>
+        <details><summary>كيف أدفع؟</summary><p id="ldPayFaq">بالتحويل من تطبيقك (مثل stc bank) على الرقم اللي يطلع لك وقت الشراء، وبعدها ترسل لصاحب الطاولة بالواتساب بضغطة، وتنضاف الجولات لحسابك أول ما يتأكد من التحويل.</p></details>
         <details><summary>أقدر أسترجع المبلغ؟</summary><p>إذا ما استخدمت ولا جولة من الباقة، تقدر تطلب الاسترجاع خلال 7 أيام من الشراء. التفاصيل في <a href="terms.html#refund">الشروط وسياسة الاسترجاع</a>.</p></details>
       </div>
     </section>
@@ -756,6 +756,16 @@
     <p class="shop-note" id="shopNote"></p>
   </div>
 </div>
+<!-- (v14) الدفع بالتحويل: يختار التطبيق ← يحوّل ← «✅ حوّلت» ← واتساب لصاحب الطاولة -->
+<div class="modal-overlay" id="payModal" hidden>
+  <div class="modal pay-modal" role="dialog" aria-modal="true" aria-labelledby="payTitle">
+    <button class="teams-close" id="payClose" type="button" aria-label="إغلاق">✕</button>
+    <div class="pay-kicker">💳 الدفع بالتحويل</div>
+    <h3 id="payTitle">ادفع بالتحويل</h3>
+    <p class="pay-sum" id="paySum"></p>
+    <div class="pay-body" id="payBody" aria-live="polite"></div>
+  </div>
+</div>
 <!-- welcome after first sign-in -->
 <div class="modal-overlay" id="welcomeModal" hidden>
   <div class="modal" role="dialog" aria-modal="true">
@@ -888,6 +898,6 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="index.js?v=13"></script>
+<script src="index.js?v=14"></script>
 </body>
 </html>

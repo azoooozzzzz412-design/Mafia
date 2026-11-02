@@ -5655,7 +5655,12 @@
     }
     var gn = document.querySelector("#ldStats .ld-stat:nth-child(1) b"); if(gn) gn.textContent = games.length;
     document.getElementById("ldPacks").innerHTML = packsHtml("اختار الباقة");
-    if(CATALOG && CATALOG.pay !== true) document.getElementById("ldPayFaq").textContent = "الشراء أونلاين قريب — وتقدر الحين تطلب الجولات من صاحب الطاولة مباشرة.";
+    var faq = document.getElementById("ldPayFaq");   /* (v14) */
+    if(CATALOG && CATALOG.pay === true) faq.textContent = "مدى أو فيزا أو ماستركارد أو Apple Pay عن طريق بوابة ميسّر، والجولات تنضاف لرصيدك أول ما يتم الدفع.";
+    else if(CATALOG){
+      faq.textContent = trFaqText(TR.methods);
+      if(!TR.methods) trLoad().then(function(l){ faq.textContent = trFaqText(l); });
+    }
     var cl = contactLink("السلام عليكم، عندي سؤال عن طاولة السهرة"), lc = document.getElementById("ldContact");
     lc.innerHTML = cl ? '<a href="' + escapeHtml(cl) + '" target="_blank" rel="noopener">الدعم الفني</a>' : "";
     var sl = document.getElementById("ldSeller"), seller = String((CATALOG && CATALOG.seller) || "").trim();   /* (v13) */
@@ -5725,16 +5730,25 @@
     if(digits.charAt(0) === "0") digits = "966" + digits.slice(1);
     return "https://wa.me/" + digits + "?text=" + encodeURIComponent(text);
   }
+  /* (v14) الدفع أونلاين شغّال ← ميسّر. مطفي + فيه طرق تحويل ← «💳 ادفع» بالتحويل. وإلا ← «📩 اطلب» بالواتساب مثل قبل */
+  function shopRender(){
+    var payOn = !!(CATALOG && CATALOG.pay === true), tr = payOn ? null : TR.methods;
+    var terms = '<br><small>بالدفع توافق على <a href="terms.html" target="_blank" rel="noopener">الشروط وسياسة الاسترجاع</a>.</small>';
+    shopEls.sub.textContent = "كل جولة تختار لها أي لعبة" + (ACCT.credits > 0 ? " — رصيدك الحين: " + roundsWord(ACCT.credits) : "") + ".";
+    var h = packsHtml(payOn || !tr || tr.length ? "💳 ادفع" : "📩 اطلب");
+    if(shopEls.packs._h !== h){ shopEls.packs._h = h; shopEls.packs.innerHTML = h; }
+    shopEls.note.innerHTML = payOn
+      ? "الدفع آمن عن طريق بوابة ميسّر: مدى، فيزا، ماستركارد وApple Pay. الجولات تنضاف لرصيدك أول ما يتم الدفع." + terms
+      : !tr ? "…"
+      : tr.length
+        ? "💳 الدفع بالتحويل من تطبيقك: <b>" + escapeHtml(trLabels(tr)) + "</b>. تحوّل المبلغ، وترسل لصاحب الطاولة بالواتساب بضغطة، وتنضاف الجولات لحسابك أول ما يتأكد." + terms
+        : "الحين اطلب الباقة من صاحب الطاولة" + (contactLink("") ? " بالواتساب" : "") + "، ويضيفها لحسابك (" + escapeHtml((ME && ME.email) || "") + ").";
+  }
   function openShop(){
     if(!ME){ showLanding(); return; }
-    var payOn = !!(CATALOG && CATALOG.pay === true);
-    shopEls.sub.textContent = "كل جولة تختار لها أي لعبة" + (ACCT.credits > 0 ? " — رصيدك الحين: " + roundsWord(ACCT.credits) : "") + ".";
-    shopEls.packs.innerHTML = packsHtml(payOn ? "💳 ادفع" : "📩 اطلب");
-    shopEls.note.innerHTML = payOn
-      ? "الدفع آمن عن طريق بوابة ميسّر: مدى، فيزا، ماستركارد وApple Pay. الجولات تنضاف لرصيدك أول ما يتم الدفع."
-        + '<br><small>بالدفع توافق على <a href="terms.html" target="_blank" rel="noopener">الشروط وسياسة الاسترجاع</a>.</small>'
-      : "الدفع أونلاين قريب — الحين اطلب الباقة من صاحب الطاولة" + (contactLink("") ? " بالواتساب" : "") + "، ويضيفها لحسابك (" + escapeHtml((ME && ME.email) || "") + ").";
+    shopRender();
     shopEls.modal.hidden = false;
+    if(!(CATALOG && CATALOG.pay === true)) trLoad().then(function(){ if(!shopEls.modal.hidden) shopRender(); });
   }
   function closeShop(){ shopEls.modal.hidden = true; }
   document.getElementById("shopClose").addEventListener("click", closeShop);
@@ -5757,10 +5771,10 @@
     var b = e.target.closest("[data-buy]"); if(!b) return;
     var pk = ((CATALOG && CATALOG.packages) || []).find(function(x){ return x.id === b.getAttribute("data-buy"); });
     if(!pk) return;
-    if(!(CATALOG && CATALOG.pay === true)){
-      var link = contactLink("السلام عليكم، أبي باقة " + roundsWord(pk.rounds) + " (" + fmtPrice(pk.price) + ") في طاولة السهرة — حسابي: " + ((ME && ME.email) || ""));
-      if(link) window.open(link, "_blank", "noopener");
-      else toast("تواصل مع صاحب الطاولة وعطه إيميلك: " + ((ME && ME.email) || ""));
+    if(!(CATALOG && CATALOG.pay === true)){   /* (v14) */
+      if(TR.methods && TR.methods.length){ trOpen(pk); return; }
+      if(TR.methods){ trFallback(pk); return; }
+      trLoad().then(function(list){ if(list.length) trOpen(pk); else trFallback(pk); });
       return;
     }
     var label = b.textContent;
@@ -5778,6 +5792,252 @@
       b.textContent = label;
     });
   });
+  /* ============ (v14) الدفع بالتحويل ============
+     العميل يختار الباقة ← يختار التطبيق (stc bank / برق …) ← يحوّل على الرقم ← «✅ حوّلت» يفتح واتسابه برسالة جاهزة
+     لصاحب الطاولة (حسابه + رمز الطلب + رابط التفعيل) ← صاحب الطاولة يفعّل من الأدمن ← الجولات تطلع عند العميل لحالها. */
+  var TR = { methods:null, at:0, loading:null, pk:null, order:null, sel:-1, state:"", err:"", poll:0, credits:null };
+  var TR_KEY = "sahra-pay-pending";
+  var payEls = { modal: document.getElementById("payModal"), body: document.getElementById("payBody"), sum: document.getElementById("paySum"), title: document.getElementById("payTitle") };
+  function trClean(m){ return { label:String(m.label || "").trim().slice(0, 30), num:String(m.num || "").trim().slice(0, 40), name:String(m.name || "").trim().slice(0, 60) }; }
+  /* طرق التحويل من إعدادات الأدمن (app_settings.transfer) — تنقرى للكل، وتنحفظ دقيقة */
+  function trLoad(force){
+    if(!force && TR.methods && Date.now() - TR.at < 60000) return Promise.resolve(TR.methods);
+    if(TR.loading) return TR.loading;
+    TR.loading = sbReady.then(function(sb){ return sb.from("app_settings").select("value").eq("key", "transfer").maybeSingle(); }).then(function(r){
+      if(r && r.error) throw r.error;
+      var v = r && r.data && r.data.value, list = v && Array.isArray(v.methods) ? v.methods : [];
+      TR.methods = list.filter(function(m){ return m && typeof m === "object"; }).map(trClean).filter(function(m){ return m.label && m.num; }).slice(0, 4);
+      TR.at = Date.now();
+      return TR.methods;
+    }).catch(function(){ return TR.methods || []; }).then(function(x){ TR.loading = null; return x; });
+    return TR.loading;
+  }
+  function trLabels(list){
+    var l = (list || []).map(function(m){ return m.label; });
+    return l.length <= 1 ? (l[0] || "") : l.slice(0, -1).join("، ") + " أو " + l[l.length - 1];
+  }
+  function trFaqText(list){
+    return list && list.length
+      ? "بالتحويل من تطبيقك (" + trLabels(list) + ") على الرقم اللي يطلع لك وقت الشراء، وبعدها ترسل لصاحب الطاولة بالواتساب بضغطة، وتنضاف الجولات لحسابك أول ما يتأكد من التحويل."
+      : list ? "تطلب الباقة من صاحب الطاولة بالواتساب وتحوّل له، ويضيف الجولات لحسابك."
+      : "بالتحويل من تطبيقك على الرقم اللي يطلع لك وقت الشراء، وبعدها ترسل لصاحب الطاولة بالواتساب بضغطة، وتنضاف الجولات لحسابك أول ما يتأكد من التحويل.";
+  }
+  function trIsIban(n){ return /^SA\d{22}$/i.test(String(n || "").replace(/[\s-]+/g, "")); }
+  /* للعرض: آيبان بمجموعات 4، وجوال 05x xxx xxxx */
+  function trFmtNum(n){
+    var s = String(n || "").replace(/[\s-]+/g, "");
+    if(trIsIban(s)) return s.toUpperCase().replace(/(.{4})/g, "$1 ").trim();
+    if(/^05\d{8}$/.test(s)) return s.slice(0, 3) + " " + s.slice(3, 6) + " " + s.slice(6);
+    return String(n || "").trim();
+  }
+  function trWaLink(text){
+    var c = String((CATALOG && CATALOG.contact) || "").trim();
+    var m = c.match(/^https?:\/\/(?:wa\.me\/|api\.whatsapp\.com\/send\/?\?phone=)\+?(\d{8,15})/i);
+    if(m) return "https://wa.me/" + m[1] + "?text=" + encodeURIComponent(text);
+    var l = contactLink(text);
+    return /^https:\/\/wa\.me\/\d/.test(l) ? l : "";
+  }
+  function trMsg(m){
+    var o = TR.order || {};
+    return "السلام عليكم 👋\nحوّلت " + fmtPrice((o.amount | 0) / 100) + " عن طريق " + (m && m.label ? m.label : "التحويل")
+      + "\nالباقة: " + roundsWord(o.rounds)
+      + "\nحسابي: " + ((ME && ME.email) || "")
+      + "\nرمز الطلب: " + (o.code || "")
+      + "\n\nرابط التفعيل (لصاحب الطاولة):\n" + location.origin + "/admin.html#order=" + o.id;
+  }
+  function trSavePending(o){
+    try{
+      if(o) localStorage.setItem(TR_KEY, JSON.stringify({ id:o.id, code:o.code, rounds:o.rounds, uid:(ME && ME.id) || "", at:Date.now() }));
+      else localStorage.removeItem(TR_KEY);
+    }catch(e){}
+  }
+  function trPending(){
+    try{
+      var p = JSON.parse(localStorage.getItem(TR_KEY) || "null");
+      if(p && p.id && Date.now() - (p.at || 0) < 7 * 86400000 && (!p.uid || !ME || p.uid === ME.id)) return p;
+    }catch(e){}
+    return null;
+  }
+  var TR_ERR = {
+    too_many: "فتحت طلبات كثيرة اليوم — تواصل مع صاحب الطاولة",
+    bad_package: "هذي الباقة ما عادت متوفرة — حدّث الصفحة",
+    blocked: "حسابك موقوف — تواصل مع صاحب الطاولة",
+    login_required: "سجّل دخولك من جديد"
+  };
+  function trErrCode(e){
+    var m = String((e && (e.message || e.details)) || e || "");
+    var k = ["transfer_not_configured", "too_many", "bad_package", "blocked", "login_required", "no_order"].filter(function(x){ return m.indexOf(x) !== -1; })[0];
+    return k || "";
+  }
+  function trFallback(pk){
+    var link = contactLink("السلام عليكم، أبي باقة " + roundsWord(pk.rounds) + " (" + fmtPrice(pk.price) + ") في طاولة السهرة — حسابي: " + ((ME && ME.email) || ""));
+    if(link) window.open(link, "_blank", "noopener");
+    else toast("تواصل مع صاحب الطاولة وعطه إيميلك: " + ((ME && ME.email) || ""));
+  }
+  function trClose(){ payEls.modal.hidden = true; if(trPending()) trPollStart(); }
+  function trOpen(pk){
+    TR.pk = pk; TR.order = null; TR.state = "loading"; TR.err = ""; TR.sel = -1; TR.credits = null;
+    closeShop(); payEls.modal.hidden = false; trRender();
+    trLoad().then(function(list){
+      if(!list.length) throw new Error("transfer_not_configured");
+      return sbReady.then(function(sb){ return sb.rpc("transfer_order_create", { p_package: pk.id, p_via: list.length === 1 ? list[0].label : "" }); });
+    }).then(function(r){
+      if(r.error) throw r.error;
+      var d = parseJ(r.data);
+      if(!d || !d.id) throw new Error("server_error");
+      if(TR.pk !== pk) return;
+      TR.order = d;
+      var ms = TR.methods || [], i = -1;
+      ms.forEach(function(m, k){ if(i === -1 && d.via && m.label === d.via) i = k; });
+      TR.sel = i !== -1 ? i : (ms.length === 1 ? 0 : -1);
+      TR.state = d.claimed ? "waiting" : (TR.sel === -1 ? "pick" : "details");
+      if(d.claimed){ trSavePending(d); trPollStart(); }
+      trRender();
+    }).catch(function(e){
+      if(TR.pk !== pk) return;
+      var code = trErrCode(e);
+      if(code === "transfer_not_configured"){ payEls.modal.hidden = true; trFallback(pk); return; }
+      TR.state = "error";
+      TR.err = TR_ERR[code] || ("ما قدرنا نجهّز الطلب — " + (isMissingFn(e) ? "الموقع يحتاج تحديث بسيط، تواصل مع صاحب الطاولة" : "تأكد من الإنترنت وجرّب مرة ثانية"));
+      trRender();
+    });
+  }
+  function trRender(){
+    var o = TR.order, pk = TR.pk || {}, ms = TR.methods || [], m = TR.sel >= 0 ? ms[TR.sel] : null, h = "";
+    var rounds = (o && o.rounds) || pk.rounds || 0, amount = o ? (o.amount | 0) / 100 : pk.price;
+    var foot = function(extra){ return '<p class="pay-foot">' + (o && o.code ? 'رمز الطلب: <b>' + escapeHtml(String(o.code)) + '</b>' : '') + (extra ? (o && o.code ? ' · ' : '') + extra : '') + '</p>'; };
+    payEls.title.textContent = TR.state === "paid" ? "تم الدفع 🎉" : TR.state === "waiting" ? "طلبك وصل" : "ادفع بالتحويل";
+    payEls.sum.innerHTML = rounds ? "باقة <b>" + escapeHtml(roundsWord(rounds)) + "</b> — <b>" + escapeHtml(fmtPrice(amount)) + "</b>" : "";
+    if(TR.state === "loading"){
+      h = '<div class="pay-wait"><span class="pay-spin" aria-hidden="true"></span> جاري تجهيز الطلب…</div>';
+    } else if(TR.state === "error"){
+      h = '<div class="pay-err">' + escapeHtml(TR.err) + '</div><div class="pay-row"><button class="btn-ghost" type="button" data-pay="retry">🔄 جرّب مرة ثانية</button></div>';
+    } else if(TR.state === "pick" || TR.state === "details"){
+      if(ms.length > 1){
+        h += (m ? "" : '<p class="pay-q">من أي تطبيق بتحوّل؟</p>')
+          + '<div class="pay-apps' + (m ? " sm" : "") + '" role="group" aria-label="طريقة التحويل">' + ms.map(function(x, i){
+            return '<button type="button" class="pay-app' + (i === TR.sel ? " on" : "") + '" data-app="' + i + '" aria-pressed="' + (i === TR.sel) + '">' + escapeHtml(x.label)
+              + (m ? "" : '<small>' + (trIsIban(x.num) ? "تحويل على الآيبان" : "تحويل على الرقم") + '</small>') + '</button>';
+          }).join("") + '</div>';
+      }
+      if(m){
+        var wa = trWaLink(trMsg(m)), iban = trIsIban(m.num);
+        h += '<ol class="pay-steps">'
+          + '<li><span class="ps-n">1</span><div class="ps-b"><div class="ps-t">حوّل <b>' + escapeHtml(fmtPrice(amount)) + '</b> من تطبيق <b>' + escapeHtml(m.label) + '</b> على ' + (iban ? "الآيبان" : "الرقم") + ':</div>'
+          + '<div class="pay-num"><bdi dir="ltr">' + escapeHtml(trFmtNum(m.num)) + '</bdi><button class="btn-soft btn-sm" type="button" data-pay="copy">📋 نسخ</button></div>'
+          + (m.name ? '<div class="ps-name">باسم: ' + escapeHtml(m.name) + '</div>' : '')
+          + '</div></li>'
+          + '<li><span class="ps-n">2</span><div class="ps-b"><div class="ps-t">بعد ما تحوّل:</div>'
+          + (wa ? '<a class="btn-primary pay-go" href="' + escapeHtml(wa) + '" target="_blank" rel="noopener" data-pay="sent">✅ حوّلت — أرسل للتفعيل</a>'
+                  + '<div class="ps-hint">ينفتح واتسابك برسالة جاهزة لصاحب الطاولة فيها حسابك ورمز الطلب. اضغط «إرسال»، وأرفق صورة التحويل لو تقدر.</div>'
+                : '<button class="btn-primary pay-go" type="button" data-pay="sent">✅ حوّلت</button>'
+                  + '<div class="ps-hint">أرسل صورة التحويل لصاحب الطاولة مع رمز الطلب وإيميلك.</div>')
+          + '</div></li></ol>'
+          + foot("الجولات تنضاف لحسابك أول ما يتأكد صاحب الطاولة من التحويل.");
+      } else h += foot("");
+    } else if(TR.state === "waiting"){
+      var m2 = m || (o && o.via ? { label:o.via } : null), wa2 = trWaLink(trMsg(m2));
+      h = '<div class="pay-state"><div class="pay-ic">⏳</div><h4>ننتظر تأكيد صاحب الطاولة</h4>'
+        + '<p>أول ما يتأكد من التحويل تنضاف <b>' + escapeHtml(roundsWord(rounds)) + '</b> لحسابك وتطلع لك هنا. تقدر تسكّر النافذة وتكمّل عادي.</p>'
+        + '<div class="pay-row">' + (wa2 ? '<a class="btn-ghost" href="' + escapeHtml(wa2) + '" target="_blank" rel="noopener" data-pay="resend">📲 أرسل الرسالة مرة ثانية</a>' : '')
+        + '<button class="btn-ghost" type="button" data-pay="close">تمام</button></div>'
+        + foot('<button class="pay-link" type="button" data-pay="cancel">إلغاء الطلب</button>') + '</div>';
+    } else if(TR.state === "paid"){
+      h = '<div class="pay-state ok"><div class="pay-ic">✅</div><h4>وصلت! انضافت ' + escapeHtml(roundsWord(rounds)) + '</h4>'
+        + '<p>' + (typeof TR.credits === "number" ? "رصيدك الحين: <b>" + escapeHtml(roundsWord(TR.credits)) + "</b>. " : "") + 'شكرًا لك 🌙</p>'
+        + '<div class="pay-row"><button class="btn-primary" type="button" data-pay="close">🎮 يلا نلعب</button></div></div>';
+    } else if(TR.state === "canceled" || TR.state === "expired"){
+      var sup = supportLink();
+      h = '<div class="pay-state bad"><div class="pay-ic">✖</div><h4>' + (TR.state === "expired" ? "الطلب انتهى" : "الطلب انلغى") + '</h4>'
+        + '<p>لو حوّلت المبلغ، تواصل مع صاحب الطاولة ويضبطها لك.</p>'
+        + '<div class="pay-row">' + (sup ? '<a class="btn-ghost" href="' + escapeHtml(sup) + '" target="_blank" rel="noopener">💬 تواصل</a>' : '')
+        + (TR.pk && TR.pk.id ? '<button class="btn-primary" type="button" data-pay="again">طلب جديد</button>' : '') + '</div></div>';
+    }
+    payEls.body.innerHTML = h;
+  }
+  /* نتابع الطلب لين يتفعّل: كل 8 ث والنافذة مفتوحة، وكل 30 ث وهي مسكّرة، وفورًا لما يرجع للصفحة */
+  function trPollStart(){
+    clearTimeout(TR.poll);
+    if(!trPending()) return;
+    TR.poll = setTimeout(trCheck, payEls.modal.hidden ? 30000 : 8000);
+  }
+  function trCheck(){
+    clearTimeout(TR.poll);
+    var p = trPending(); if(!p || !ME) return;
+    if(document.hidden){ TR.poll = setTimeout(trCheck, 30000); return; }
+    sbReady.then(function(sb){ return sb.rpc("my_order", { p_order:p.id }); }).then(function(r){
+      if(r.error){ if(trErrCode(r.error) === "no_order"){ trSavePending(null); return; } throw r.error; }
+      var d = parseJ(r.data) || {}, mine = TR.order && TR.order.id === p.id;
+      if(d.status === "paid"){
+        trSavePending(null);
+        if(typeof d.credits === "number"){ ACCT.credits = d.credits; updateBalanceUI(); saveBootSnap(); }
+        if(mine){ TR.order.status = "paid"; TR.credits = d.credits; TR.state = "paid"; if(!payEls.modal.hidden) trRender(); }
+        if(!shopEls.modal.hidden) shopRender();
+        toast("✅ وصلت! انضافت " + roundsWord(d.rounds || p.rounds) + " لحسابك");
+        return;
+      }
+      if(d.status === "canceled" || d.status === "expired"){
+        trSavePending(null);
+        if(mine){ TR.order.status = d.status; TR.state = d.status; if(!payEls.modal.hidden) trRender(); }
+        else toast(d.status === "expired" ? "طلب الجولات انتهى — لو حوّلت تواصل مع صاحب الطاولة" : "طلب الجولات انلغى — لو حوّلت تواصل مع صاحب الطاولة");
+        return;
+      }
+      trPollStart();
+    }).catch(function(){ clearTimeout(TR.poll); TR.poll = setTimeout(trCheck, 30000); });
+  }
+  document.addEventListener("visibilitychange", function(){ if(!document.hidden && ME && trPending()) trCheck(); });
+  document.getElementById("payClose").addEventListener("click", trClose);
+  payEls.modal.addEventListener("click", function(e){
+    if(e.target === payEls.modal){ trClose(); return; }
+    var app = e.target.closest("[data-app]");
+    if(app){ TR.sel = +app.getAttribute("data-app"); TR.state = "details"; trRender(); return; }
+    var b = e.target.closest("[data-pay]"); if(!b) return;
+    var act = b.getAttribute("data-pay"), m = (TR.methods || [])[TR.sel], o = TR.order;
+    if(act === "copy" && m){
+      var num = String(m.num).replace(/[\s-]+/g, ""), what = trIsIban(num) ? "الآيبان" : "الرقم";
+      if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(num).then(function(){ toast("📋 تم نسخ " + what); }, function(){ prompt("انسخ " + what + ":", num); });
+      else prompt("انسخ " + what + ":", num);
+      return;
+    }
+    if(act === "sent" && o){
+      var via = m ? m.label : (o.via || "");
+      o.claimed = true; o.via = via;
+      trSavePending(o);
+      sbReady.then(function(sb){ return sb.rpc("transfer_order_claim", { p_order:o.id, p_via:via }); }).then(function(r){ if(r && r.error) throw r.error; }).catch(function(){});
+      /* نخلّي الرابط يفتح واتساب أول — لو انشال من الصفحة وقت الضغطة، المتصفح ما يفتحه */
+      setTimeout(function(){ if(TR.order === o){ TR.state = "waiting"; trRender(); } trPollStart(); }, b.tagName === "A" ? 600 : 0);
+      return;
+    }
+    if(act === "cancel" && o){
+      payEls.modal.hidden = true;
+      ask("تلغي الطلب؟", "لو حوّلت المبلغ لا تلغيه — انتظر صاحب الطاولة يأكده.", "إيه، ألغِه").then(function(yes){
+        payEls.modal.hidden = false;
+        if(!yes) return;
+        sbReady.then(function(sb){ return sb.rpc("transfer_order_cancel", { p_order:o.id }); }).then(function(r){
+          if(r.error) throw r.error;
+          var d = parseJ(r.data) || {};
+          trSavePending(null); clearTimeout(TR.poll);
+          o.status = d.status || "canceled";
+          TR.state = o.status === "paid" ? "paid" : "canceled";
+          trRender();
+        }).catch(function(){ toast("ما قدرنا نلغي الطلب — جرّب مرة ثانية"); });
+      });
+      return;
+    }
+    if(act === "retry" || act === "again"){ if(TR.pk) trOpen(TR.pk); return; }
+    if(act === "close") trClose();
+  });
+  document.addEventListener("keydown", function(e){ if(e.key === "Escape" && !payEls.modal.hidden && document.getElementById("askModal").hidden) trClose(); });
+  /* (v14) صاحب الطاولة ضغط رابط التفعيل وهو مو داخل بحساب الأدمن ← سجّل دخول هنا ← نرجّعه للأدمن */
+  function adminNext(){
+    var n = null; try{ n = JSON.parse(localStorage.getItem("sahra-admin-next") || "null"); }catch(e){}
+    if(!n) return false;
+    try{ localStorage.removeItem("sahra-admin-next"); }catch(e){}
+    if(Date.now() - (n.at || 0) > 30 * 60000) return false;
+    if(!ACCT.admin){ toast("هذا الحساب مو أدمن — سجّل خروج وادخل بحساب الأدمن"); return false; }
+    location.replace("admin.html" + (/^#order=[0-9a-f-]{36}$/i.test(n.h || "") ? n.h : ""));
+    return true;
+  }
   function notice(title, text){
     clearTimeout(toastTimer); document.getElementById("toast").classList.remove("show");
     ask(title, text, "تمام 👍");
@@ -5991,6 +6251,8 @@
     enterApp();
     if(!first) return;
     handlePaymentReturn();
+    if(adminNext()) return;   /* (v14) */
+    if(trPending()) trCheck();
     var intent = null; try{ intent = sessionStorage.getItem("sahra-intent"); sessionStorage.removeItem("sahra-intent"); }catch(e){}
     if(intent === "mafia-host"){ location.href = "mafia.html?host=1"; return; }
     if(intent === "shop") openShop(); else maybeWelcome();
@@ -6015,6 +6277,7 @@
     enterApp();
   }
   var bootTries = 0;
+  var WANT_ADMIN = false;   /* (v14) جاي من صفحة الأدمن عشان يسجّل دخول */
   function bootFetchLoop(first){
     fetchBoot().then(function(d){ applyBoot(d, first); }, function(err){
       if(!inited){ bootShowError(err && err.message ? err.message : String(err)); return; }
@@ -6123,7 +6386,9 @@
       if(!session){
         clearBootCache();
         if(inited && ME){ location.replace(location.pathname); return; }   /* الجلسة انتهت: نرجع للصفحة العامة */
-        showLanding(urlErr ? "ما تم تسجيل الدخول: " + urlErr : ""); return;
+        showLanding(urlErr ? "ما تم تسجيل الدخول: " + urlErr : "");
+        if(WANT_ADMIN && !urlErr){ WANT_ADMIN = false; signInWithGoogle(); }   /* (v14) */
+        return;
       }
       if(!inited) bootEls.msg.textContent = "جاري تجهيز الطاولة…";
       bootFetchLoop(true);
@@ -6135,6 +6400,7 @@
   try{
     var bootQs = new URLSearchParams(location.search);
     if(bootQs.get("buy") === "1"){ sessionStorage.setItem("sahra-intent", "shop"); bootQs.delete("buy"); history.replaceState(null, "", location.pathname + (bootQs.toString() ? "?" + bootQs.toString() : "") + location.hash); }
+    if(bootQs.get("admin") === "1"){ WANT_ADMIN = true; bootQs.delete("admin"); history.replaceState(null, "", location.pathname + (bootQs.toString() ? "?" + bootQs.toString() : "") + location.hash); }   /* (v14) */
   }catch(e){}
   earlyBoot();
   if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", authBoot);

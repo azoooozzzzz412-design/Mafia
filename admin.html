@@ -129,6 +129,34 @@
   .ord th{ color:var(--tx-3); font-weight:600; font-size:.78rem; }
   .ord td.n{ font-variant-numeric:tabular-nums; white-space:nowrap; }
   .st-paid{ color:var(--ok); font-weight:700; } .st-wait{ color:var(--warn); font-weight:700; } .st-bad{ color:var(--tx-3); font-weight:700; }
+  /* (v14) الدفع بالتحويل */
+  .tr-head{ display:flex; align-items:flex-end; justify-content:space-between; gap:10px; flex-wrap:wrap; margin:22px 0 10px; }
+  .tr-head .sub-h{ margin:0; }
+  .tr-filter{ display:flex; gap:6px; }
+  .tr-list{ display:grid; grid-template-columns:repeat(auto-fill, minmax(290px, 1fr)); gap:10px; }
+  .tr-list .empty{ grid-column:1 / -1; border:1px dashed var(--line-2); border-radius:16px; }
+  .tr-ord{ display:grid; gap:6px; padding:14px 16px; border-radius:16px; background:rgba(255,255,255,.03); border:1px solid var(--line); }
+  .tr-ord.wait{ border-color:var(--warn-line); background:linear-gradient(180deg, var(--warn-soft), rgba(255,255,255,.02)); }
+  .tr-ord.paid{ opacity:.82; }
+  .tr-ord.focus{ border-color:var(--v-line); box-shadow:0 0 0 1px var(--v-line), 0 18px 40px -22px var(--v-glow); }
+  .to-top{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; font-size:.8rem; color:var(--tx-3); }
+  .to-st{ font-weight:700; font-size:.84rem; color:var(--tx-2); }
+  .tr-ord.wait .to-st{ color:var(--warn); } .tr-ord.paid .to-st{ color:var(--ok); }
+  .to-code{ font-family:var(--f-mono); color:var(--tx-2); } .to-when{ margin-inline-start:auto; }
+  .to-who b{ font-size:.98rem; } .to-who span{ color:var(--tx-2); font-size:.84rem; overflow-wrap:anywhere; }
+  .to-what{ font-size:.9rem; color:var(--tx-2); } .to-what b{ color:var(--tx); font-variant-numeric:tabular-nums; }
+  .to-acts{ display:flex; gap:8px; flex-wrap:wrap; margin-top:4px; }
+  .to-note{ font-size:.82rem; color:var(--tx-3); }
+  .tr-focus{ margin:6px 0 18px; padding:14px; border-radius:20px; border:1px solid var(--v-line); background:var(--v-soft); scroll-margin-top:84px; }
+  .tr-fhead{ font-weight:700; font-size:.92rem; color:#e4ddff; margin-bottom:10px; }
+  .tr-title{ display:block; font-size:1rem; margin-bottom:4px; }
+  .tr-rows{ display:grid; gap:8px; }
+  .tr-row{ display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 1.2fr); gap:8px; padding:10px 12px; border-radius:14px; background:rgba(255,255,255,.03); border:1px solid var(--line); }
+  .tr-row .field{ margin:0; }
+  .tr-row .field > span{ font-size:.76rem; margin-bottom:4px; }
+  .tr-row input[data-k="num"]{ font-family:var(--f-mono); direction:ltr; text-align:left; }
+  .tr-warn{ margin-top:10px; font-size:.84rem; line-height:1.7; color:#fde68a; background:var(--warn-soft); border:1px solid var(--warn-line); border-radius:12px; padding:9px 12px; }
+  @media (max-width:640px){ .tr-row{ grid-template-columns:1fr; } .tr-list{ grid-template-columns:1fr; } }
 
   /* المحتوى */
   .subtabs{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px; }
@@ -289,7 +317,7 @@
   <div class="tabs-wrap">
     <nav class="tabs" id="tabs" aria-label="أقسام لوحة التحكم">
       <button type="button" data-tab="users">👥 <span>الحسابات</span> <span class="count" id="pendingCount" hidden></span></button>
-      <button type="button" data-tab="sales">💰 <span>المبيعات</span></button>
+      <button type="button" data-tab="sales">💰 <span>المبيعات</span> <span class="count" id="trCount" hidden></span></button>
       <button type="button" data-tab="content">📝 <span>المحتوى</span></button>
       <button type="button" data-tab="games">⚙️ <span>الإعدادات</span></button>
       <button type="button" data-tab="stats">📊 <span>إحصائيات</span></button>
@@ -309,11 +337,23 @@
     <section id="tab-sales" hidden>
       <h2 class="sec">💰 المبيعات والباقات</h2>
       <div id="slErr"></div>
+      <div class="tr-focus" id="trFocus" hidden></div>
       <div class="kpis k4" id="slSum"></div>
+      <div class="tr-head"><h3 class="sub-h">📥 طلبات التحويل</h3>
+        <div class="tr-filter" role="group" aria-label="عرض"><button type="button" class="chip on" data-trf="wait">تنتظر التفعيل</button><button type="button" class="chip" data-trf="all">الكل</button></div></div>
+      <div id="trErr"></div>
+      <div class="tr-list" id="trList"><div class="empty">جاري التحميل…</div></div>
       <div class="card sl-card">
-        <label class="sl-toggle"><span class="switch"><input type="checkbox" id="slPay"><span></span></span><span><b>الدفع أونلاين (ميسّر)</b><small>شغّله بعد ما تضبط حساب ميسّر ودالة الدفع. وهو مطفي، زر الشراء يفتح واتساب للطلب.</small></span></label>
+        <label class="sl-toggle"><span class="switch"><input type="checkbox" id="slPay"><span></span></span><span><b>الدفع أونلاين (ميسّر)</b><small>شغّله بعد ما تضبط حساب ميسّر ودالة الدفع. وهو مطفي، الدفع يصير بالتحويل (طرق التحويل تحت).</small></span></label>
         <div class="row" style="margin-top:14px"><label class="field" style="flex:1 1 240px;margin:0"><span>رقم واتساب للتواصل والطلبات (يطلع أسفل الصفحة الرئيسية وفي صفحة الشروط)</span><input class="input" id="slContact" type="tel" placeholder="9665xxxxxxxx" maxlength="20"></label><button class="btn-ghost sm" id="slContactSave" type="button" style="align-self:flex-end">حفظ الرقم</button></div>
         <div class="row" style="margin-top:12px"><label class="field" style="flex:1 1 240px;margin:0"><span>بيانات البائع — تطلع أسفل الصفحة الرئيسية وفي صفحة الشروط (ميسّر ومنصة الأعمال يراجعونها). كل معلومة بسطر، والروابط تبدأ بـ https://</span><textarea class="input" id="slSeller" rows="5" maxlength="600" placeholder="الاسم: …&#10;وثيقة العمل الحر رقم: …&#10;البريد: …&#10;توثيق المتجر (منصة الأعمال): الرقم أو الرابط"></textarea></label><button class="btn-ghost sm" id="slSellerSave" type="button" style="align-self:flex-end">حفظ</button></div>
+      </div>
+      <div class="card sl-card" id="trCard">
+        <b class="tr-title">📲 طرق التحويل</b>
+        <p class="hint">وهو «الدفع أونلاين» مطفي، زر <b>«💳 ادفع»</b> يطلّع للعميل هالطرق: يختار التطبيق، ويحوّل على رقمك، ويرسل لك واتساب فيه حسابه ورابط تفعيل. اكتب بكل سطر اسم التطبيق والرقم (أو الآيبان) اللي يحوّلون عليه — والسطر اللي رقمه فاضي ما يطلع.</p>
+        <div class="tr-rows" id="trRows"></div>
+        <div class="row" style="margin:12px 0 0"><button class="btn-primary sm" id="trSave" type="button">💾 حفظ طرق التحويل</button></div>
+        <div class="tr-warn" id="trWarn" hidden></div>
       </div>
       <h3 class="sub-h">الباقات</h3>
       <p class="hint">غيّر عدد الجولات والسعر (بالريال) واضغط حفظ. الباقة المطفية ما تطلع للناس.</p>
@@ -477,6 +517,13 @@ document.addEventListener("DOMContentLoaded", function(){
     }
     return page(0);
   }
+  /* (v14) رابط التفعيل من واتساب العميل: admin.html#order=<رقم الطلب> */
+  var ORDER_ID = (function(){ var m = /^#order=([0-9a-f-]{36})$/i.exec(location.hash || ""); return m ? m[1].toLowerCase() : ""; })();
+  function goLogin(signOut){
+    try{ localStorage.setItem("sahra-admin-next", JSON.stringify({ h: ORDER_ID ? "#order=" + ORDER_ID : "", at: Date.now() })); }catch(e){}
+    var go = function(){ location.href = "./?admin=1"; };
+    if(signOut && SB) SB.auth.signOut().then(go, go); else go();
+  }
   function boot(){
     if(typeof window.supabase === "undefined" || !window.supabase.createClient || !window.SAHRA_SUPABASE_URL
        || !window.SAHRA_SUPABASE_ANON_KEY || window.SAHRA_SUPABASE_URL.indexOf("xxxx") !== -1){
@@ -487,7 +534,11 @@ document.addEventListener("DOMContentLoaded", function(){
     });
     SB.auth.getSession().then(function(r){
       var session = r && r.data && r.data.session;
-      if(!session){ gate('<div class="big">🔐</div>لازم تسجل دخولك من الطاولة أول.<br><a class="btn-primary" href="./" style="margin-top:14px">🏠 افتح الطاولة</a>'); return null; }
+      if(!session){
+        gate('<div class="big">🔐</div>سجّل دخولك بحساب الأدمن' + (ORDER_ID ? ' عشان تفعّل الطلب' : '') + '.<br><button class="btn-primary" type="button" id="gLogin" style="margin-top:14px">🔐 تسجيل الدخول</button>');
+        $("gLogin").addEventListener("click", function(){ goLogin(false); });
+        return null;
+      }
       return SB.rpc("touch_me").then(function(t){
         if(t && t.error) throw t.error;
         return SB.from("profiles").select("id,email,full_name,avatar_url,role,status").eq("id", session.user.id).maybeSingle();
@@ -495,7 +546,9 @@ document.addEventListener("DOMContentLoaded", function(){
         if(p && p.error) throw p.error;
         ME = p && p.data;
         if(!ME || ME.role !== "admin" || ME.status !== "approved"){
-          gate('<div class="big">🔒</div>هذي الصفحة للأدمن بس.<br><a class="btn-primary" href="./" style="margin-top:14px">🏠 رجوع للطاولة</a>');
+          gate('<div class="big">🔒</div>هذي الصفحة للأدمن بس.' + (ME && ME.email ? '<br><small class="dim">أنت داخل بـ <span dir="ltr">' + esc(ME.email) + '</span></small>' : '')
+            + '<br><button class="btn-primary" type="button" id="gSwitch" style="margin-top:14px">🔄 ادخل بحساب الأدمن</button><br><a class="btn-ghost" href="./" style="margin-top:10px">🏠 رجوع للطاولة</a>');
+          $("gSwitch").addEventListener("click", function(){ goLogin(true); });
           return;
         }
         start();
@@ -505,10 +558,13 @@ document.addEventListener("DOMContentLoaded", function(){
   function start(){
     $("gate").hidden = true; $("app").hidden = false;
     $("me").innerHTML = (ME.avatar_url ? '<img src="' + esc(ME.avatar_url) + '" alt="" referrerpolicy="no-referrer">' : '') + '<span>' + esc(ME.full_name || ME.email) + '</span>';
-    var t = (location.hash || "").replace("#", "");
+    var t = ORDER_ID ? "sales" : (location.hash || "").replace("#", "");
     if(t === "settings") t = "games";
     openTab(["users", "sales", "content", "games", "stats", "reports"].indexOf(t) !== -1 ? t : "users");
     repBadge();
+    if(ORDER_ID) trFocus(ORDER_ID);   /* (v14) */
+    if(TAB !== "sales") trLoadOrders();
+    setInterval(trLoadOrders, 60000);
   }
 
   /* ================= التبويبات ================= */
@@ -771,17 +827,17 @@ document.addEventListener("DOMContentLoaded", function(){
   /* ================= 💰 المبيعات ================= */
   var SL = { packs:[], orders:[], names:{}, settings:{} };
   function loadSales(){
-    return Promise.all([
+    return trLoadOrders().then(function(){ return Promise.all([
       SB.from("packages").select("id,rounds,price,active,sort").order("sort", { ascending:true }),
       SB.from("orders").select("id,user_id,package_id,rounds,amount,status,created_at,paid_at").order("created_at", { ascending:false }).range(0, 199),
       SB.from("app_settings").select("key,value"),
       SB.from("profiles").select("id,full_name,email")
-    ]).then(function(res){
+    ]); }).then(function(res){
       res.forEach(must);
       SL.packs = res[0].data || []; SL.orders = res[1].data || [];
       SL.settings = {}; (res[2].data || []).forEach(function(r){ SL.settings[r.key] = r.value; });
       SL.names = {}; (res[3].data || []).forEach(function(p){ SL.names[p.id] = p.full_name || p.email || "—"; });
-      clearErr("slErr"); renderSales();
+      clearErr("slErr"); renderSales(); trRows(false);
     }).catch(function(e){ showErr("slErr", e); });
   }
   function renderSales(){
@@ -805,16 +861,146 @@ document.addEventListener("DOMContentLoaded", function(){
         + '</div>';
     }).join("") : '<div class="empty">ما فيه باقات — أضف باقة</div>';
     var ST = { paid:["✅ مدفوع", "st-paid"], initiated:["⏳ ما اكتمل", "st-wait"], failed:["❌ فشل", "st-bad"], canceled:["❌ ملغي", "st-bad"], expired:["⌛ انتهى", "st-bad"] };
+    var TRW = {}; TRA.rows.forEach(function(x){ TRW[x.id] = x; });   /* (v14) */
     $("slOrders").innerHTML = SL.orders.length
       ? '<div class="ord-wrap"><table class="ord"><tr><th>التاريخ</th><th>الحساب</th><th>الباقة</th><th>المبلغ</th><th>الحالة</th></tr>'
         + SL.orders.slice(0, 50).map(function(o){
-          var st = ST[o.status] || [o.status, ""];
+          var st = TRW[o.id] && o.status === "initiated" ? ["⏳ تحويل ينتظر", "st-wait"] : (ST[o.status] || [o.status, ""]);
           return '<tr><td class="n">' + new Date(o.created_at).toLocaleString("en-GB", { timeZone:"Asia/Riyadh", day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" }) + '</td>'
             + '<td>' + esc(SL.names[o.user_id] || "—") + '</td><td>' + roundsTxt(o.rounds) + '</td><td class="n">' + sar(o.amount / 100) + '</td>'
             + '<td class="' + st[1] + '">' + st[0] + '</td></tr>';
         }).join("") + '</table></div>'
       : '<div class="empty">ما فيه طلبات للحين</div>';
   }
+  /* ================= (v14) 📥 طلبات التحويل + 📲 طرق التحويل ================= */
+  var TRA = { f:"wait", rows:[], pending:0, opened:0, focus:null, rowsDone:false };
+  function trJ(r){ var d = r && r.data; return typeof d === "string" ? JSON.parse(d) : d; }
+  function trErrText(e){
+    var m = String((e && (e.message || e.details || e.code)) || e || "");
+    if(/PGRST202|Could not find the function|does not exist/i.test(m)) return "الدفع بالتحويل يحتاج تحديث قاعدة البيانات — شغّل ملف v14_transfer.sql في Supabase (SQL Editor).";
+    if(/no_order/.test(m)) return "ما لقينا هالطلب — يمكن الرابط ناقص.";
+    if(/not_transfer/.test(m)) return "هذا طلب دفع بالبطاقة، ما يتفعّل من هنا.";
+    if(/already_paid/.test(m)) return "هالطلب مفعّل من قبل.";
+    return errText(e);
+  }
+  function trWhen(x){
+    if(!x) return "";
+    var t = new Date(x).getTime(), s = (Date.now() - t) / 1000;
+    if(s < 60) return "الحين";
+    if(s < 3600) return "قبل " + Math.floor(s / 60) + " د";
+    if(s < 86400) return "قبل " + Math.floor(s / 3600) + " س";
+    return new Date(x).toLocaleString("en-GB", { timeZone:"Asia/Riyadh", day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" });
+  }
+  function trBadge(n){ var b = $("trCount"); b.textContent = n; b.hidden = !n; }
+  function trCard(o, focus){
+    var st = o.status, wait = st === "initiated";
+    var lab = wait ? (o.claimed_at ? "⏳ قال إنه حوّل" : "🕓 فتح الدفع وما أكّد") : st === "paid" ? "✅ مفعّل" : st === "canceled" ? "✖ مرفوض" : "⌛ انتهى";
+    return '<div class="tr-ord ' + (wait ? (o.claimed_at ? "wait" : "open") : esc(st)) + (focus ? " focus" : "") + '" data-ord="' + esc(o.id) + '">'
+      + '<div class="to-top"><span class="to-st">' + lab + '</span><span class="to-code">رمز ' + esc(String(o.code || "—")) + '</span><span class="to-when">' + esc(trWhen(o.claimed_at || o.created_at)) + '</span></div>'
+      + '<div class="to-who"><b>' + esc(o.name || "—") + '</b> <span dir="ltr">' + esc(o.email || "") + '</span></div>'
+      + '<div class="to-what">' + roundsTxt(o.rounds) + ' · <b>' + sar((o.amount | 0) / 100) + '</b>' + (o.via ? ' · عن طريق ' + esc(o.via) : '') + '</div>'
+      + (wait ? '<div class="to-acts"><button class="btn-ok" type="button" data-tro="ok">✅ وصل — فعّل</button><button class="btn-bad" type="button" data-tro="no">✖ رفض</button></div>'
+        : st === "paid" ? '<div class="to-note">تفعّل ' + esc(trWhen(o.paid_at)) + (o.credits != null ? ' · رصيده الحين ' + roundsTxt(o.credits) : '') + '</div>'
+        : '<div class="to-acts"><button class="btn-ghost sm" type="button" data-tro="ok">✅ وصل متأخر — فعّل</button></div>')
+      + '</div>';
+  }
+  function trRenderOrders(){
+    var rows = TRA.rows;
+    $("trList").innerHTML = rows.length ? rows.map(function(o){ return trCard(o, false); }).join("")
+      : '<div class="empty">' + (TRA.f === "wait" ? "ما فيه طلبات تنتظر 👌" : "ما فيه طلبات تحويل للحين") + '</div>';
+  }
+  function trLoadOrders(){
+    return SB.rpc("admin_transfer_orders", { p_all: TRA.f === "all" }).then(function(r){
+      must(r); var d = trJ(r) || {};
+      TRA.rows = d.rows || []; TRA.pending = d.pending | 0; TRA.opened = d.opened | 0;
+      clearErr("trErr"); trBadge(TRA.pending);
+      if(TAB === "sales") trRenderOrders();
+    }).catch(function(e){ if(TAB === "sales"){ $("trErr").innerHTML = '<div class="err">⚠️ ' + esc(trErrText(e)) + '</div>'; $("trList").innerHTML = ""; } });
+  }
+  function trFocusRender(){
+    var o = TRA.focus;
+    $("trFocus").innerHTML = '<div class="tr-fhead">🔗 الطلب من رابط الواتساب</div>' + trCard(o, true)
+      + (o.status === "paid" ? '<div class="to-note" style="margin-top:8px">✅ هالطلب مفعّل — ما تحتاج تسوي شي.</div>' : '');
+  }
+  function trFocus(id){
+    var f = $("trFocus");
+    f.hidden = false; f.innerHTML = '<div class="empty">جاري فتح الطلب…</div>';
+    SB.rpc("admin_order_get", { p_order:id }).then(function(r){
+      must(r); TRA.focus = trJ(r); trFocusRender();
+      try{ f.scrollIntoView({ block:"start" }); }catch(e){}
+    }).catch(function(e){ f.innerHTML = '<div class="err">⚠️ ' + esc(trErrText(e)) + '</div>'; });
+  }
+  $("tab-sales").addEventListener("click", function(e){
+    var fl = e.target.closest("[data-trf]");
+    if(fl){
+      TRA.f = fl.getAttribute("data-trf");
+      Array.prototype.forEach.call(document.querySelectorAll("[data-trf]"), function(x){ x.classList.toggle("on", x === fl); });
+      $("trList").innerHTML = '<div class="empty">جاري التحميل…</div>';
+      trLoadOrders(); return;
+    }
+    var b = e.target.closest("[data-tro]"); if(!b) return;
+    var id = b.closest("[data-ord]").getAttribute("data-ord");
+    var o = TRA.focus && TRA.focus.id === id ? TRA.focus : TRA.rows.filter(function(x){ return x.id === id; })[0];
+    if(!o) return;
+    var who = o.name || o.email || "الحساب";
+    if(b.getAttribute("data-tro") === "ok"){
+      if(!confirm("تأكدت إن " + sar((o.amount | 0) / 100) + " وصلتك" + (o.via ? " عن طريق " + o.via : "") + "؟\nبتنضاف " + roundsTxt(o.rounds) + " لـ " + who + ".")) return;
+      b.disabled = true;
+      SB.rpc("admin_order_confirm", { p_order:id }).then(function(r){
+        must(r); var d = trJ(r) || {};
+        toast(d.already ? "✅ هالطلب مفعّل من قبل" : "✅ انضافت " + roundsTxt(o.rounds) + " لـ " + who + " — رصيده الحين " + roundsTxt(d.credits | 0));
+        if(TRA.focus && TRA.focus.id === id){ TRA.focus.status = "paid"; TRA.focus.paid_at = new Date().toISOString(); TRA.focus.credits = d.credits; trFocusRender(); }
+        trLoadOrders(); loadSales();
+      }).catch(function(err){ b.disabled = false; toast("⚠️ " + trErrText(err)); });
+    } else {
+      if(!confirm("ترفض الطلب (رمز " + o.code + ")؟ ما تنضاف جولات.")) return;
+      b.disabled = true;
+      SB.rpc("admin_order_cancel", { p_order:id }).then(function(r){
+        must(r);
+        toast("✖ انرفض الطلب");
+        if(TRA.focus && TRA.focus.id === id){ TRA.focus.status = "canceled"; trFocusRender(); }
+        trLoadOrders(); loadSales();
+      }).catch(function(err){ b.disabled = false; toast("⚠️ " + trErrText(err)); });
+    }
+  });
+  /* طرق التحويل (3 سطور): app_settings.transfer = { methods:[{label, num, name}] } */
+  function trRows(force){
+    if(TRA.rowsDone && !force) return;
+    TRA.rowsDone = true;
+    var v = SL.settings.transfer, list = v && Array.isArray(v.methods) ? v.methods.slice(0, 3) : [{ label:"stc bank" }, { label:"برق" }];
+    while(list.length < 3) list.push({});
+    $("trRows").innerHTML = list.map(function(m, i){
+      m = m && typeof m === "object" ? m : {};
+      return '<div class="tr-row" data-i="' + i + '">'
+        + '<label class="field"><span>التطبيق</span><input class="input" data-k="label" maxlength="30" placeholder="' + (["stc bank", "برق", "تحويل بنكي"][i] || "") + '" value="' + esc(m.label || "") + '"></label>'
+        + '<label class="field"><span>الرقم أو الآيبان</span><input class="input" data-k="num" maxlength="40" dir="ltr" placeholder="05xxxxxxxx" value="' + esc(m.num || "") + '"></label>'
+        + '<label class="field"><span>باسم (اختياري)</span><input class="input" data-k="name" maxlength="60" placeholder="اسم صاحب الحساب" value="' + esc(m.name || "") + '"></label>'
+        + '</div>';
+    }).join("");
+    trWarn();
+  }
+  function trWarn(){
+    var w = [], v = SL.settings.transfer, has = v && Array.isArray(v.methods) && v.methods.some(function(m){ return m && String(m.num || "").trim() && String(m.label || "").trim(); });
+    if(!String(SL.settings.contact || "").trim()) w.push("⚠️ اكتب «رقم واتساب للتواصل والطلبات» فوق — عشان توصلك رسائل العملاء.");
+    if(SL.settings.payments_enabled === true && has) w.push("ℹ️ «الدفع أونلاين» شغّال — العملاء يروحون لميسّر بدل التحويل. طفّه لو تبي التحويل.");
+    if(!has) w.push("ℹ️ ما فيه طرق تحويل محفوظة — زر الشراء يفتح واتساب للطلب مثل قبل.");
+    $("trWarn").innerHTML = w.map(esc).join("<br>"); $("trWarn").hidden = !w.length;
+  }
+  $("trSave").addEventListener("click", function(){
+    var out = [], bad = "";
+    Array.prototype.forEach.call(document.querySelectorAll("#trRows .tr-row"), function(row, i){
+      var g = function(k){ return row.querySelector('[data-k="' + k + '"]').value.replace(/[<>]/g, "").trim(); };
+      var label = g("label").slice(0, 30), raw = g("num"), name = g("name").slice(0, 60), num = raw.replace(/[\s-]+/g, "");
+      if(!label && !num && !name) return;
+      if(num && !label){ bad = bad || "اكتب اسم التطبيق في السطر " + (i + 1); return; }
+      if(num && !(/^\+?\d{8,15}$/.test(num) || /^SA\d{22}$/i.test(num))){ bad = bad || "الرقم في السطر " + (i + 1) + " مو صحيح — اكتب رقم جوال (05xxxxxxxx) أو آيبان (SA وبعده 22 رقم)"; return; }
+      out.push({ label:label, num: /^SA/i.test(num) ? num.toUpperCase() : num, name:name });
+    });
+    if(bad){ toast("⚠️ " + bad); return; }
+    var btn = this; btn.disabled = true;
+    saveSetting("transfer", { methods: out }).then(function(){ SL.settings.transfer = { methods: out }; trRows(true); toast("✅ انحفظت طرق التحويل"); })
+      .catch(function(e){ toast("⚠️ " + errText(e)); }).then(function(){ btn.disabled = false; });
+  });
   function saveSetting(key, value){
     return SB.from("app_settings").upsert({ key:key, value:value, updated_at:new Date().toISOString() }, { onConflict:"key" }).then(must);
   }
@@ -822,16 +1008,16 @@ document.addEventListener("DOMContentLoaded", function(){
     var on = this.checked, cb = this;
     if(on && !confirm("تشغّل الدفع أونلاين؟ تأكد إنك ضبطت حساب ميسّر ودالة sahra-pay أول، وجرّبت دفعة تجريبية.")){ cb.checked = false; return; }
     cb.disabled = true;
-    saveSetting("payments_enabled", on).then(function(){ SL.settings.payments_enabled = on; toast(on ? "💳 الدفع أونلاين شغّال" : "📩 الدفع أونلاين مطفي — الطلب بالواتساب"); })
+    saveSetting("payments_enabled", on).then(function(){ SL.settings.payments_enabled = on; trWarn(); toast(on ? "💳 الدفع أونلاين شغّال" : "📲 الدفع أونلاين مطفي — الدفع بالتحويل"); })
       .catch(function(e){ cb.checked = !on; toast("⚠️ " + errText(e)); }).then(function(){ cb.disabled = false; });
   });
   $("slSellerSave").addEventListener("click", function(){
-    var v = $("slSeller").value.replace(/[<>]/g, "").trim().slice(0, 300);
+    var v = $("slSeller").value.replace(/[<>]/g, "").trim().slice(0, 600);
     saveSetting("seller", v).then(function(){ SL.settings.seller = v; toast("✅ انحفظت بيانات البائع"); }).catch(function(e){ toast("⚠️ " + errText(e)); });
   });
   $("slContactSave").addEventListener("click", function(){
     var v = $("slContact").value.replace(/[^\d+]/g, "");
-    saveSetting("contact", v).then(function(){ SL.settings.contact = v; toast("✅ انحفظ رقم الواتساب"); }).catch(function(e){ toast("⚠️ " + errText(e)); });
+    saveSetting("contact", v).then(function(){ SL.settings.contact = v; trWarn(); toast("✅ انحفظ رقم الواتساب"); }).catch(function(e){ toast("⚠️ " + errText(e)); });
   });
   $("slPacks").addEventListener("click", function(e){
     var sv = e.target.closest("[data-pksave]"), dl = e.target.closest("[data-pkdel]");
