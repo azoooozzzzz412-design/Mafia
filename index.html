@@ -34,7 +34,7 @@
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script defer src="config.js"></script>
 <!-- صفحة اللعب 3 ملفات: هذي الصفحة + الشكل (index.css) + الكود (index.js آخر الصفحة). ارفعهم الثلاثة مع بعض -->
-<link rel="stylesheet" href="index.css?v=18">
+<link rel="stylesheet" href="index.css?v=19">
 </head>
 
 <body>
@@ -713,6 +713,17 @@
   </div>
 </div>
 
+<!-- (v18) 💬 شات العصابة عند المقدّم: كل رسائل الجولة، ويتحدث لحاله -->
+<div class="modal-overlay" id="mChatOverlay" hidden>
+  <div class="modal m-chatw" role="dialog" aria-modal="true" aria-labelledby="mcwTitle">
+    <button class="ticket-close" id="mcwClose" aria-label="إغلاق" type="button">✕</button>
+    <h3 id="mcwTitle" style="font-size:1.25rem;margin-bottom:4px">💬 شات العصابة</h3>
+    <p class="mcw-sub" id="mcwSub"></p>
+    <div class="mcw-list" id="mcwList" aria-live="polite"></div>
+    <p class="mcw-note">يشوفه بس اللي بالعصابة، وأنت. ويتحدث لحاله أول ما تجي رسالة.</p>
+  </div>
+</div>
+
 <!-- letters question modal -->
 <div class="modal-overlay" id="ltModal" hidden>
   <div class="modal" role="dialog" aria-modal="true">
@@ -937,6 +948,6 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="index.js?v=18"></script>
+<script src="index.js?v=19"></script>
 </body>
 </html>

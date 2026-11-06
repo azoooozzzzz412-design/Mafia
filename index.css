@@ -682,6 +682,20 @@ section.gated .game-body, section.gated .game-only{ display:none !important; }
 .m-night .mn-chat{ margin-top:8px; padding:8px 10px; border-radius:10px; background:rgba(0,0,0,.25); border:1px solid var(--line); font-size:.84rem; line-height:1.8; max-height:180px; overflow-y:auto; }
 .m-night .mn-chat p{ margin:0; overflow-wrap:anywhere; }
 .m-night .mn-chat b{ color:var(--mafia-bright); margin-inline-end:4px; }
+/* (v18) 💬 زر ونافذة شات العصابة عند المقدّم */
+.m-night .mn-chatbtn{ border-color:rgba(239,68,68,.45); }
+.m-night .mn-n{ font-family:var(--f-mono); font-size:.78rem; color:var(--tx-2); }
+.m-night .mn-new{ font-style:normal; font-size:.7rem; font-weight:800; color:#fff; background:var(--mafia); border-radius:999px; padding:1px 8px; }
+.m-chatw{ text-align:right; width:min(560px, 100%); }
+.mcw-sub{ font-size:.84rem; color:var(--tx-2); margin-bottom:12px; line-height:1.7; }
+.mcw-list{ display:flex; flex-direction:column; gap:8px; max-height:min(60vh, 520px); overflow-y:auto; padding:10px; border-radius:14px; background:rgba(0,0,0,.28); border:1px solid var(--line); }
+.mcw-m{ padding:8px 12px; border-radius:12px; background:rgba(239,68,68,.1); border:1px solid rgba(239,68,68,.22); }
+.mcw-h{ display:flex; align-items:baseline; justify-content:space-between; gap:8px; }
+.mcw-h b{ color:var(--mafia-bright); font-size:.88rem; }
+.mcw-t{ font-family:var(--f-mono); font-size:.72rem; color:var(--tx-3); }
+.mcw-m p{ margin-top:2px; font-size:.96rem; line-height:1.7; overflow-wrap:anywhere; }
+.mcw-empty{ text-align:center; color:var(--tx-3); font-size:.88rem; padding:16px; }
+.mcw-note{ font-size:.78rem; color:var(--tx-3); margin-top:10px; text-align:center; }
 .m-round button{ background:none; border:none; color:var(--v-hi); font-weight:700; text-decoration:underline; text-underline-offset:3px; font-size:.86rem; }
 
 /* ================= الحروف ================= */

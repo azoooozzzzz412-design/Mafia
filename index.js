@@ -237,7 +237,7 @@
                         buzz_pen_timeout:1, buzz_pen_wrong:1, buzz_steal_secs:10,
                         million:{ step_pts:1, lv_pts:[1,2,3], speed_bonus:1, all_secs:20, vote_secs:15, friend_secs:30, life:{ fifty:true, aud:true, friend:true, swap:true } },
                         helps:{ x2:true, steal:true, swap:true }, mc:{ secs:20, bonus:1 },
-                        letters:{ level:"hard", reveal:true, speed:"normal" } };   /* «أسرع إصبع»: buzz_pen_timeout = الخصم المقترح لما يخلص الوقت (المقدّم يختار على مين) + زر «غلط وخصم» (0 = بدون) */
+                        letters:{ level:"vhard", reveal:true, speed:"normal" } };   /* «أسرع إصبع»: buzz_pen_timeout = الخصم المقترح لما يخلص الوقت (المقدّم يختار على مين) + زر «غلط وخصم» (0 = بدون) */
   function clampInt(v, lo, hi, def){ v = Math.round(+v); if(!isFinite(v)) v = def; return Math.max(lo, Math.min(hi, v)); }
   function cfgSize(g){
     var d = SIZE_DEFAULTS[g]; if(!d) return null;
@@ -280,7 +280,7 @@
     out.mc = { secs: clampInt(mc.secs, 5, 120, mcd.secs), bonus: clampInt(mc.bonus, 0, 999, mcd.bonus) };
     /* (v17) 🔤 الحروف: السؤال كلمة كلمة + سرعته (الصعوبة يقررها السيرفر وقت الجولة) */
     var lt = isObj(p.letters) ? p.letters : {};
-    out.letters = { level: lt.level === "normal" ? "normal" : "hard", reveal: lt.reveal !== false,
+    out.letters = { level: ["vhard", "hard", "normal"].indexOf(lt.level) !== -1 ? lt.level : PLAY_DEFAULTS.letters.level, reveal: lt.reveal !== false,
                     speed: ["slow", "normal", "fast"].indexOf(lt.speed) !== -1 ? lt.speed : PLAY_DEFAULTS.letters.speed };
     return out;
   }
@@ -2209,7 +2209,7 @@
     var box = document.getElementById("mNight");
     var on = !!store.mafia.caseId && store.mafia.players.some(function(p){ return CHOICE_Q[p.role]; });
     box.hidden = !on;
-    if(!on){ box.innerHTML = ""; return; }
+    if(!on){ box.innerHTML = ""; document.getElementById("mChatOverlay").hidden = true; return; }
     var P = mPicks(), show = !!store.mafia.showPicks, now = Date.now();
     var body = [["mafia", "🔪", "المافيا"], ["doctor", "💉", "الطبيب"], ["detective", "🔍", "المحقق"]].map(function(g){
       var who = store.mafia.players.filter(function(p){ return p.role === g[0]; });
@@ -2234,14 +2234,46 @@
       return '<div class="mn-g"><div class="mn-h"><span>' + g[1] + " " + g[2] + '</span><span class="mn-c">'
         + (done === who.length ? (who.length > 1 ? "✅ اختاروا" : "✅ اختار") : "⏳ " + done + " من " + who.length) + '</span></div>' + rows + sum + chat + '</div>';
     }).join("");
+    /* (v18) زر «💬 شات العصابة»: يبين عدد الرسائل والجديد بس — النص ما يطلع إلا لما تفتحه */
+    var CH = mChat(), gang = store.mafia.players.filter(function(p){ return p.role === "mafia"; }).length > 1;
+    if((MK.chatSeen | 0) > CH.length) MK.chatSeen = 0;   /* جولة جديدة = شات جديد */
+    if(!document.getElementById("mChatOverlay").hidden) MK.chatSeen = CH.length;   /* النافذة مفتوحة = شفتها */
+    var unread = CH.length - (MK.chatSeen | 0);
     box.innerHTML = '<div class="mn-head"><b>🌙 اختيارات الليلة ' + mNight() + '</b>'
+      + (gang ? '<button class="btn-ghost btn-sm mn-chatbtn" type="button" data-mn="chat">💬 شات العصابة' + (CH.length ? ' <span class="mn-n">' + CH.length + '</span>' : '')
+                + (unread > 0 ? ' <i class="mn-new">' + unread + ' جديد</i>' : '') + '</button>' : '')
       + '<button class="btn-ghost btn-sm" type="button" data-mn="eye">' + (show ? "🙈 اخفِ" : "👁️ اعرض") + '</button>'
       + '<button class="btn-ghost btn-sm" type="button" data-mn="night">🌙 ليلة جديدة</button></div>'
       + (show ? "" : '<p class="mn-note">🔒 مخفية عن الشاشة — اضغط «👁️ اعرض» لما تكون الشاشة قدامك بس.</p>') + body;
     var mc = box.querySelector(".mn-chat"); if(mc) mc.scrollTop = mc.scrollHeight;   /* آخر رسالة تحت */
+    if(!document.getElementById("mChatOverlay").hidden) mkChatRender();
   }
+  /* ============ (v18) 💬 نافذة شات العصابة عند المقدّم: كل رسائل الجولة، وتتحدث لحالها ============ */
+  function mkChatRender(){
+    var C = mChat(), gang = store.mafia.players.filter(function(p){ return p.role === "mafia"; });
+    MK.chatSeen = C.length;
+    document.getElementById("mcwSub").textContent = (store.mafia.caseId ? "الجولة " + (store.mafia.round | 0) + " · " : "")
+      + (gang.length ? "العصابة: " + gang.map(function(p){ return p.name; }).join("، ") : "ما فيه مافيا بهالجولة") + " · " + arN(C.length, "رسالة", "رسالتين", "رسائل", "رسالة");
+    var list = document.getElementById("mcwList");
+    list.innerHTML = C.length ? C.map(function(x){
+      var w = mPlayer(x.from), t = new Date(x.at || 0);
+      return '<div class="mcw-m"><div class="mcw-h"><b>' + escapeHtml(w ? w.name : "؟") + '</b><span class="mcw-t">'
+        + (isNaN(t.getTime()) ? "" : t.toLocaleTimeString("en-GB", { hour:"2-digit", minute:"2-digit" })) + '</span></div><p>' + escapeHtml(x.t) + '</p></div>';
+    }).join("") : '<p class="mcw-empty">ما فيه رسائل للحين — أول ما يكتبون تطلع هنا.</p>';
+    list.scrollTop = list.scrollHeight;
+  }
+  function mkChatOpen(open){
+    var ov = document.getElementById("mChatOverlay");
+    ov.hidden = !open;
+    if(open) mkChatRender();
+    mRenderNight();   /* يشيل علامة «جديد» */
+  }
+  document.getElementById("mcwClose").addEventListener("click", function(){ mkChatOpen(false); });
+  document.getElementById("mChatOverlay").addEventListener("click", function(e){ if(e.target === e.currentTarget) mkChatOpen(false); });
+  document.addEventListener("keydown", function(e){ if(e.key === "Escape" && !document.getElementById("mChatOverlay").hidden) mkChatOpen(false); });
   document.getElementById("mNight").addEventListener("click", function(e){
     var b = e.target.closest("[data-mn]"); if(!b) return;
+    if(b.getAttribute("data-mn") === "chat"){ mkChatOpen(true); return; }
     if(b.getAttribute("data-mn") === "eye"){ store.mafia.showPicks = !store.mafia.showPicks; persist(); mRenderNight(); return; }
     ask("نبدأ ليلة جديدة؟", "اختيارات الليلة " + mNight() + " تنمسح، والمافيا والطبيب والمحقق يختارون من جديد.", "🌙 ليلة جديدة").then(function(ok){
       if(!ok) return;

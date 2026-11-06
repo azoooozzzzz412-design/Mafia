@@ -173,7 +173,7 @@ if(window.top !== window.self){ var same = false; try{ same = window.top.locatio
   .pill{ display:inline-block; font-size:.72rem; font-weight:700; background:rgba(255,255,255,.06); border:1px solid var(--line); color:var(--tx-2); border-radius:999px; padding:1px 9px; margin-inline-end:5px; white-space:nowrap; }
   .pill.pts{ font-family:var(--f-mono); direction:ltr; }
   .pill.hid{ background:var(--warn-soft); color:#fde68a; border-color:var(--warn-line); }
-  .kv.lt-kv{ grid-template-columns:minmax(0, 1fr) 132px; }   /* (v17) «🔤 الحروف» بالإعدادات: القوائم أعرض شوي */
+  .kv.lt-kv{ grid-template-columns:minmax(0, 1fr) 150px; }   /* (v17) «🔤 الحروف» بالإعدادات: القوائم أعرض شوي */
   .lt-sel{ width:100%; }
   .pill.hard{ background:rgba(239,68,68,.14); color:#fca5a5; border-color:rgba(239,68,68,.4); }   /* (v17) 🔥 سؤال حروف صعب */
   .pill.lv1{ color:#86efac; border-color:rgba(134,239,172,.35); } .pill.lv2{ color:#fde68a; border-color:rgba(253,230,138,.35); } .pill.lv3{ color:#fca5a5; border-color:rgba(252,165,165,.35); }
@@ -1216,31 +1216,33 @@ document.addEventListener("DOMContentLoaded", function(){
       return fetchAll("letters_questions", "id,letter,question,answer,active");
     }).then(function(rows){ LQ.rows = rows; if(SUB === "letters") renderLetters(); }).catch(cFail);
   };
-  function lqHard(r){ return LQ.lv && (r.level | 0) >= 3; }
+  function lqLv(r){ return LQ.lv ? (r.level | 0) || 1 : 1; }   /* 1 عادي، 3 🔥 صعب، 4 🔥🔥 صعب جدًا */
+  function lqHard(r){ return lqLv(r) >= 3; }
+  var LQ_LV = { 4:"🔥🔥 صعب جدًا", 3:"🔥 صعب", 1:"عادي" };
   function firstLetter(a){
     var t = String(a || "").trim().replace(/^ال(?=\S{2,})/, "");
     return t.charAt(0).replace(/[أإآ]/, "ا");
   }
   function renderLetters(){
-    var counts = {}, hard = {}; LQ.rows.forEach(function(r){ if(isOn(r)){ counts[r.letter] = (counts[r.letter] || 0) + 1; if(lqHard(r)) hard[r.letter] = (hard[r.letter] || 0) + 1; } });
+    var counts = {}, hard = {}, vhard = {}; LQ.rows.forEach(function(r){ if(isOn(r)){ counts[r.letter] = (counts[r.letter] || 0) + 1; if(lqHard(r)) hard[r.letter] = (hard[r.letter] || 0) + 1; if(lqLv(r) >= 4) vhard[r.letter] = (vhard[r.letter] || 0) + 1; } });
     var used = AR_ALPHA.filter(function(l){ return counts[l]; }).length;
     if(!LQ.letter) LQ.letter = AR_ALPHA.find(function(l){ return counts[l]; }) || "ا";
     var rows = LQ.rows.filter(function(r){ return r.letter === LQ.letter && visOk(r, LQ.vis); });
     $("cBody").innerHTML = '<p class="hint">كل سؤال جوابه يبدأ بالحرف. اللوحة 5×5 تحتاج <b>25 حرف</b> فيها أسئلة ظاهرة (و4×4 تحتاج 16) — الحين فيه <b>' + used + '</b>. اللوحة 6×6 تكرر بعض الحروف، فكل ما زادت الأسئلة كان أحسن.</p>'
-      + (LQ.lv ? '<p class="hint">🔥 = سؤال صعب. لو الحروف على «🔥 صعب» (من «⚙️ الإعدادات»)، الجولة تبدأ بالأسئلة الصعبة. الرقم الصغير تحت كل حرف = كم سؤال صعب فيه.</p>'
+      + (LQ.lv ? '<p class="hint">🔥 = صعب، 🔥🔥 = صعب جدًا. الجولة تبدأ بالأصعب حسب «⚙️ الإعدادات ← 🔤 الحروف». الرقم الأحمر تحت كل حرف = كم سؤال صعب أو صعب جدًا فيه (مرّر عليه تشوف التفصيل).</p>'
                : '<p class="hint">⚠️ عشان تحدد الأسئلة الصعبة: شغّل ملف <b>v17_letters.sql</b> في Supabase.</p>')
       + '<div class="letters-grid">' + AR_ALPHA.map(function(l){
-        return '<button type="button" class="lg' + (l === LQ.letter ? " on" : "") + (counts[l] ? "" : " none") + '" data-l="' + l + '"><b>' + l + '</b><small>' + (counts[l] || 0) + (hard[l] ? "<i>·🔥" + hard[l] + "</i>" : "") + '</small></button>';
+        return '<button type="button" class="lg' + (l === LQ.letter ? " on" : "") + (counts[l] ? "" : " none") + '" data-l="' + l + '"' + (hard[l] ? ' title="🔥 صعب: ' + (hard[l] - (vhard[l] || 0)) + ' · 🔥🔥 صعب جدًا: ' + (vhard[l] || 0) + '"' : '') + '><b>' + l + '</b><small>' + (counts[l] || 0) + (hard[l] ? "<i>·🔥" + hard[l] + "</i>" : "") + '</small></button>';
       }).join("") + '</div>'
       + '<div class="toolbar"><button class="btn-primary sm" type="button" id="lqAdd">➕ سؤال لحرف «' + esc(LQ.letter) + '»</button><button class="btn-ghost sm" type="button" id="lqImp">📥 استيراد</button><button class="btn-ghost sm" type="button" id="lqExp">📤 تصدير</button></div>'
       + '<div class="toolbar">' + visChips(LQ.vis, LQ.rows.filter(function(r){ return r.letter === LQ.letter; })) + '</div>'
       + '<div class="list">' + (rows.length ? rows.map(function(r){
-        return '<div class="item' + (isOn(r) ? '' : ' off') + '"><div class="txt">' + (isOn(r) ? '' : '<span class="pill hid">مخفي</span>') + (lqHard(r) ? '<span class="pill hard">🔥 صعب</span>' : '') + esc(r.question) + ' — <span class="ans">' + esc(r.answer) + '</span></div>' + itemBtns(r.id, isOn(r)) + '</div>';
+        return '<div class="item' + (isOn(r) ? '' : ' off') + '"><div class="txt">' + (isOn(r) ? '' : '<span class="pill hid">مخفي</span>') + (lqHard(r) ? '<span class="pill hard">' + LQ_LV[lqLv(r) >= 4 ? 4 : 3] + '</span>' : '') + esc(r.question) + ' — <span class="ans">' + esc(r.answer) + '</span></div>' + itemBtns(r.id, isOn(r)) + '</div>';
       }).join("") : '<div class="empty">ما فيه أسئلة لحرف «' + esc(LQ.letter) + '»</div>') + '</div>';
     $("lqAdd").addEventListener("click", function(){ lettersForm(null); });
     $("lqImp").addEventListener("click", lettersImport);
     $("lqExp").addEventListener("click", function(){
-      downloadCsv("letters.csv", [["الحرف", "السؤال", "الإجابة", "ظاهر", "الصعوبة"]].concat(LQ.rows.map(function(r){ return [r.letter, r.question, r.answer, isOn(r) ? "نعم" : "لا", lqHard(r) ? "صعب" : "عادي"]; })));
+      downloadCsv("letters.csv", [["الحرف", "السؤال", "الإجابة", "ظاهر", "الصعوبة"]].concat(LQ.rows.map(function(r){ return [r.letter, r.question, r.answer, isOn(r) ? "نعم" : "لا", lqLv(r) >= 4 ? "صعب جدا" : lqHard(r) ? "صعب" : "عادي"]; })));
     });
   }
   function lettersForm(row){
@@ -1249,12 +1251,12 @@ document.addEventListener("DOMContentLoaded", function(){
       { k:"question", label:"السؤال", type:"textarea", req:true },
       { k:"answer", label:"الإجابة (تبدأ بالحرف)", req:true }
     ];
-    if(LQ.lv) fields.push({ k:"level", label:"الصعوبة", type:"select", options:[{ v:"3", l:"🔥 صعب" }, { v:"1", l:"عادي" }] });   /* (v17) */
+    if(LQ.lv) fields.push({ k:"level", label:"الصعوبة", type:"select", options:[{ v:"4", l:LQ_LV[4] }, { v:"3", l:LQ_LV[3] }, { v:"1", l:LQ_LV[1] }] });   /* (v18) */
     openModal(row ? "تعديل سؤال" : "سؤال جديد — الحروف", fields,
-      row ? Object.assign({}, row, { level:String(lqHard(row) ? 3 : 1) }) : { letter: LQ.letter, level:"3" }, function(v){
+      row ? Object.assign({}, row, { level:String(lqLv(row) >= 4 ? 4 : lqHard(row) ? 3 : 1) }) : { letter: LQ.letter, level:"4" }, function(v){
       if(firstLetter(v.answer) !== v.letter.replace(/[أإآ]/, "ا") && !confirm("الإجابة «" + v.answer + "» ما تبدأ بحرف «" + v.letter + "» — تحفظها كذا؟")) return false;
       var data = { letter:v.letter, question:v.question, answer:v.answer };
-      if(LQ.lv) data.level = v.level === "3" ? 3 : 1;
+      if(LQ.lv) data.level = v.level === "4" ? 4 : v.level === "3" ? 3 : 1;
       var p = row ? SB.from("letters_questions").update(data).eq("id", row.id) : SB.from("letters_questions").insert(data);
       return p.then(function(r){ must(r); LQ.letter = v.letter; toast(row ? "✏️ انحفظ التعديل" : "➕ انضاف السؤال"); return LOADERS.letters(); });
     });
@@ -1262,14 +1264,14 @@ document.addEventListener("DOMContentLoaded", function(){
   function lettersImport(){
     var have = {}; LQ.rows.forEach(function(r){ have[r.letter + "|" + r.question.trim()] = 1; });
     importModal("📥 استيراد أسئلة الحروف", {
-      text:"كل سؤال بسطر: <b>السؤال | الإجابة</b> (الحرف ينحسب من أول حرف بالإجابة) — أو <b>الحرف | السؤال | الإجابة</b>." + (LQ.lv ? " ولو تبيه صعب، زِد بآخر السطر <b>| صعب</b>." : ""),
+      text:"كل سؤال بسطر: <b>السؤال | الإجابة</b> (الحرف ينحسب من أول حرف بالإجابة) — أو <b>الحرف | السؤال | الإجابة</b>." + (LQ.lv ? " ولو تبيه صعب، زِد بآخر السطر <b>| صعب</b> أو <b>| صعب جدا</b>." : ""),
       ph:"حيوان يعيش بالصحراء | جمل\nب | فاكهة صفراء طويلة | موز"
     }, function(txt){
       var ok = [], bad = [], seen = {};
       txt.split(/\r?\n/).forEach(function(l, i){
         if(!l.trim()) return;
         var f = splitLine(l), L, qq, aa, lv = 1;
-        if(f.length >= 3 && /^(صعب|عادي)$/.test(f[f.length - 1])){ lv = f[f.length - 1] === "صعب" ? 3 : 1; f = f.slice(0, -1); }   /* (v17) «| صعب» بآخر السطر */
+        if(f.length >= 3 && /^(صعب جد(ا|ًا)|صعب|عادي)$/.test(f[f.length - 1])){ var mk = f[f.length - 1]; lv = /جد/.test(mk) ? 4 : mk === "صعب" ? 3 : 1; f = f.slice(0, -1); }   /* «| صعب» أو «| صعب جدا» بآخر السطر */
         if(f.length >= 3 && f[0].length === 1){ L = f[0].replace(/[أإآ]/, "ا"); qq = f.slice(1, f.length - 1).join(" | "); aa = f[f.length - 1]; }
         else if(f.length >= 2){ aa = f[f.length - 1]; qq = f.slice(0, f.length - 1).join(" | "); L = firstLetter(aa); }
         else return bad.push({ n:i + 1, why:"لازم «السؤال | الإجابة»" });
@@ -1765,7 +1767,8 @@ document.addEventListener("DOMContentLoaded", function(){
                    buzz_pen_timeout:1, buzz_pen_wrong:1, buzz_steal_secs:10,
                    million:{ step_pts:1, lv_pts:[1,2,3], speed_bonus:1, all_secs:20, vote_secs:15, friend_secs:30, life:{ fifty:true, aud:true, friend:true, swap:true } },
                    helps:{ x2:true, steal:true, swap:true }, mc:{ secs:20, bonus:1 },
-                   letters:{ level:"hard", reveal:true, speed:"normal" } };   /* (v17) الحروف: الصعوبة + السؤال كلمة كلمة */
+                   letters:{ level:"vhard", reveal:true, speed:"normal" } };   /* (v17) الحروف: الصعوبة + السؤال كلمة كلمة — (v18) الافتراضي صعب جدًا */
+  var LT_LEVELS = [["vhard", "🔥🔥 صعب جدًا"], ["hard", "🔥 صعب"], ["normal", "عادي"]];
   var LT_SPEEDS = [["slow", "بطيئة"], ["normal", "عادية"], ["fast", "سريعة"]];
   var ML_LIFE = [["fifty", "50:50 حذف إجابتين"], ["aud", "👥 اسأل الجمهور"], ["friend", "📞 اتصل بصديق"], ["swap", "🔄 تبديل السؤال"]];
   var TRIV_HELPS = [["x2", "×2 دبل"], ["steal", "🦹 سرقة"], ["swap", "🔄 تبديل السؤال"]];   /* (v11) وسائل سين جيم */
@@ -1809,7 +1812,7 @@ document.addEventListener("DOMContentLoaded", function(){
     out.mc = { secs:ci(mc.secs, 5, 120, PLAY_DEF.mc.secs), bonus:ci(mc.bonus, 0, 999, PLAY_DEF.mc.bonus) };
     /* (v17) 🔤 الحروف */
     var lt = p.letters && typeof p.letters === "object" && !Array.isArray(p.letters) ? p.letters : {};
-    out.letters = { level:lt.level === "normal" ? "normal" : "hard", reveal:lt.reveal !== false,
+    out.letters = { level:LT_LEVELS.some(function(x){ return x[0] === lt.level; }) ? lt.level : PLAY_DEF.letters.level, reveal:lt.reveal !== false,
                     speed:LT_SPEEDS.some(function(x){ return x[0] === lt.speed; }) ? lt.speed : PLAY_DEF.letters.speed };
     return out;
   }
@@ -1946,8 +1949,8 @@ document.addEventListener("DOMContentLoaded", function(){
       + '<span>⏱️ وقت السؤال (ثانية)</span>' + num("mc_secs", p.mc.secs, 5, 120)
       + '<span>⚡ بونص أسرع فريق جاوب صح (0 = بدون)</span>' + num("mc_bonus", p.mc.bonus, 0, 999)
       + '</div></div>'
-      + '<div class="card"><h3>🔤 الحروف</h3><p class="hint">🔥 صعب: كل جولة تبدأ بالأسئلة الصعبة اللي ما انلعبت، وبعدها الباقي (عشان ما يتكرر سؤال). وتحدد أي سؤال صعب من «📝 المحتوى ← 🔤 الحروف».</p><div class="kv lt-kv">'
-      + '<span>مستوى الأسئلة</span><select class="input lt-sel" data-pl="lt_level"><option value="hard"' + (p.letters.level === "hard" ? " selected" : "") + '>🔥 صعب</option><option value="normal"' + (p.letters.level === "normal" ? " selected" : "") + '>عادي</option></select>'
+      + '<div class="card"><h3>🔤 الحروف</h3><p class="hint">كل جولة تبدأ بالأسئلة اللي ما انلعبت، وبينها الأصعب أول: 🔥🔥 صعب جدًا ← 🔥 صعب ← الباقي (عشان ما يتكرر سؤال). وتحدد صعوبة كل سؤال من «📝 المحتوى ← 🔤 الحروف».</p><div class="kv lt-kv">'
+      + '<span>مستوى الأسئلة</span><select class="input lt-sel" data-pl="lt_level">' + LT_LEVELS.map(function(x){ return '<option value="' + x[0] + '"' + (x[0] === p.letters.level ? " selected" : "") + '>' + x[1] + '</option>'; }).join("") + '</select>'
       + '<span>⏱️ سرعة ظهور الكلمات</span><select class="input lt-sel" data-pl="lt_speed">' + LT_SPEEDS.map(function(x){ return '<option value="' + x[0] + '"' + (x[0] === p.letters.speed ? " selected" : "") + '>' + x[1] + '</option>'; }).join("") + '</select>'
       + '</div><div class="lf-grid"><label class="lf-t"><span class="switch"><input type="checkbox" data-pl="lt_reveal"' + (p.letters.reveal ? " checked" : "") + ' aria-label="السؤال يطلع كلمة كلمة"><span></span></span>السؤال يطلع كلمة كلمة (ويوقف لما أحد يضغط الزر)</label></div></div>';
   }
