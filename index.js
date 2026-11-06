@@ -370,7 +370,7 @@
     emoji: { round:null, items: [], idx: 0, mode: "v2" },
     charades: { round:null, items: [], idx: 0, turn: 0 },
     mafia: { caseId:null, round:0, players:[], counts:{mafia:0,detective:0,doctor:0} },
-    letters: { round:null, board: [], qmap: {}, qpos: {}, owners: {}, history: [], wins: {}, lastWin: null },
+    letters: { round:null, board: [], qmap: {}, qpos: {}, cq: {}, qdone: {}, owners: {}, history: [], wins: {}, lastWin: null },
     flags: { round:null, items: [], idx: 0 },
     million: { pref:"seat", round:null, items:[] },   /* طريق المليون */
     rope: { round:null },                               /* مربوطين: round = { id, kind, level, best, done } */
@@ -443,6 +443,10 @@
            && L.board.every(function(l){ return l === "" || (typeof l === "string" && Array.isArray(L.qmap[l]) && L.qmap[l].length); })){
           store.letters.round = L.round; store.letters.board = L.board; store.letters.qmap = L.qmap;
           store.letters.qpos = isObj(L.qpos) ? L.qpos : {};
+          /* (v22) كل خلية لها سؤالها: cq = سؤال كل خلية، qdone = الأسئلة اللي انلعبت من كل حرف (الجولات القديمة: من qpos) */
+          store.letters.cq = isObj(L.cq) ? L.cq : {};
+          store.letters.qdone = isObj(L.qdone) ? L.qdone : {};
+          if(!isObj(L.qdone)) Object.keys(store.letters.qpos).forEach(function(l){ var n = store.letters.qpos[l] | 0, a = []; for(var k = 0; k < n; k++) a.push(k); store.letters.qdone[l] = a; });
           store.letters.owners = isObj(L.owners) ? L.owners : {};
           store.letters.history = Array.isArray(L.history) ? L.history : [];
           store.letters.lastWin = isObj(L.lastWin) ? L.lastWin : null;
@@ -3627,7 +3631,7 @@
       if(g === "emoji") return store.emoji.items.slice(0, store.emoji.idx).map(function(x){ return x.id; });
       if(g === "letters"){
         var L = store.letters, out = [];
-        Object.keys(L.qpos || {}).forEach(function(l){ var qs = L.qmap[l] || [], n = Math.min(qs.length, L.qpos[l] | 0); for(var i = 0; i < n; i++) if(qs[i]) out.push(qs[i].id); });
+        Object.keys(L.qdone || {}).forEach(function(l){ var qs = L.qmap[l] || []; (L.qdone[l] || []).forEach(function(k){ if(qs[k]) out.push(qs[k].id); }); });
         return out;
       }
       if(g === "million"){
@@ -3732,7 +3736,7 @@
             letters.slice(0, 25).forEach(function(l, k){ board[LT_TRIAL_ORDER[k]] = l; });
           }
           L.round = { id: d.round, kind: d.kind };
-          L.board = board; L.qmap = qmap; L.qpos = {};
+          L.board = board; L.qmap = qmap; L.qpos = {}; L.cq = {}; L.qdone = {};
           L.owners = {}; L.history = []; L.lastWin = null;
           persist(); lettersOpen();
           ansStart("letters", d.round);
@@ -3827,12 +3831,24 @@
     return "🔤 الإجابة " + (words.length === 2 ? "كلمتين" : words.length + " كلمات") + ": "
       + words.map(function(w){ return ltLettersCount(w.length); }).join(" + ");
   }
+  /* (v22) أسئلة الحرف: اللي انلعبت (qdone)، واللي ماسكتها خلية ثانية مفتوحة من نفس الحرف — ما تنعطى لخلية ثانية */
+  function ltIsDone(letter, k){ return (store.letters.qdone[letter] || []).indexOf(k) !== -1; }
+  function ltDone(letter, k){ var d = store.letters.qdone[letter] || (store.letters.qdone[letter] = []); if(d.indexOf(k) === -1) d.push(k); }
+  function ltPickQ(i, letter, cur){
+    var L = store.letters, qs = L.qmap[letter] || [], held = {};
+    Object.keys(L.cq).forEach(function(c){ if(+c !== i && L.board[c] === letter && !L.owners[c]) held[L.cq[c]] = 1; });
+    for(var k = 0; k < qs.length; k++) if(k !== cur && !held[k] && !ltIsDone(letter, k)) return k;   /* سؤال ما انلعب */
+    for(var s = 1; s <= qs.length; s++){ var j = ((cur < 0 ? -1 : cur) + s) % qs.length; if(j !== cur && !held[j]) return j; }   /* خلصت: نلف، بس بدون سؤال خلية ثانية */
+    return cur < 0 ? 0 : cur;
+  }
   function lettersAsk(i){
     var letter = store.letters.board[i];
     if(!letter){ toast("🔒 هذي الخلية تنفتح بالجولات الكاملة"); return; }
     var qs = store.letters.qmap[letter];
     if(!qs || !qs.length){ toast("ما فيه أسئلة لهالحرف"); return; }
-    var qi = (store.letters.qpos[letter] | 0) % qs.length;
+    /* (v22) الحرف المكرر ياخذ بكل خلية سؤال غير، والخلية تحتفظ بسؤالها لو تسكّرت وانفتحت مرة ثانية */
+    var L = store.letters, qi = L.cq[i];
+    if(typeof qi !== "number" || qi >= qs.length || ltIsDone(letter, qi)){ qi = ltPickQ(i, letter, -1); L.cq[i] = qi; persist(); }
     LT.cur = { idx:i, letter:letter, qi: qi };
     ltRenderModal();
     ltEls.modal.hidden = false;
@@ -3916,7 +3932,7 @@
     store.letters.owners[LT.cur.idx] = teamId;
     store.letters.history.push(LT.cur.idx);
     /* السؤال اللي انجاب ما يرجع لو رجع أحد نفس الحرف */
-    store.letters.qpos[LT.cur.letter] = LT.cur.qi + 1;
+    ltDone(LT.cur.letter, LT.cur.qi);
     persist(); ltClose(); lettersRender();
     var w = lettersWinner();
     if(w){
@@ -3941,8 +3957,11 @@
     if(!LT.cur) return;
     var qs = store.letters.qmap[LT.cur.letter];
     if(!qs || qs.length < 2){ toast("ما فيه سؤال ثاني لهالحرف بهالجولة"); return; }
-    LT.cur.qi = (LT.cur.qi + 1) % qs.length;
-    store.letters.qpos[LT.cur.letter] = LT.cur.qi; persist();
+    /* (v22) السؤال اللي تخطّيناه ينحسب منلعب، والجديد ما يكون سؤال خلية ثانية من نفس الحرف */
+    var k = ltPickQ(LT.cur.idx, LT.cur.letter, LT.cur.qi);
+    if(k === LT.cur.qi){ toast("ما فيه سؤال ثاني لهالحرف بهالجولة"); return; }
+    ltDone(LT.cur.letter, LT.cur.qi);
+    LT.cur.qi = k; store.letters.cq[LT.cur.idx] = k; persist();
     ltRenderModal();
   });
   ltEls.mNone.addEventListener("click", ltClose);
@@ -4540,7 +4559,7 @@
     store.trivia = { round:null, cells:[] };
     store.emoji.round = null; store.emoji.items = []; store.emoji.idx = 0; store.emoji.mq = null; store.emoji.ch = null;
     store.charades = { round:null, items:[], idx:0, turn:0 };
-    store.letters = { round:null, board:[], qmap:{}, qpos:{}, owners:{}, history:[], wins:{}, lastWin:null };
+    store.letters = { round:null, board:[], qmap:{}, qpos:{}, cq:{}, qdone:{}, owners:{}, history:[], wins:{}, lastWin:null };
     store.flags = { round:null, items:[], idx:0 };
     store.million = { pref: store.million.pref === "all" ? "all" : "seat", round:null, items:[] }; clearInterval(ML.tick); clearTimeout(ML.revealT);
     store.heads = { round:null, deck: store.heads.deck || "all", dur: store.heads.dur || 60, turns:{}, done:[], last:{} };
