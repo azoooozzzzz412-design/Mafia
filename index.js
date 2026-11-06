@@ -237,7 +237,7 @@
                         buzz_pen_timeout:1, buzz_pen_wrong:1, buzz_steal_secs:10,
                         million:{ step_pts:1, lv_pts:[1,2,3], speed_bonus:1, all_secs:20, vote_secs:15, friend_secs:30, life:{ fifty:true, aud:true, friend:true, swap:true } },
                         helps:{ x2:true, steal:true, swap:true }, mc:{ secs:20, bonus:1 },
-                        letters:{ level:"vhard", reveal:true, speed:"normal" } };   /* «أسرع إصبع»: buzz_pen_timeout = الخصم المقترح لما يخلص الوقت (المقدّم يختار على مين) + زر «غلط وخصم» (0 = بدون) */
+                        letters:{ level:"extreme", reveal:true, speed:"normal" } };   /* «أسرع إصبع»: buzz_pen_timeout = الخصم المقترح لما يخلص الوقت (المقدّم يختار على مين) + زر «غلط وخصم» (0 = بدون) */
   function clampInt(v, lo, hi, def){ v = Math.round(+v); if(!isFinite(v)) v = def; return Math.max(lo, Math.min(hi, v)); }
   function cfgSize(g){
     var d = SIZE_DEFAULTS[g]; if(!d) return null;
@@ -280,7 +280,7 @@
     out.mc = { secs: clampInt(mc.secs, 5, 120, mcd.secs), bonus: clampInt(mc.bonus, 0, 999, mcd.bonus) };
     /* (v17) 🔤 الحروف: السؤال كلمة كلمة + سرعته (الصعوبة يقررها السيرفر وقت الجولة) */
     var lt = isObj(p.letters) ? p.letters : {};
-    out.letters = { level: ["vhard", "hard", "normal"].indexOf(lt.level) !== -1 ? lt.level : PLAY_DEFAULTS.letters.level, reveal: lt.reveal !== false,
+    out.letters = { level: ["extreme", "vhard", "hard", "normal"].indexOf(lt.level) !== -1 ? lt.level : PLAY_DEFAULTS.letters.level, reveal: lt.reveal !== false,
                     speed: ["slow", "normal", "fast"].indexOf(lt.speed) !== -1 ? lt.speed : PLAY_DEFAULTS.letters.speed };
     return out;
   }
