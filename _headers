@@ -1,0 +1,11 @@
+# طاولة السهرة — ترويسات الحماية (Cloudflare Pages يقرأ هالملف لحاله ويطبّقه على كل الصفحات)
+#  - ما أحد يقدر يفتح صفحاتك داخل موقع ثاني (حماية من الخداع بالنقر، مثل زر «فعّل» بلوحة الأدمن)
+#  - المتصفح ما يخمّن نوع الملفات، وما يرسل رابط الصفحة كامل للمواقع الثانية
+#  - المايك مسموح لموقعك بس (صوت المافيا والإعادة)، والكاميرا والموقع الجغرافي مقفلة (الموقع ما يستخدمها)
+/*
+  X-Frame-Options: SAMEORIGIN
+  Content-Security-Policy: frame-ancestors 'self'; object-src 'none'; base-uri 'self'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), geolocation=(), microphone=(self)
+  Strict-Transport-Security: max-age=31536000

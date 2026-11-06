@@ -626,6 +626,62 @@ section.gated .game-body, section.gated .game-only{ display:none !important; }
 .ticket-hint{ font-size:.78rem; color:var(--tx-3); text-align:center; margin:12px 0 0; min-height:1em; }
 .m-round{ font-size:.86rem; color:var(--tx-2); text-align:center; margin:10px 0 8px; line-height:1.7; }
 .m-round:empty{ display:none; }
+/* (v16) 📱 بطاقات المافيا بالجوال: الباركود + حالة كل لاعب + اختيارات الليلة */
+.m-link{ display:flex; align-items:center; gap:18px; padding:16px; margin-bottom:16px; border-radius:18px; background:rgba(255,255,255,.03); border:1px solid var(--line-2); }
+.m-link .ml-qr{ flex:0 0 auto; width:170px; height:170px; padding:8px; border-radius:14px; background:#fff; display:grid; place-items:center; }
+.m-link .ml-qr svg{ display:block; width:100%; height:100%; }
+.ml-wait{ color:var(--paper-ink); font-size:.8rem; text-align:center; line-height:1.6; }
+.m-link .ml-txt{ flex:1 1 auto; min-width:0; }
+.m-link .ml-txt b{ display:block; font-family:var(--f-display); font-size:1.08rem; margin-bottom:6px; }
+.m-link .ml-txt p{ font-size:.86rem; color:var(--tx-2); line-height:1.7; margin-bottom:8px; }
+.m-link .ml-st{ font-size:.82rem; color:var(--tx-3); margin-bottom:10px; min-height:1.2em; }
+@media (max-width:560px){ .m-link{ flex-direction:column; text-align:center; } }
+.p-card.seen .pc-status{ color:var(--ok); }
+.p-card.seen .dot{ background:var(--ok); }
+.p-card.on .pc-status{ color:var(--v-hi); }
+.p-card.on .dot{ background:var(--v-hi); }
+.p-card.off .pc-status{ color:var(--warn); }
+.p-card.off .dot{ background:var(--warn); }
+.player-list .p-dev{ font-size:.8rem; margin-inline-start:6px; }
+.m-night{ margin-top:16px; padding:14px 16px; border-radius:18px; background:rgba(239,68,68,.06); border:1px solid rgba(239,68,68,.25); }
+.m-night .mn-head{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
+.m-night .mn-head b{ font-family:var(--f-display); margin-inline-end:auto; }
+.m-night .mn-note{ font-size:.8rem; color:var(--tx-3); margin-bottom:6px; }
+.m-night .mn-g{ padding:9px 0 3px; border-top:1px dashed var(--line-2); }
+.m-night .mn-h{ display:flex; justify-content:space-between; gap:8px; font-weight:700; font-size:.9rem; }
+.m-night .mn-c{ font-weight:500; font-size:.8rem; color:var(--tx-2); }
+.m-night ul{ list-style:none; display:grid; gap:4px; margin-top:6px; }
+.m-night li{ display:flex; justify-content:space-between; gap:8px; padding:6px 10px; border-radius:10px; background:rgba(255,255,255,.03); font-size:.88rem; }
+.m-night li.chg{ animation:mnFlash 2.4s var(--ease-out); }
+@keyframes mnFlash{ from{ background:rgba(124,92,255,.38); } to{ background:rgba(255,255,255,.03); } }
+.m-night em{ font-style:normal; font-size:.8rem; }
+.m-night em.bad{ color:var(--mafia-bright); }
+.m-night em.ok{ color:var(--ok); }
+.m-night .ed{ font-style:normal; font-size:.74rem; color:var(--warn); }
+.m-night .dim{ color:var(--tx-3); }
+.m-night .mn-sum{ font-size:.84rem; margin-top:6px; }
+.m-night .mn-sum.ok{ color:var(--ok); }
+.m-night .mn-sum.warn{ color:var(--warn); }
+.m-qr-big{ width:min(62vh, 78vw, 440px); margin:0 auto 12px; padding:14px; border-radius:18px; background:#fff; }
+.m-qr-big svg{ display:block; width:100%; height:auto; }
+.m-qr-cap{ font-size:.92rem; color:var(--tx-2); }
+/* (v16) 🎯 أختار الأدوار بنفسي + 💬 شات العصابة عند المقدّم */
+.m-manual{ display:flex; align-items:center; justify-content:center; gap:9px; margin:4px 0 14px; font-size:.88rem; color:var(--tx-2); cursor:pointer; text-align:center; }
+.m-manual input{ width:18px; height:18px; flex:0 0 auto; accent-color:var(--mafia); }
+.m-pick{ text-align:right; }
+.m-pick .mpr-sub{ font-size:.86rem; color:var(--tx-2); line-height:1.7; }
+.m-pick .mpr-key{ font-size:.8rem; color:var(--tx-3); margin:8px 0 12px; }
+.mpr-list{ display:grid; gap:6px; }
+.mpr-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:7px 10px; border-radius:12px; background:rgba(255,255,255,.03); border:1px solid var(--line); }
+.mpr-row b{ font-size:.92rem; min-width:0; overflow-wrap:anywhere; }
+.mpr-chips{ display:flex; gap:4px; flex:0 0 auto; }
+.mpr-chips button{ width:38px; height:36px; border-radius:10px; border:1px solid var(--line-2); background:var(--glass); font-size:1rem; line-height:1; opacity:.55; }
+.mpr-chips button.on{ opacity:1; border-color:var(--mafia); background:rgba(239,68,68,.18); box-shadow:0 0 0 2px rgba(239,68,68,.25); }
+.mpr-chips button[data-r="auto"].on{ border-color:var(--v); background:var(--v-soft); box-shadow:0 0 0 2px var(--v-line); }
+.m-pick .mpr-sum{ font-size:.86rem; color:var(--tx); margin:12px 0 4px; line-height:1.8; }
+.m-night .mn-chat{ margin-top:8px; padding:8px 10px; border-radius:10px; background:rgba(0,0,0,.25); border:1px solid var(--line); font-size:.84rem; line-height:1.8; max-height:180px; overflow-y:auto; }
+.m-night .mn-chat p{ margin:0; overflow-wrap:anywhere; }
+.m-night .mn-chat b{ color:var(--mafia-bright); margin-inline-end:4px; }
 .m-round button{ background:none; border:none; color:var(--v-hi); font-weight:700; text-decoration:underline; text-underline-offset:3px; font-size:.86rem; }
 
 /* ================= الحروف ================= */

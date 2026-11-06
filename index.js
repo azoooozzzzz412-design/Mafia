@@ -29,10 +29,11 @@
   function uid(){ return "id"+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
   /* باركود SVG لنص أو رابط (يرمي خطأ لو ما قدر — كل مكان يعرض رسالته) */
   function qrSvg(text, cell, margin){ var qr = qrcode(0, "M"); qr.addData(text); qr.make(); return qr.createSvgTag({ cellSize:cell, margin:margin }); }
-  /* نسخ رابط — ولو المتصفح ما سمح، نعرضه عشان ينسخه بيده */
-  function copyLink(url, okMsg){
-    if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(function(){ toast(okMsg); }, function(){ prompt("انسخ الرابط:", url); });
-    else prompt("انسخ الرابط:", url);
+  /* نسخ نص (رابط، رقم…) — ولو المتصفح ما سمح، نعرضه عشان ينسخه بيده. what = وش ننسخ (للرسالة) */
+  function copyLink(text, okMsg, what){
+    var ask = function(){ prompt("انسخ " + (what || "الرابط") + ":", text); };
+    if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function(){ toast(okMsg); }, ask);
+    else ask();
   }
   /* الفريق برقمه (null لو ما لقيناه) */
   function teamOf(id){ return store.teams.find(function(t){ return t.id === id; }) || null; }
@@ -219,7 +220,7 @@
     heads:    { name:"حطها على راسك", ic:"i-heads", accent:"heads", desc:"الجوال على الجبهة وفريقك يعطيك تلميحات — اقلبه لتحت إذا عرفتها ولفوق إذا بتعدّيها." },
     charades: { name:"التمثيل الصامت", ic:"i-charades", accent:"char", desc:"مثّل الفيلم أو المسلسل بدون كلام، وفريقك يحاول يخمّن قبل الوقت." },
     million:  { name:"طريق المليون", ic:"i-million", accent:"million", desc:"سؤال وأربع خيارات تصعب درجة درجة — على الكرسي الحار بالمساعدات، أو الكل يجاوب من جواله." },
-    mafia:    { name:"المافيا", ic:"i-mafia", accent:"mafia", desc:"وزّع أدوار المافيا والمحقق والطبيب سرًا، وابعث لكل لاعب دوره بالواتساب." },
+    mafia:    { name:"المافيا", ic:"i-mafia", accent:"mafia", desc:"وزّع أدوار المافيا والمحقق والطبيب سرًا، وكل لاعب يشوف دوره بجواله." },
     rope:     { name:"مربوطين", ic:"i-rope", accent:"rope", desc:"من 2 لين 8 لاعبين مربوطين بحبل — امشوا مع بعض، اقفزوا، وامسكوا اللي يطيح لين توصلون. جوالاتكم أيادي تحكم." }
   };
   var GAME_ORDER = ["trivia","emoji","letters","flags","heads","charades","million","rope","mafia"];
@@ -1524,7 +1525,7 @@
   ["mNameInput","mPhoneInput","mAddPlayerBtn","mPlayerList","mEmptyHint","mClearAllBtn","mRoleConfig",
    "mStartBtn","mFormWarn","mafiaIntake","mafiaActive","mPlayerGrid","mafiaCaseStamp",
    "mNewRoundBtn","mNewCaseBtn","mTicketOverlay","mTicketClose","mTicketRoleBadge","mTicketText",
-   "mTicketWaLink","mTicketCopyBtn","mTicketHint"
+   "mTicketWaLink","mTicketCopyBtn","mTicketHint","mTicketUnlink"
   ].forEach(function(id){ mEls[id] = document.getElementById(id); });
 
   function mSanitizePhone(raw){ return raw.replace(/[^\d]/g,"").replace(/^0+/,""); }
@@ -1584,14 +1585,17 @@
       mEls.mPlayerList.innerHTML = store.mafia.players.map(function(p, i){
         return '<li><span><span class="p-num ltr">'+(i+1)+'.</span> '
           + '<span class="p-name">'+escapeHtml(p.name)+'</span>'
-          + '<span class="p-phone ltr">'+escapeHtml(p.phone)+'</span></span>'
+          + (p.dev ? '<span class="p-dev" title="جواله مربوط بالباركود">📱</span>' : '')
+          + (p.phone ? '<span class="p-phone ltr">'+escapeHtml(p.phone)+'</span>' : '')+'</span>'
           + '<button class="p-remove" type="button" data-id="'+p.id+'" aria-label="إزالة">✕</button></li>';
       }).join("");
       mEls.mPlayerList.querySelectorAll(".p-remove").forEach(function(btn){
         btn.addEventListener("click", function(){
-          store.mafia.players = store.mafia.players.filter(function(p){ return p.id !== btn.getAttribute("data-id"); });
+          var id = btn.getAttribute("data-id"), gone = store.mafia.players.filter(function(p){ return p.id === id; });
+          store.mafia.players = store.mafia.players.filter(function(p){ return p.id !== id; });
           store.mafia.counts = mDefaultCounts(store.mafia.players.length);
           mRenderPlayerList(); mRenderRoleConfig(); mUpdateStartState(); persist();
+          mkDrop(gone); mkRoster();
         });
       });
     }
@@ -1610,12 +1614,14 @@
       }, 3000);
       return;
     }
+    var gone = store.mafia.players;
     store.mafia.players = [];
     store.mafia.counts = { mafia:0, detective:0, doctor:0 };
     mClearArmed = false;
     mEls.mClearAllBtn.textContent = "مسح كل اللاعبين ✕";
     mEls.mClearAllBtn.classList.remove("armed");
     mRenderPlayerList(); mRenderRoleConfig(); mUpdateStartState(); persist();
+    mkDrop(gone); mkRoster();
   });
 
   function mUpdateStartState(){
@@ -1631,22 +1637,35 @@
     var name = mEls.mNameInput.value.trim();
     var phone = mSanitizePhone(mEls.mPhoneInput.value.trim());
     if(!name){ mEls.mFormWarn.textContent = "اكتب اسم اللاعب أولاً."; return; }
-    if(phone.length < 8){ mEls.mFormWarn.textContent = "رقم واتساب غير صالح (أدخله برمز الدولة، بدون + أو صفر)."; return; }
+    /* (v16) الرقم اختياري: البطاقة تطلع بالجوال من الباركود، والواتساب احتياط */
+    if(phone && phone.length < 8){ mEls.mFormWarn.textContent = "رقم واتساب غير صالح (أدخله برمز الدولة، بدون + أو صفر) — أو خلّه فاضي."; return; }
     store.mafia.players.push({ id:uid(), name:name, phone:phone, role:null, sent:false, specialTurns:0 });
     store.mafia.counts = mDefaultCounts(store.mafia.players.length);
     mEls.mNameInput.value = ""; mEls.mPhoneInput.value = "";
     mEls.mFormWarn.textContent = "";
     mEls.mNameInput.focus();
     mRenderPlayerList(); mRenderRoleConfig(); mUpdateStartState(); persist();
+    mkRoster();
   }
 
-  function mAssignRoles(){
-    var specialList = [];
-    ROLE_ORDER.forEach(function(key){ for(var i=0;i<store.mafia.counts[key];i++) specialList.push(key); });
-    specialList = shuffle(specialList);
-    var remaining = shuffle(store.mafia.players.slice()).sort(function(a,b){ return (a.specialTurns||0)-(b.specialTurns||0); });
-    var assigned = {};
+  /* forced (v16) = الأدوار اللي اختارها المقدّم بنفسه { لاعب: دور } — الباقي يتوزع عشوائي حسب العدد */
+  function mAssignRoles(forced){
+    forced = forced || {};
+    var assigned = {}, specialList = [];
+    ROLE_ORDER.forEach(function(key){
+      var fixed = store.mafia.players.filter(function(p){ return forced[p.id] === key; }).length;
+      for(var i=fixed;i<store.mafia.counts[key];i++) specialList.push(key);
+    });
+    /* لو اللاعبين الباقين أقل من الأدوار: الأولوية للمافيا ثم المحقق ثم الطبيب (نفس الحسبة اللي بالنافذة) */
+    specialList = shuffle(specialList.slice(0, store.mafia.players.filter(function(p){ return !forced[p.id]; }).length));
+    store.mafia.players.forEach(function(p){
+      if(!forced[p.id]) return;
+      assigned[p.id] = forced[p.id];
+      if(forced[p.id] !== "citizen") p.specialTurns = (p.specialTurns||0) + 1;
+    });
+    var remaining = shuffle(store.mafia.players.filter(function(p){ return !forced[p.id]; })).sort(function(a,b){ return (a.specialTurns||0)-(b.specialTurns||0); });
     specialList.forEach(function(role){
+      if(!remaining.length) return;
       var idx = remaining.findIndex(function(p){ return p.role !== role; });
       if(idx === -1) idx = 0;
       var p = remaining.splice(idx,1)[0];
@@ -1654,8 +1673,70 @@
       p.specialTurns = (p.specialTurns||0) + 1;
     });
     remaining.forEach(function(p){ assigned[p.id] = "citizen"; });
-    store.mafia.players.forEach(function(p){ p.role = assigned[p.id]; p.sent = false; });
+    store.mafia.players.forEach(function(p){ p.role = assigned[p.id]; p.sent = false; p.seen = 0; });
+    store.mafia.night = 1; store.mafia.picks = {}; store.mafia.chat = []; MK.flash = {};   /* (v16) جولة جديدة = اختيارات وشات جديد */
   }
+
+  /* ============ (v16) 🎯 أختار الأدوار بنفسي (خيار) ============
+     لو مشغّل: «فتح القضية» و«جولة جديدة» يفتحون نافذة تختار فيها دور كل لاعب، واللي تخليه «🎲» ياخذ الباقي عشوائي */
+  var MPR = { pick:{}, done:null };
+  var MPR_ROLES = [["auto", "🎲", "عشوائي"], ["mafia", "🔪", "مافيا"], ["doctor", "💉", "طبيب"], ["detective", "🔍", "محقق"], ["citizen", "👤", "مواطن"]];
+  /* الأعداد النهائية بعد اختيارك + الباقي العشوائي */
+  function mPickCounts(pick){
+    var n = store.mafia.players.length, out = {}, auto = store.mafia.players.filter(function(p){ return !pick[p.id]; }).length, left = auto;
+    ROLE_ORDER.forEach(function(key){
+      var fixed = store.mafia.players.filter(function(p){ return pick[p.id] === key; }).length;
+      var rnd = Math.min(left, Math.max(0, (store.mafia.counts[key] || 0) - fixed));
+      left -= rnd; out[key] = { fixed:fixed, rnd:rnd, all:fixed + rnd };
+    });
+    out.citizen = { all:n - out.mafia.all - out.doctor.all - out.detective.all };
+    return out;
+  }
+  function mPickRender(){
+    var pick = MPR.pick, c = mPickCounts(pick);
+    document.getElementById("mprList").innerHTML = store.mafia.players.map(function(p){
+      var cur = pick[p.id] || "auto";
+      return '<div class="mpr-row"><b>' + escapeHtml(p.name) + '</b><div class="mpr-chips" data-id="' + p.id + '">'
+        + MPR_ROLES.map(function(r){ return '<button type="button" data-r="' + r[0] + '" class="' + (cur === r[0] ? "on" : "") + '" title="' + r[2] + '" aria-label="' + r[2] + '" aria-pressed="' + (cur === r[0]) + '">' + r[1] + '</button>'; }).join("")
+        + '</div></div>';
+    }).join("");
+    var part = function(k, ic, nm){ var x = c[k]; return ic + " " + nm + ": <b>" + x.all + "</b>" + (x.rnd ? ' <small>(' + (x.fixed ? x.fixed + " اخترته + " : "") + x.rnd + ' عشوائي)</small>' : ""); };
+    document.getElementById("mprSum").innerHTML = [part("mafia", "🔪", "مافيا"), part("doctor", "💉", "طبيب"), part("detective", "🔍", "محقق"), "👤 مواطن: <b>" + c.citizen.all + "</b>"].join(" · ");
+    var warn = c.mafia.all < 1 ? "لازم مافيا واحد على الأقل." : c.mafia.all >= store.mafia.players.length ? "لازم يكون فيه لاعبين مو مافيا." : "";
+    document.getElementById("mprWarn").textContent = warn;
+    document.getElementById("mprGo").disabled = !!warn;
+  }
+  function mPickClose(result){
+    document.getElementById("mPickOverlay").hidden = true;
+    var done = MPR.done; MPR.done = null;
+    if(done) done(result);
+  }
+  /* يرجّع {} لو التوزيع عشوائي، أو اختياراتك، أو null لو سكّرت النافذة */
+  function mChooseRoles(){
+    if(!store.mafia.manual) return Promise.resolve({});
+    return new Promise(function(resolve){
+      MPR.pick = {}; MPR.done = resolve;
+      mPickRender();
+      document.getElementById("mPickOverlay").hidden = false;
+    });
+  }
+  document.getElementById("mprList").addEventListener("click", function(e){
+    var b = e.target.closest("[data-r]"); if(!b) return;
+    var id = b.closest("[data-id]").getAttribute("data-id"), r = b.getAttribute("data-r");
+    if(r === "auto") delete MPR.pick[id]; else MPR.pick[id] = r;
+    mPickRender();
+  });
+  document.getElementById("mprGo").addEventListener("click", function(){
+    var forced = {};
+    Object.keys(MPR.pick).forEach(function(id){ if(mPlayer(id)) forced[id] = MPR.pick[id]; });
+    mPickClose(forced);
+  });
+  document.getElementById("mprClose").addEventListener("click", function(){ mPickClose(null); });
+  document.getElementById("mPickOverlay").addEventListener("click", function(e){ if(e.target === e.currentTarget) mPickClose(null); });
+  document.addEventListener("keydown", function(e){ if(e.key === "Escape" && !document.getElementById("mPickOverlay").hidden) mPickClose(null); });
+  document.querySelectorAll("[data-mmanual]").forEach(function(cb){
+    cb.addEventListener("change", function(){ store.mafia.manual = cb.checked; persist(); mRender(); });
+  });
 
   /* كل توزيع أدوار = جولة (أو التجربة المجانية أول مرة) */
   function mPayRound(){
@@ -1673,43 +1754,51 @@
   }
   mEls.mStartBtn.addEventListener("click", function(){
     if(store.mafia.players.length < 4) return;
-    mEls.mStartBtn.disabled = true;
-    mPayRound().then(function(d){
-      if(!store.mafia.caseId) store.mafia.caseId = mGenCaseId();
-      store.mafia.round = 1; store.mafia.kind = d.kind;
-      mAssignRoles(); persist(); mRender();
-    }).catch(function(e){ if(!(e && e.message === "quiet")) roundError(e); mUpdateStartState(); });
+    mChooseRoles().then(function(forced){
+      if(!forced) return;   /* سكّر نافذة الاختيار */
+      mEls.mStartBtn.disabled = true;
+      mPayRound().then(function(d){
+        if(!store.mafia.caseId) store.mafia.caseId = mGenCaseId();
+        store.mafia.round = 1; store.mafia.kind = d.kind;
+        mAssignRoles(forced); persist(); mRender(); mkAll();
+      }).catch(function(e){ if(!(e && e.message === "quiet")) roundError(e); mUpdateStartState(); });
+    });
   });
   mEls.mNewRoundBtn.addEventListener("click", function(){
-    function go(){
+    function go(forced){
       mEls.mNewRoundBtn.disabled = true;
       mPayRound().then(function(d){
-        store.mafia.round += 1; store.mafia.kind = d.kind; mAssignRoles(); persist(); mRender();
+        store.mafia.round += 1; store.mafia.kind = d.kind; mAssignRoles(forced); persist(); mRender(); mkAll();
       }).catch(function(e){ if(!(e && e.message === "quiet")) roundError(e); })
         .then(function(){ mEls.mNewRoundBtn.disabled = false; });
     }
-    if(ACCT.admin){ go(); return; }
-    if(!hasCredit() && trialUsed("mafia")){ openShop(); return; }
-    ask("جولة مافيا جديدة؟",
-      hasCredit() ? "توزيع أدوار جديد = جولة وحدة من رصيدك (" + roundsWord(ACCT.credits) + ")." : "بتستخدم تجربتك المجانية للمافيا.",
-      "🔄 وزّع الأدوار").then(function(ok){ if(ok) go(); });
+    if(!ACCT.admin && !hasCredit() && trialUsed("mafia")){ openShop(); return; }
+    mChooseRoles().then(function(forced){
+      if(!forced) return;
+      if(ACCT.admin){ go(forced); return; }
+      ask("جولة مافيا جديدة؟",
+        hasCredit() ? "توزيع أدوار جديد = جولة وحدة من رصيدك (" + roundsWord(ACCT.credits) + ")." : "بتستخدم تجربتك المجانية للمافيا.",
+        "🔄 وزّع الأدوار").then(function(ok){ if(ok) go(forced); });
+    });
   });
   mEls.mNewCaseBtn.addEventListener("click", function(){
-    store.mafia.caseId = null; store.mafia.round = 0;
-    store.mafia.players.forEach(function(p){ p.role=null; p.sent=false; });
-    persist(); mRender();
+    store.mafia.caseId = null; store.mafia.round = 0; store.mafia.night = 1; store.mafia.picks = {}; store.mafia.chat = [];
+    store.mafia.players.forEach(function(p){ p.role=null; p.sent=false; p.seen=0; });
+    persist(); mRender(); mkAll();   /* الجوالات ترجع «ننتظر المقدّم يوزّع الأدوار» */
   });
 
+  /* (v16) حالة كل لاعب: مسح الباركود؟ جواله متصل؟ فتح بطاقته؟ — والضغط يفتح رسالته (الواتساب احتياط) */
   function mRenderPlayerGrid(){
+    var round = store.mafia.round | 0;
     mEls.mPlayerGrid.innerHTML = store.mafia.players.map(function(p){
-      return '<button class="p-card'+(p.sent?' sent':'')+'" type="button" data-id="'+p.id+'">'
-        + '<span class="pc-top"><span class="pc-name">'+escapeHtml(p.name)+'</span><span class="pc-icon">💬</span></span>'
-        + '<span class="pc-status">'+(p.sent?'تم فتحها للإرسال':'رسالة واتساب جاهزة')+'<span class="dot"></span></span></button>';
+      var st = p.dev ? (p.seen === round ? ["seen", "👁️ شاف بطاقته"] : MK.online[p.dev.pid] ? ["on", "📱 متصل — ما فتح بطاقته"] : ["off", "📴 جواله مو متصل"])
+             : p.sent ? ["sent", "💬 انفتحت رسالته بالواتساب"] : ["", "⏳ ما مسح الباركود"];
+      return '<button class="p-card'+(st[0]?' '+st[0]:'')+'" type="button" data-id="'+p.id+'">'
+        + '<span class="pc-top"><span class="pc-name">'+escapeHtml(p.name)+'</span><span class="pc-icon">'+(p.dev?'📱':'💬')+'</span></span>'
+        + '<span class="pc-status">'+st[1]+'<span class="dot"></span></span></button>';
     }).join("");
-    mEls.mPlayerGrid.querySelectorAll(".p-card").forEach(function(card){
-      card.addEventListener("click", function(){ mOpenTicket(card.getAttribute("data-id")); });
-    });
   }
+  mEls.mPlayerGrid.addEventListener("click", function(e){ var c = e.target.closest(".p-card"); if(c) mOpenTicket(c.getAttribute("data-id")); });
 
   function mRosterList(p){
     return store.mafia.players.map(function(x,i){ return (i+1)+". "+x.name+(x.id===p.id?" (أنت)":""); }).join("\n");
@@ -1738,7 +1827,7 @@
     }
     return header+"\n\n"+meta.body+extra+"\n"+footer;
   }
-  function mWaLink(phone, message){ return "https://wa.me/"+phone+"?text="+encodeURIComponent(message); }
+  function mWaLink(phone, message){ return "https://wa.me/"+(phone||"")+"?text="+encodeURIComponent(message); }   /* بدون رقم: واتساب يخليك تختار المحادثة */
 
   /* إرسال الأدوار تلقائيًا عبر بوت واتساب يشتغل على جهاز صاحب الطاولة (للأدمن فقط).
      السر ينطلب مرة وحدة ويتحفظ بمتصفحه، وما ينحط بالملف. الإرسال اليدوي لكل لاعب يبقى متاح. */
@@ -1757,8 +1846,8 @@
   }
   function mAutoSend(){
     var btn = document.getElementById("mAutoSendBtn"), msg = document.getElementById("mAutoSendMsg");
-    var list = store.mafia.players.filter(function(p){ return p.role && !p.sent; });
-    if(!list.length){ msg.textContent = "كل الرسائل انرسلت."; return; }
+    var list = store.mafia.players.filter(function(p){ return p.role && !p.sent && p.phone; });
+    if(!list.length){ msg.textContent = store.mafia.players.some(function(p){ return p.phone; }) ? "كل الرسائل انرسلت." : "ما فيه أرقام واتساب — البطاقات تطلع بالجوالات من الباركود."; return; }
     var secret = mBotSecret();
     if(!secret){ msg.textContent = "ما انكتب السر."; return; }
     btn.disabled = true; msg.textContent = "جاري الإرسال...";
@@ -1793,9 +1882,18 @@
     var msg = mBuildMessage(p);
     mEls.mTicketText.textContent = msg;
     mEls.mTicketWaLink.href = mWaLink(p.phone, msg);
-    mEls.mTicketHint.textContent = "";
+    mEls.mTicketHint.textContent = p.dev ? "📱 جواله مربوط بالباركود — بطاقته تطلع له هناك، والواتساب احتياط." : "";
+    mEls.mTicketUnlink.hidden = !p.dev;
     mEls.mTicketOverlay.hidden = false;
   }
+  /* (v16) أحد اختار اسم غلط بجواله؟ نفك ربطه ويرجع يختار */
+  mEls.mTicketUnlink.addEventListener("click", function(){
+    var p = mCurrentTicketId && mPlayer(mCurrentTicketId);
+    if(!p || !p.dev) return;
+    mCloseTicket();
+    ask("تفك ربط جوال «" + p.name + "»؟", "جواله يرجع لقائمة الأسماء ويختار اسمه الصحيح. استخدمها لو أحد اختار اسم غلط.", "🔗 فك الربط")
+      .then(function(ok){ if(ok) mkUnlink(p); });
+  });
   function mCloseTicket(){ mEls.mTicketOverlay.hidden = true; mCurrentTicketId = null; }
   mEls.mTicketClose.addEventListener("click", mCloseTicket);
   mEls.mTicketOverlay.addEventListener("click", function(e){ if(e.target === mEls.mTicketOverlay) mCloseTicket(); });
@@ -1822,6 +1920,331 @@
     } else { fallback(); }
   });
 
+  /* ============ (v16) 📱 بطاقات المافيا بالجوال (الباركود) ============
+     كل لاعب يمسح باركود واحد ويختار اسمه (مرة وحدة)، وبطاقته تطلع بجواله وتتحدث لحالها كل جولة.
+     المافيا والطبيب والمحقق يختارون من قائمة بجوالاتهم، واختياراتهم تطلع هنا (ولو عدّلوا).
+     القناة اللحظية عامة: كل جوال يتفق مع الشاشة على مفتاح سري خاص فيه (ECDH)، والبطاقات والاختيارات تمشي مشفّرة (AES-GCM)،
+     فاللي يتصنّت على القناة ما يقرا دور أحد ولا يرسل اختيار باسم أحد. والباركود فيه بصمة مفتاح الشاشة عشان ما أحد ينتحلها. */
+  var MK = { ch:null, status:"off", wait:false, busy:false, rt:null, hb:null, link:null, priv:null, keys:{}, nKeys:0,
+             peers:{}, why:{}, online:{}, q:[], qT:null, seq:0, hiT:0, hiN:0, flash:{}, chatAt:{} };
+  var MK_SUBTLE = window.crypto && window.crypto.subtle && window.TextEncoder ? window.crypto.subtle : null;
+  var mkEnc = MK_SUBTLE ? new TextEncoder() : null, mkDec = MK_SUBTLE ? new TextDecoder() : null;
+  var CHOICE_Q = { mafia:"🎯 اختاروا ضحيتكم الليلة", detective:"🔎 مين تحقق معه الليلة؟", doctor:"💉 مين تحمي الليلة؟ (تقدر تختار نفسك)" };
+  function mkB64(buf){ var b = new Uint8Array(buf), s = ""; for(var i = 0; i < b.length; i++) s += String.fromCharCode(b[i]); return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); }
+  function mkUnB64(s){ s = String(s).replace(/-/g, "+").replace(/_/g, "/"); while(s.length % 4) s += "="; var bin = atob(s), b = new Uint8Array(bin.length); for(var i = 0; i < bin.length; i++) b[i] = bin.charCodeAt(i); return b; }
+  function mkB64ok(s, max){ return typeof s === "string" && s.length > 0 && s.length <= max && /^[\w-]+$/.test(s); }
+  function mNight(){ return Math.max(1, store.mafia.night | 0); }
+  function mPicks(){ if(!isObj(store.mafia.picks)) store.mafia.picks = {}; return store.mafia.picks; }
+  function mChat(){ if(!Array.isArray(store.mafia.chat)) store.mafia.chat = []; return store.mafia.chat; }   /* 💬 شات العصابة لهالجولة */
+  function mPlayer(id){ return store.mafia.players.find(function(p){ return p.id === id; }) || null; }
+  /* المافيا يختارون من غير المافيا، والمحقق من غيره، والطبيب أي أحد (حتى نفسه) */
+  function mCanPick(p, t){ return p.role === "mafia" ? t.role !== "mafia" : p.role === "detective" ? t.id !== p.id : p.role === "doctor"; }
+
+  /* رابط الباركود: رمز غرفة + مفتاح الشاشة — ينحفظ مع اللعبة عشان الباركود يبقى نفسه لو حدّثت الصفحة */
+  function mkLinkOk(L){ return isObj(L) && /^[a-z0-9]{4,16}$/.test(L.room) && mkB64ok(L.pub, 100) && isObj(L.priv) && /^[\w-]{22}$/.test(L.h || ""); }
+  function mkLink(){
+    if(!MK_SUBTLE) return Promise.reject(new Error("crypto"));
+    if(MK.link) return MK.link;
+    var L = store.mafia.link;
+    var p = (mkLinkOk(L) ? MK_SUBTLE.importKey("jwk", L.priv, { name:"ECDH", namedCurve:"P-256" }, false, ["deriveKey"]).then(function(k){ MK.priv = k; return L; })
+                         : Promise.reject(new Error("new"))).catch(function(){
+      return MK_SUBTLE.generateKey({ name:"ECDH", namedCurve:"P-256" }, true, ["deriveKey"]).then(function(kp){
+        return Promise.all([MK_SUBTLE.exportKey("raw", kp.publicKey), MK_SUBTLE.exportKey("jwk", kp.privateKey)]).then(function(x){
+          return MK_SUBTLE.digest("SHA-256", x[0]).then(function(h){
+            MK.priv = kp.privateKey;
+            store.mafia.link = { room:buzzRoomGen(), pub:mkB64(x[0]), priv:x[1], h:mkB64(h).slice(0, 22) };
+            store.mafia.players.forEach(function(q){ delete q.dev; delete q.ban; q.seen = 0; });   /* باركود جديد = الجوالات تمسح من جديد */
+            persist();
+            return store.mafia.link;
+          });
+        });
+      });
+    });
+    MK.link = p;
+    p.catch(function(){ if(MK.link === p) MK.link = null; });
+    return p;
+  }
+  function mkUrl(L){ return location.origin + location.pathname.replace(/[^\/]*$/, "") + "mafia-card.html#r=" + L.room + "&h=" + L.h; }
+  /* المفتاح المشترك مع جوال (يتحسب مرة وحدة لكل جوال) */
+  function mkKey(pid, pk){
+    var id = pid + "|" + pk;
+    if(MK.keys[id]) return MK.keys[id];
+    if(++MK.nKeys > 300){ MK.keys = {}; MK.nKeys = 1; }
+    var p = mkLink().then(function(){
+      return MK_SUBTLE.importKey("raw", mkUnB64(pk), { name:"ECDH", namedCurve:"P-256" }, false, []);
+    }).then(function(pub){
+      return MK_SUBTLE.deriveKey({ name:"ECDH", public:pub }, MK.priv, { name:"AES-GCM", length:256 }, false, ["encrypt", "decrypt"]);
+    });
+    MK.keys[id] = p;
+    p.catch(function(){ if(MK.keys[id] === p) delete MK.keys[id]; });
+    return p;
+  }
+
+  /* الرسائل تطلع بالدور (8 بالثانية بالكثير) عشان ما نتجاوز حد القناة لو اللاعبين كثير */
+  function mkQueue(id, run){
+    MK.q = MK.q.filter(function(j){ return j.id !== id; });
+    MK.q.push({ id:id, run:run });
+    if(!MK.qT) mkPump();
+  }
+  function mkPump(){
+    var j = MK.q.shift();
+    if(!j){ MK.qT = null; return; }
+    MK.qT = setTimeout(mkPump, 125);
+    try{ j.run(); }catch(e){}
+  }
+  function mkPost(event, payload){
+    if(!MK.ch || MK.status !== "on") return;
+    try{ var r = MK.ch.send({ type:"broadcast", event:event, payload:payload }); if(r && r.catch) r.catch(function(){}); }catch(e){}
+  }
+  /* «العرض» لجوال واحد: قائمة الأسماء (لو ما اختار اسمه) أو بطاقته — يتجهّز وقت الإرسال عشان يكون آخر شي */
+  function mkView(pid, pk, why){
+    var id = pid + "|" + pk;
+    if(why) MK.why[id] = why;
+    mkQueue("v:" + id, function(){
+      var L = store.mafia.link, w = MK.why[id];
+      delete MK.why[id];
+      if(!MK.ch || MK.status !== "on" || !mkLinkOk(L)) return;
+      var pl = store.mafia.players.find(function(p){ return p.dev && p.dev.pid === pid && p.dev.pk === pk; }) || null;
+      MK.seq = Math.max(Date.now(), MK.seq + 1);
+      var v = { s:MK.seq, live:!!store.mafia.caseId, round:store.mafia.round | 0, night:mNight(),
+                me:pl ? pl.id : null, name:pl ? pl.name : "", why:pl ? null : w || null, card:pl ? mkCard(pl) : null,
+                seen:!!(pl && store.mafia.caseId && pl.seen === (store.mafia.round | 0)),   /* وصلنا إنه شاف بطاقته (لو لا، جواله يعيد يرسلها) */
+                roster:pl ? [] : store.mafia.players.map(function(p){ return { id:p.id, n:p.name, on:!!p.dev }; }) };
+      mkKey(pid, pk).then(function(key){
+        var iv = crypto.getRandomValues(new Uint8Array(12));
+        return MK_SUBTLE.encrypt({ name:"AES-GCM", iv:iv, additionalData:mkEnc.encode("v|" + pid) }, key, mkEnc.encode(JSON.stringify(v)))
+          .then(function(ct){ mkPost("v", { to:pid, hk:L.pub, iv:mkB64(iv), ct:mkB64(ct) }); });
+      }).catch(function(){});
+    });
+  }
+  /* البطاقة: نفس رسالة الواتساب، والاختيار من قائمة بدال الرد برقم */
+  function mkCard(pl){
+    var meta = ROLE_META[pl.role];
+    if(!store.mafia.caseId || !meta) return null;
+    var P = mPicks(), c = { caseId:store.mafia.caseId, round:store.mafia.round | 0, night:mNight(), role:pl.role, label:meta.label, icon:meta.icon, body:meta.body };
+    if(pl.role === "mafia") c.team = mMafiaTeamLine(pl);
+    if(CHOICE_Q[pl.role]){
+      c.ask = CHOICE_Q[pl.role];
+      c.opts = store.mafia.players.filter(function(t){ return mCanPick(pl, t); }).map(function(t){ return { id:t.id, n:t.name }; });
+      c.pick = P[pl.id] ? P[pl.id].t : null;
+      if(pl.role === "mafia") c.mates = store.mafia.players.filter(function(t){ return t.role === "mafia" && t.id !== pl.id; })   /* زملاءه بالعصابة وش اختاروا */
+        .map(function(t){ var q = P[t.id], tg = q && mPlayer(q.t); return { n:t.name, t:tg ? tg.name : "" }; });
+    }
+    /* 💬 شات العصابة: بس لو المافيا اثنين أو أكثر */
+    if(pl.role === "mafia" && c.mates && c.mates.length) c.chat = mChat().slice(-30).map(function(x){
+      var w = mPlayer(x.from); return { n:w ? w.name : "؟", me:x.from === pl.id, t:x.t, cid:x.cid || "" };
+    });
+    return c;
+  }
+  /* رسالة من واحد من العصابة ← تنحفظ، وتروح (مشفّرة) لكل جوالات العصابة */
+  function mkChat(pl, m){
+    if(!store.mafia.caseId || m.round !== store.mafia.round || pl.role !== "mafia") return;
+    var t = String(m.t || "").replace(/\s+/g, " ").trim().slice(0, 200), cid = typeof m.cid === "string" && /^[\w-]{4,24}$/.test(m.cid) ? m.cid : "";
+    if(!t || store.mafia.players.filter(function(x){ return x.role === "mafia"; }).length < 2) return;
+    var C = mChat(), now = Date.now();
+    if(!(cid && C.some(function(x){ return x.from === pl.id && x.cid === cid; }))){   /* نفس الرسالة وصلت مرتين؟ نأكدها بس */
+      if(now - (MK.chatAt[pl.id] || 0) < 500) return;   /* أسرع من اللازم — جواله يعيد يرسلها */
+      MK.chatAt[pl.id] = now;
+      C.push({ from:pl.id, t:t, at:now, cid:cid });
+      if(C.length > 40) C.splice(0, C.length - 40);
+      persist(); mRenderNight();
+    }
+    store.mafia.players.forEach(function(x){ if(x.role === "mafia" && x.dev) mkView(x.dev.pid, x.dev.pk); });
+  }
+  /* جوالات ما اختارت اسمها للحين (تشوف قائمة الأسماء) */
+  function mkPeer(pid, pk){
+    var ks = Object.keys(MK.peers);
+    if(ks.length >= 40){ ks.sort(function(a, b){ return MK.peers[a].at - MK.peers[b].at; }); delete MK.peers[ks[0]]; }
+    MK.peers[pid + "|" + pk] = { pid:pid, pk:pk, at:Date.now() };
+  }
+  function mkRoster(){
+    var now = Date.now();
+    Object.keys(MK.peers).forEach(function(k){ var q = MK.peers[k]; if(now - q.at > 30 * 60000) delete MK.peers[k]; else mkView(q.pid, q.pk); });
+  }
+  function mkAll(){
+    if(!MK.ch) return;
+    store.mafia.players.forEach(function(p){ if(p.dev) mkView(p.dev.pid, p.dev.pk); });
+    mkRoster();
+  }
+  /* لاعبين انشالوا (أو سهرة جديدة): جوالاتهم ترجع لقائمة الأسماء */
+  function mkDrop(list){
+    (list || []).forEach(function(p){ if(p && p.dev){ mkPeer(p.dev.pid, p.dev.pk); mkView(p.dev.pid, p.dev.pk, "gone"); } });
+  }
+  function mkUnlink(p){
+    var d = p.dev;
+    if(!d) return;
+    p.ban = (Array.isArray(p.ban) ? p.ban : []).concat(d.pid).slice(-5);   /* ما يرجع لحاله لهالاسم — لازم يختاره بنفسه */
+    delete p.dev; p.seen = 0; delete mPicks()[p.id];
+    persist();
+    mkPeer(d.pid, d.pk); mkView(d.pid, d.pk, "unlinked");
+    mRender(); mkRoster();
+  }
+
+  /* جوال يسلّم: معه رقمه ومفتاحه العام، و«me» = الاسم اللي اختاره (x = اختاره بنفسه الحين) */
+  function mkOnHi(p){
+    if(!isObj(p) || !/^[\w-]{1,40}$/.test(p.pid || "") || !/^[\w-]{87}$/.test(p.pk || "")) return;
+    var now = Date.now();
+    if(now - MK.hiT > 1000){ MK.hiT = now; MK.hiN = 0; }
+    if(++MK.hiN > 25) return;   /* حماية من الإغراق */
+    var held = store.mafia.players.find(function(x){ return x.dev && x.dev.pid === p.pid; });
+    if(held){ mkView(p.pid, p.pk, held.dev.pk === p.pk ? null : "taken"); return; }   /* جوال معروف رجع — يبقى على اسمه */
+    var me = typeof p.me === "string" ? p.me : "", pl = me ? mPlayer(me) : null;
+    if(!me){ mkPeer(p.pid, p.pk); mkView(p.pid, p.pk); return; }
+    var why = !pl ? "gone" : pl.dev ? "taken" : !p.x && Array.isArray(pl.ban) && pl.ban.indexOf(p.pid) !== -1 ? "unlinked" : "";
+    if(why){ mkPeer(p.pid, p.pk); mkView(p.pid, p.pk, why); return; }
+    pl.dev = { pid:p.pid, pk:p.pk, s:0 }; delete pl.ban;
+    delete MK.peers[p.pid + "|" + p.pk];
+    persist(); mRender();
+    mkView(p.pid, p.pk);
+    mkRoster();   /* الباقين يشوفون الاسم صار «مأخوذ» */
+  }
+  /* رسالة مشفّرة من جوال مربوط: «شفت بطاقتي» أو اختياره بالليل */
+  function mkOnMsg(p){
+    if(!isObj(p) || !mkB64ok(p.iv, 16) || !mkB64ok(p.ct, 4000)) return;
+    var pl = store.mafia.players.find(function(x){ return x.dev && x.dev.pid === p.pid; });
+    if(!pl) return;
+    var dev = pl.dev;
+    mkKey(dev.pid, dev.pk).then(function(key){
+      return MK_SUBTLE.decrypt({ name:"AES-GCM", iv:mkUnB64(p.iv), additionalData:mkEnc.encode("m|" + dev.pid) }, key, mkUnB64(p.ct));
+    }).then(function(pt){
+      var m = JSON.parse(mkDec.decode(pt));
+      if(pl.dev !== dev || !isObj(m) || typeof m.s !== "number" || m.s <= (dev.s || 0)) return;   /* قديمة أو مكررة أو انفك ربطه */
+      dev.s = m.s;
+      if(m.k === "seen" && store.mafia.caseId && m.round === store.mafia.round){ pl.seen = m.round; mRenderPlayerGrid(); mkView(dev.pid, dev.pk); }
+      else if(m.k === "pick") mkPick(pl, m);
+      else if(m.k === "chat") mkChat(pl, m);
+      persist();
+    }).catch(function(){});
+  }
+  function mkPick(pl, m){
+    var t = mPlayer(m.t);
+    if(!store.mafia.caseId || m.round !== store.mafia.round || m.night !== mNight() || !CHOICE_Q[pl.role] || !t || !mCanPick(pl, t)) return;
+    var P = mPicks(), cur = P[pl.id];
+    if(!cur || cur.t !== t.id){
+      P[pl.id] = { t:t.id, n:cur ? (cur.n | 0) + 1 : 1, at:Date.now() };
+      MK.flash[pl.id] = Date.now();
+      mRenderNight();
+      if(pl.role === "mafia") store.mafia.players.forEach(function(x){ if(x.role === "mafia" && x !== pl && x.dev) mkView(x.dev.pid, x.dev.pk); });
+    }
+    mkView(pl.dev.pid, pl.dev.pk);   /* تأكيد لجواله */
+  }
+
+  function mkConnect(){
+    if(MK.ch || MK.busy || !MK_SUBTLE) return;
+    if(!sharedSb){
+      if(!sbFailed && !MK.wait){ MK.wait = true; sbReady.then(function(){ MK.wait = false; mkConnect(); }); }
+      return;
+    }
+    MK.busy = true; MK.status = "connecting";
+    mkLink().then(function(L){
+      MK.busy = false;
+      if(MK.ch) return;
+      var ch = sharedSb.channel("sahra-mcard-" + L.room, { config: { broadcast: { self:false }, presence: { key:"host" } } });
+      ch.on("broadcast", { event:"hi" }, function(m){ if(MK.ch === ch) mkOnHi(m && m.payload); });
+      ch.on("broadcast", { event:"msg" }, function(m){ if(MK.ch === ch) mkOnMsg(m && m.payload); });
+      ch.on("presence", { event:"sync" }, function(){
+        if(MK.ch !== ch) return;
+        var st = ch.presenceState(), on = {};
+        Object.keys(st).forEach(function(k){ (st[k] || []).forEach(function(x){ if(x && typeof x.pid === "string") on[x.pid] = true; }); });
+        MK.online = on; mRenderPlayerGrid();
+      });
+      ch.subscribe(function(status){
+        if(MK.ch !== ch) return;
+        if(status === "SUBSCRIBED"){ MK.status = "on"; mkBeacon(); mkAll(); }
+        else if(status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED"){ MK.status = "error"; mkRetry(); }
+        mkRenderLink();
+      });
+      MK.ch = ch;
+      clearInterval(MK.hb); MK.hb = setInterval(mkBeacon, 8000);   /* نبضة: الجوالات تعرف إن الشاشة شغالة */
+      mkRenderLink();
+    }).catch(function(){ MK.busy = false; MK.status = "error"; mkRenderLink(); });
+  }
+  function mkRetry(){
+    clearTimeout(MK.rt);
+    MK.rt = setTimeout(function(){
+      var ch = MK.ch; MK.ch = null; clearInterval(MK.hb);
+      if(ch && sharedSb){ try{ sharedSb.removeChannel(ch); }catch(e){} }
+      mkConnect();
+    }, 5000);
+  }
+  function mkBeacon(){ var L = store.mafia.link; if(mkLinkOk(L)) mkPost("host", { hk:L.pub, live:!!store.mafia.caseId, round:store.mafia.round | 0 }); }
+
+  /* الباركود + كم واحد مسحه */
+  function mkRenderLink(){
+    var box = document.getElementById("mLinkQr"), st = document.getElementById("mLinkSt");
+    if(!box || !store.mafia.caseId) return;
+    if(!MK_SUBTLE){ box.innerHTML = '<p class="ml-wait">الباركود يحتاج متصفح أحدث</p>'; box._u = ""; st.textContent = "اضغط على أي لاعب وارسل له بطاقته بالواتساب."; return; }
+    var L = store.mafia.link;
+    if(!mkLinkOk(L) || !MK.priv){ box.innerHTML = '<p class="ml-wait">جاري تجهيز الباركود…</p>'; box._u = ""; mkLink().then(mkRenderLink, function(){}); }
+    else {
+      var u = mkUrl(L);
+      if(box._u !== u){
+        if(needQR(mkRenderLink)){ box.innerHTML = qrSvg(u, 4, 1); box._u = u; }
+        else box.innerHTML = qrWaitHtml("ml-wait");
+      }
+    }
+    var n = store.mafia.players.filter(function(p){ return p.dev; }).length, tot = store.mafia.players.length;
+    st.textContent = MK.status === "on" ? (n >= tot ? "✅ كل اللاعبين مسحوا الباركود" : "📱 " + n + " من " + tot + " مسحوا الباركود")
+      : MK.status === "error" ? "⚠️ الاتصال انقطع — نحاول نرجع…" : "⏳ نتصل…";
+  }
+  function mkBig(open){
+    var ov = document.getElementById("mQrOverlay"), L = store.mafia.link;
+    if(!open || !mkLinkOk(L)){ ov.hidden = true; return; }
+    if(!needQR(function(){ mkBig(true); })) return;
+    document.getElementById("mQrBig").innerHTML = qrSvg(mkUrl(L), 8, 2);
+    ov.hidden = false;
+  }
+  document.getElementById("mLinkBig").addEventListener("click", function(){ mkBig(true); });
+  document.getElementById("mQrClose").addEventListener("click", function(){ mkBig(false); });
+  document.getElementById("mQrOverlay").addEventListener("click", function(e){ if(e.target === e.currentTarget) mkBig(false); });
+  document.addEventListener("keydown", function(e){ if(e.key === "Escape" && !document.getElementById("mQrOverlay").hidden) mkBig(false); });
+
+  /* 🌙 اختيارات الليلة عند المقدّم — مخفية عن الشاشة لين يضغط «اعرض» (لو الشاشة قدام اللاعبين) */
+  function mRenderNight(){
+    var box = document.getElementById("mNight");
+    var on = !!store.mafia.caseId && store.mafia.players.some(function(p){ return CHOICE_Q[p.role]; });
+    box.hidden = !on;
+    if(!on){ box.innerHTML = ""; return; }
+    var P = mPicks(), show = !!store.mafia.showPicks, now = Date.now();
+    var body = [["mafia", "🔪", "المافيا"], ["doctor", "💉", "الطبيب"], ["detective", "🔍", "المحقق"]].map(function(g){
+      var who = store.mafia.players.filter(function(p){ return p.role === g[0]; });
+      if(!who.length) return "";
+      var done = who.filter(function(p){ return P[p.id]; }).length, sum = "", rows = "";
+      if(show){
+        rows = '<ul>' + who.map(function(p){
+          var q = P[p.id], t = q && mPlayer(q.t), x = "";
+          if(t && g[0] === "detective") x = t.role === "mafia" ? ' <em class="bad">🔪 من المافيا</em>' : ' <em class="ok">👤 مو مافيا</em>';
+          return '<li' + (MK.flash[p.id] && now - MK.flash[p.id] < 2500 ? ' class="chg"' : '') + '><b>' + escapeHtml(p.name) + '</b><span>'
+            + (t ? "← " + escapeHtml(t.name) + x + (q.n > 1 ? ' <i class="ed">✏️ عدّل</i>' : "") : '<span class="dim">⏳ ما اختار</span>') + '</span></li>';
+        }).join("") + '</ul>';
+        if(g[0] === "mafia" && who.length > 1 && done === who.length){
+          var ts = who.map(function(p){ return P[p.id].t; }), t0 = mPlayer(ts[0]);
+          sum = ts.every(function(x){ return x === ts[0]; }) ? '<p class="mn-sum ok">🎯 اتفقوا على ' + escapeHtml(t0 ? t0.name : "") + '</p>' : '<p class="mn-sum warn">⚠️ ما اتفقوا للحين</p>';
+        }
+      }
+      var chat = "", C = g[0] === "mafia" && who.length > 1 ? mChat() : [];
+      if(C.length) chat = show
+        ? '<div class="mn-chat">' + C.slice(-12).map(function(x){ var w = mPlayer(x.from); return '<p><b>' + escapeHtml(w ? w.name : "؟") + ':</b>' + escapeHtml(x.t) + '</p>'; }).join("") + '</div>'
+        : '<p class="mn-note">💬 ' + C.length + ' رسالة بشات العصابة</p>';
+      return '<div class="mn-g"><div class="mn-h"><span>' + g[1] + " " + g[2] + '</span><span class="mn-c">'
+        + (done === who.length ? (who.length > 1 ? "✅ اختاروا" : "✅ اختار") : "⏳ " + done + " من " + who.length) + '</span></div>' + rows + sum + chat + '</div>';
+    }).join("");
+    box.innerHTML = '<div class="mn-head"><b>🌙 اختيارات الليلة ' + mNight() + '</b>'
+      + '<button class="btn-ghost btn-sm" type="button" data-mn="eye">' + (show ? "🙈 اخفِ" : "👁️ اعرض") + '</button>'
+      + '<button class="btn-ghost btn-sm" type="button" data-mn="night">🌙 ليلة جديدة</button></div>'
+      + (show ? "" : '<p class="mn-note">🔒 مخفية عن الشاشة — اضغط «👁️ اعرض» لما تكون الشاشة قدامك بس.</p>') + body;
+    var mc = box.querySelector(".mn-chat"); if(mc) mc.scrollTop = mc.scrollHeight;   /* آخر رسالة تحت */
+  }
+  document.getElementById("mNight").addEventListener("click", function(e){
+    var b = e.target.closest("[data-mn]"); if(!b) return;
+    if(b.getAttribute("data-mn") === "eye"){ store.mafia.showPicks = !store.mafia.showPicks; persist(); mRenderNight(); return; }
+    ask("نبدأ ليلة جديدة؟", "اختيارات الليلة " + mNight() + " تنمسح، والمافيا والطبيب والمحقق يختارون من جديد.", "🌙 ليلة جديدة").then(function(ok){
+      if(!ok) return;
+      store.mafia.night = mNight() + 1; store.mafia.picks = {}; MK.flash = {};
+      persist(); mRenderNight(); mkAll();
+    });
+  });
+
   function mOnlineRender(){
     var a = document.getElementById("mafiaRejoin"), last = null;
     try{ last = JSON.parse(localStorage.getItem("sahra-mafia-last") || "null"); }catch(e){}
@@ -1839,7 +2262,11 @@
     document.getElementById("mRoundLine2").innerHTML = mRoundText();
     mEls.mafiaCaseStamp.innerHTML = active ? 'LIVE CASE <b>'+store.mafia.caseId+'</b> · ج'+store.mafia.round : '';
     document.getElementById("mAutoSendBtn").hidden = !(ACCT && ACCT.admin);
-    if(active){ mRenderPlayerGrid(); } else { mRenderPlayerList(); mRenderRoleConfig(); mUpdateStartState(); }
+    if(active){ mRenderPlayerGrid(); mkRenderLink(); } else { mRenderPlayerList(); mRenderRoleConfig(); mUpdateStartState(); }
+    document.querySelectorAll("[data-mmanual]").forEach(function(cb){ cb.checked = !!store.mafia.manual; });
+    mRenderNight();
+    /* (v16) نتصل بقناة البطاقات لما تكون فيه لعبة، أو جوالات مربوطة تنتظر الجولة الجاية */
+    if(active || store.mafia.players.some(function(p){ return p.dev; })) mkConnect();
   }
 
   /* ======================================================================
@@ -2224,7 +2651,7 @@
     buzzStopTimer(); buzzTimeUpSound();
     recMark();   /* (v12) 🔁 نعلّم لحظة الصفارة بالتسجيل ونكمّل ثانية ونص بعدها */
     recExpectPhone();   /* (v12) 🔁 لو مايك جوال اللي ضغط جاهز — ننتظر مقطعه */
-    var tw = buzz.state === "locked" && store.teams.find(function(t){ return t.id === buzz.winner; });
+    var tw = buzz.state === "locked" && teamOf(buzz.winner);
     if(tw) buzzTupFlash(tw, buzz.winnerName);
     /* (v10) فيه أحد ضغط وخلص وقته: نافذة للمقدّم — ✅ صح / ❌ غلط / ⏰ ما جاوب. الأزرار تنتظر قراره */
     if(buzz.state === "locked" && buzz.winner && store.teams.some(function(t){ return t.id === buzz.winner; })){
@@ -2481,7 +2908,7 @@
       if(!bzcEls.box.hidden){ bzcEls.box.hidden = true; document.body.classList.remove("has-bz-clock"); }
       return;
     }
-    var t = store.teams.find(function(x){ return x.id === buzz.winner; });
+    var t = teamOf(buzz.winner);
     var ms = Math.max(0, buzz.endAt - Date.now()), left = Math.ceil(ms / 1000), span = buzz.span || (buzzTimerSecs() * 1000) || 1;
     var who = '⚡ ' + (buzz.winnerName ? '<b>' + escapeHtml(buzz.winnerName) + '</b><small>' + escapeHtml(t ? t.name : "") + '</small>' : '<b>' + escapeHtml(t ? t.name : "") + '</b>');
     if(bzcEls.who._h !== who){ bzcEls.who._h = who; bzcEls.who.innerHTML = who; }
@@ -2731,7 +3158,7 @@
     if(box.hidden !== !show) box.hidden = !show;
     if(!show) return;
     var Pl = REC.play, ready = !!cur;
-    var wt = store.teams.find(function(t){ return t.id === buzz.winner; }), who = escapeHtml(buzz.winnerName || (wt ? wt.name : "الفريق"));
+    var wt = teamOf(buzz.winner), who = escapeHtml(buzz.winnerName || (wt ? wt.name : "الفريق"));
     recEls.st.textContent = ready ? (Pl ? "▶ يشتغل…" : "✅ جاهزة") : "⏺️ نجهّز الإعادة…";
     /* المصدر: 📱 جوال اللي ضغط (صوته أوضح) أو 🖥️ مايك الشاشة — لو الاثنين موجودين المقدّم يختار */
     var src = "", isP = !!cur && cur === REC.pseg;
@@ -2766,7 +3193,7 @@
     var X = function(c){ return W - 1 - c; };
     var mk = Math.round(S.mark / S.data.length * W), ph = -1;
     if(REC.play && buzz.audio){ var el = Math.max(0, buzz.audio.currentTime - REC.play.t0) * REC.play.rate * S.sr; ph = Math.min(W, Math.round(el / S.data.length * W)); }
-    var tm = store.teams.find(function(t){ return t.id === buzz.winner; }), col = tm ? tm.color : "#7c5cff";
+    var tm = teamOf(buzz.winner), col = tm ? tm.color : "#7c5cff";
     for(var c3 = 0; c3 < W; c3 += 4){
       var h = Math.max(3, REC.peaks[c3] * (H - top - 8)), y = top + (H - top - h) / 2;
       x.fillStyle = ph >= 0 && c3 <= ph ? col : c3 < mk ? "rgba(255,255,255,.85)" : "rgba(255,255,255,.3)";
@@ -4036,7 +4463,9 @@
     store.heads = { round:null, deck: store.heads.deck || "all", dur: store.heads.dur || 60, turns:{}, done:[], last:{} };
     HD.live = null;
     store.rope = { round:null }; if(RP.host){ RP.host.destroy(); RP.host = null; }
-    store.mafia = { caseId:null, round:0, players:[], counts:{ mafia:0, detective:0, doctor:0 } };
+    var mGone = store.mafia.players;   /* (v16) نفس باركود المافيا يبقى، والجوالات ترجع لقائمة الأسماء */
+    store.mafia = { caseId:null, round:0, players:[], counts:{ mafia:0, detective:0, doctor:0 }, link:store.mafia.link };
+    mkDrop(mGone); mkRoster();
     store.win.shown = ""; winEls.modal.hidden = true;
     if(cfgPlay().win_target > 0) store.win.target = cfgPlay().win_target;
     store.plan = null; closePlanModal(); document.getElementById("scoreModal").hidden = true;
@@ -4780,7 +5209,7 @@
     if(window.SahraRope) return Promise.resolve(window.SahraRope);
     if(RP.loading) return RP.loading;
     RP.loading = new Promise(function(res, rej){
-      var sc = document.createElement("script"); sc.src = "games/rope.js?v=73"; sc.async = true;
+      var sc = document.createElement("script"); sc.src = "games/rope.js?v=74"; sc.async = true;
       sc.onload = function(){ if(window.SahraRope) res(window.SahraRope); else { RP.loading = null; rej(new Error("rope")); } };
       sc.onerror = function(){ RP.loading = null; rej(new Error("rope")); };
       document.head.appendChild(sc);
@@ -4951,7 +5380,7 @@
     var mins = PLAN_MINUTES.map(function(m){ return '<button type="button" data-pl="min" data-v="' + m + '"' + (D.minutes === m ? ' class="on"' : '') + '>' + minutesLabel(m) + '</button>'; }).join("");
     var gl = games.map(function(g){
       var on = D.games.indexOf(g) !== -1, z = cfgSize(g);
-      var sub = g === "mafia" ? "تحتاج 4 لاعبين وأرقام واتساب · ≈ 20 د" : g === "heads" ? "جوال لكل فريق (أو من هالجهاز)" : "الجولة ≈ " + estMinutes(g, z ? z.def : null) + " د";
+      var sub = g === "mafia" ? "تحتاج 4 لاعبين بجوالاتهم · ≈ 20 د" : g === "heads" ? "جوال لكل فريق (أو من هالجهاز)" : "الجولة ≈ " + estMinutes(g, z ? z.def : null) + " د";
       return '<button type="button" class="pl-game' + (on ? " on" : "") + '" data-pl="game" data-g="' + g + '" style="' + accentStyle(g) + '" aria-pressed="' + on + '">'
         + gTile(g) + '<span><b>' + GAME_INFO[g].name + '</b><small>' + sub + '</small></span><span class="ck">' + icon("i-check") + '</span></button>';
     }).join("");
@@ -5784,6 +6213,7 @@
       if(r.error) return fnError(r).then(function(code){ throw new Error(code); });
       var d = parseJ(r.data);
       if(!d || !d.url) throw new Error((d && d.error) || "server_error");
+      if(!/^https:\/\//.test(d.url)) throw new Error("server_error");   /* صفحة الدفع لازم https */
       location.href = d.url;
     }).catch(function(err){
       var code = (err && err.message) || "";
@@ -5995,8 +6425,7 @@
     var act = b.getAttribute("data-pay"), m = (TR.methods || [])[TR.sel], o = TR.order;
     if(act === "copy" && m){
       var num = String(m.num).replace(/[\s-]+/g, ""), what = trIsIban(num) ? "الآيبان" : "الرقم";
-      if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(num).then(function(){ toast("📋 تم نسخ " + what); }, function(){ prompt("انسخ " + what + ":", num); });
-      else prompt("انسخ " + what + ":", num);
+      copyLink(num, "📋 تم نسخ " + what, what);
       return;
     }
     if(act === "sent" && o){

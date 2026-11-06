@@ -2,6 +2,8 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
+<script>/* (v15) لوحة الأدمن ما تنفتح داخل موقع ثاني (حماية من الخداع بالنقر) */
+if(window.top !== window.self){ var same = false; try{ same = window.top.location.origin === location.origin; }catch(e){} if(!same){ document.documentElement.style.display = "none"; try{ window.top.location.replace(location.href); }catch(e){} } }</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#050507">
 <meta name="robots" content="noindex, nofollow">
@@ -874,7 +876,8 @@ document.addEventListener("DOMContentLoaded", function(){
   }
   /* ================= (v14) 📥 طلبات التحويل + 📲 طرق التحويل ================= */
   var TRA = { f:"wait", rows:[], pending:0, opened:0, focus:null, rowsDone:false };
-  function trJ(r){ var d = r && r.data; return typeof d === "string" ? JSON.parse(d) : d; }
+  /* رد السيرفر (rpc) ممكن يجي نص JSON أو كائن */
+  function rpcData(r){ var d = r && r.data; return typeof d === "string" ? JSON.parse(d) : d; }
   function trErrText(e){
     var m = String((e && (e.message || e.details || e.code)) || e || "");
     if(/PGRST202|Could not find the function|does not exist/i.test(m)) return "الدفع بالتحويل يحتاج تحديث قاعدة البيانات — شغّل ملف v14_transfer.sql في Supabase (SQL Editor).";
@@ -911,7 +914,7 @@ document.addEventListener("DOMContentLoaded", function(){
   }
   function trLoadOrders(){
     return SB.rpc("admin_transfer_orders", { p_all: TRA.f === "all" }).then(function(r){
-      must(r); var d = trJ(r) || {};
+      must(r); var d = rpcData(r) || {};
       TRA.rows = d.rows || []; TRA.pending = d.pending | 0; TRA.opened = d.opened | 0;
       clearErr("trErr"); trBadge(TRA.pending);
       if(TAB === "sales") trRenderOrders();
@@ -926,7 +929,7 @@ document.addEventListener("DOMContentLoaded", function(){
     var f = $("trFocus");
     f.hidden = false; f.innerHTML = '<div class="empty">جاري فتح الطلب…</div>';
     SB.rpc("admin_order_get", { p_order:id }).then(function(r){
-      must(r); TRA.focus = trJ(r); trFocusRender();
+      must(r); TRA.focus = rpcData(r); trFocusRender();
       try{ f.scrollIntoView({ block:"start" }); }catch(e){}
     }).catch(function(e){ f.innerHTML = '<div class="err">⚠️ ' + esc(trErrText(e)) + '</div>'; });
   }
@@ -947,7 +950,7 @@ document.addEventListener("DOMContentLoaded", function(){
       if(!confirm("تأكدت إن " + sar((o.amount | 0) / 100) + " وصلتك" + (o.via ? " عن طريق " + o.via : "") + "؟\nبتنضاف " + roundsTxt(o.rounds) + " لـ " + who + ".")) return;
       b.disabled = true;
       SB.rpc("admin_order_confirm", { p_order:id }).then(function(r){
-        must(r); var d = trJ(r) || {};
+        must(r); var d = rpcData(r) || {};
         toast(d.already ? "✅ هالطلب مفعّل من قبل" : "✅ انضافت " + roundsTxt(o.rounds) + " لـ " + who + " — رصيده الحين " + roundsTxt(d.credits | 0));
         if(TRA.focus && TRA.focus.id === id){ TRA.focus.status = "paid"; TRA.focus.paid_at = new Date().toISOString(); TRA.focus.credits = d.credits; trFocusRender(); }
         trLoadOrders(); loadSales();
@@ -1978,7 +1981,7 @@ document.addEventListener("DOMContentLoaded", function(){
     Array.prototype.forEach.call($("sRange").querySelectorAll("[data-days]"), function(b){ b.classList.toggle("on", +b.getAttribute("data-days") === ST_DAYS); });
     $("statsBody").classList.add("loading");
     return SB.rpc("admin_stats", { p_days:ST_DAYS }).then(function(r){
-      must(r); clearErr("sErr"); renderStats(typeof r.data === "string" ? JSON.parse(r.data) : r.data);
+      must(r); clearErr("sErr"); renderStats(rpcData(r));
     }).catch(function(e){ showErr("sErr", e); }).then(function(){ $("statsBody").classList.remove("loading"); });
   }
   $("sRange").addEventListener("click", function(e){ var b = e.target.closest("[data-days]"); if(!b) return; ST_DAYS = +b.getAttribute("data-days"); loadStats(); });

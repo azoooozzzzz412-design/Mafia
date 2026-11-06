@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#050507">
+<title>بطاقة المافيا — طاولة السهرة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@600;700;800&family=IBM+Plex+Sans+Arabic:wght@500;600;700&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@600;700;800&family=IBM+Plex+Sans+Arabic:wght@500;600;700&display=swap"></noscript>
+<link rel="stylesheet" href="theme.css?v=7">
+<link rel="preconnect" href="https://monovczlaegaezjkmpnm.supabase.co" crossorigin>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script defer src="config.js"></script>
+<style>
+  :root{ color-scheme:dark; --rc:var(--tx-3); }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  [hidden]{ display:none !important; }
+  html, body{ min-height:100%; }
+  body{
+    background:radial-gradient(ellipse 120% 55% at 50% -12%, rgba(239,68,68,.22), transparent 62%), var(--stars-a) 0 0/260px 260px, var(--bg); color:var(--tx); font-family:var(--f-body);
+    min-height:100dvh; display:flex; flex-direction:column; align-items:center;
+    padding:max(14px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+    -webkit-tap-highlight-color:transparent;
+  }
+  button{ font:inherit; color:inherit; cursor:pointer; }
+  .top{ width:100%; max-width:460px; display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:18px; }
+  .brand{ font-family:var(--f-display); font-weight:800; font-size:1.05rem; }
+  .conn{ display:inline-flex; align-items:center; gap:7px; font-size:.78rem; color:var(--tx-2); padding:6px 11px; border-radius:999px; background:var(--glass); border:1px solid var(--line); }
+  .conn i{ width:8px; height:8px; border-radius:50%; background:var(--warn); }
+  .conn.on i{ background:var(--ok); }
+  .conn.bad i{ background:var(--bad); }
+  .stage{ width:100%; max-width:460px; flex:1; display:flex; flex-direction:column; justify-content:center; padding-bottom:12px; }
+  .foot{ font-size:.74rem; color:var(--tx-3); text-align:center; }
+
+  .msg{ text-align:center; padding:20px 6px; }
+  .msg .big{ font-size:3.2rem; margin-bottom:12px; }
+  .msg h2, .ttl{ font-family:var(--f-display); font-weight:800; font-size:1.35rem; line-height:1.5; }
+  .msg p, .sub{ color:var(--tx-2); font-size:.92rem; line-height:1.8; margin-top:6px; }
+  .ttl{ text-align:center; }
+  .sub{ text-align:center; margin-bottom:16px; }
+  .note{ font-size:.86rem; line-height:1.7; padding:11px 14px; border-radius:14px; margin-bottom:14px; text-align:center; }
+  .note.bad{ background:var(--bad-soft); border:1px solid var(--bad-line); color:#fecaca; }
+
+  .names{ display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; }
+  .nm{ min-height:58px; padding:10px; border-radius:16px; border:1px solid var(--line-2); background:var(--glass-2); font-weight:700; font-size:1rem; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; overflow-wrap:anywhere; }
+  .nm:active{ transform:scale(.98); }
+  .nm.taken{ opacity:.45; cursor:default; }
+  .nm small{ font-size:.72rem; font-weight:500; color:var(--tx-3); }
+  .confirm{ text-align:center; }
+  .confirm .row{ display:flex; flex-direction:column; gap:10px; margin-top:20px; }
+
+  .sealed{ text-align:center; padding:28px 18px; border-radius:var(--r-xl); border:1px solid rgba(239,68,68,.35); background:linear-gradient(180deg, rgba(239,68,68,.1), rgba(15,14,24,.9)); }
+  .sealed .seal-ic{ font-size:3rem; margin-bottom:8px; }
+  .sealed h2{ font-family:var(--f-display); font-weight:800; font-size:1.3rem; }
+  .reveal{ width:100%; margin-top:22px; min-height:64px; border-radius:18px; border:0; background:linear-gradient(180deg, #ef4444, #b91c1c); color:#fff; font-family:var(--f-display); font-weight:800; font-size:1.1rem; box-shadow:0 16px 40px -14px rgba(239,68,68,.7); }
+  .hint{ font-size:.8rem; color:var(--tx-3); margin-top:12px; }
+  .notme{ font-size:.76rem; color:var(--tx-3); text-align:center; margin-top:16px; line-height:1.7; }
+
+  .card{ position:relative; padding:20px 18px 18px; border-radius:var(--r-xl); border:1px solid color-mix(in srgb, var(--rc) 45%, transparent);
+    background:linear-gradient(180deg, color-mix(in srgb, var(--rc) 14%, #0f0e18), #0d0c15 70%); box-shadow:var(--sh-2); }
+  .c-art{ display:block; width:min(100%, 300px, calc(58vh * 2 / 3)); aspect-ratio:2 / 3; height:auto; object-fit:cover; margin:0 auto 16px; border-radius:16px;
+    background:#1a1410; box-shadow:0 22px 50px -18px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.06); animation:artIn .6s var(--ease-out) both; }
+  @keyframes artIn{ from{ opacity:0; transform:perspective(900px) rotateY(75deg) scale(.95); } to{ opacity:1; transform:none; } }
+  @media (prefers-reduced-motion: reduce){ .c-art{ animation:none; } }
+  .c-top{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:14px; }
+  .badge{ display:inline-flex; align-items:center; gap:6px; font-weight:800; font-size:1rem; padding:7px 15px; border-radius:999px; color:var(--rc); background:color-mix(in srgb, var(--rc) 18%, transparent); }
+  .c-case{ font-family:var(--f-mono); font-size:.72rem; color:var(--tx-3); letter-spacing:1px; }
+  .c-who{ font-size:.86rem; color:var(--tx-2); margin-bottom:8px; }
+  .c-body{ white-space:pre-wrap; font-size:.92rem; line-height:1.9; color:var(--tx-2); }
+  .c-team{ white-space:pre-wrap; font-size:.88rem; line-height:1.8; margin-top:12px; padding:10px 12px; border-radius:12px; background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.25); }
+  .choose{ margin-top:16px; padding-top:14px; border-top:1px dashed var(--line-2); }
+  .choose h3{ font-family:var(--f-display); font-weight:700; font-size:1rem; margin-bottom:10px; display:flex; justify-content:space-between; gap:8px; }
+  .choose h3 small{ font-family:var(--f-body); font-weight:500; font-size:.76rem; color:var(--tx-3); white-space:nowrap; flex-shrink:0; padding-top:3px; }
+  .opts{ display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px; }
+  .opt{ min-height:50px; padding:8px; border-radius:14px; border:1px solid var(--line-2); background:var(--glass); font-weight:700; font-size:.95rem; overflow-wrap:anywhere; }
+  .opt.on{ border-color:var(--rc); background:color-mix(in srgb, var(--rc) 24%, transparent); box-shadow:0 0 0 2px color-mix(in srgb, var(--rc) 40%, transparent); }
+  .ack{ font-size:.82rem; color:var(--tx-2); margin-top:10px; text-align:center; }
+  .mates{ display:flex; flex-direction:column; gap:4px; margin-top:10px; font-size:.82rem; color:var(--tx-2); text-align:center; }
+  .hide{ width:100%; margin-top:16px; min-height:46px; border-radius:14px; border:1px solid var(--line-2); background:var(--glass); font-weight:700; }
+  /* 💬 شات العصابة */
+  .chat{ margin-top:16px; padding-top:14px; border-top:1px dashed var(--line-2); }
+  .chat h3{ font-family:var(--f-display); font-weight:700; font-size:1rem; margin-bottom:8px; }
+  .msgs{ max-height:230px; overflow-y:auto; display:flex; flex-direction:column; gap:6px; padding:8px; border-radius:12px; background:rgba(0,0,0,.28); border:1px solid var(--line); }
+  .msgs .m{ align-self:flex-start; max-width:88%; padding:7px 11px; border-radius:12px; background:var(--glass-2); font-size:.92rem; line-height:1.6; overflow-wrap:anywhere; }
+  .msgs .m b{ display:block; font-size:.74rem; color:var(--mafia-bright); }
+  .msgs .m.me{ align-self:flex-end; background:rgba(239,68,68,.16); }
+  .msgs .m.pend{ opacity:.6; }
+  .msgs .mempty{ font-size:.82rem; color:var(--tx-3); text-align:center; padding:6px; }
+  .cform{ display:flex; gap:8px; margin-top:8px; }
+  .cform input{ flex:1; min-width:0; min-height:46px; padding:10px 12px; border-radius:12px; border:1px solid var(--line-2); background:rgba(255,255,255,.04); color:var(--tx); font:inherit; font-size:16px; }
+  .cform input:focus{ outline:none; border-color:var(--mafia); }
+  .cform button{ min-height:46px; padding:0 16px; border-radius:12px; border:0; background:linear-gradient(180deg, #ef4444, #b91c1c); color:#fff; font-weight:800; }
+  .cnote{ font-size:.74rem; color:var(--tx-3); margin-top:6px; text-align:center; }
+</style>
+</head>
+<body>
+<header class="top">
+  <span class="brand">🕯️ المافيا</span>
+  <span class="conn" id="conn"><i></i><span id="connText">نتصل…</span></span>
+</header>
+<main class="stage" id="stage" aria-live="polite"></main>
+<p class="foot" id="foot">طاولة السهرة · بطاقة المافيا</p>
+
+<script>
+/* (v16) 📱 بطاقة المافيا بالجوال: اللاعب يمسح باركود المقدّم مرة وحدة ويختار اسمه، وبطاقته تطلع هنا وتتحدث كل جولة.
+   القناة اللحظية عامة، فالجوال يتفق مع شاشة المقدّم على مفتاح سري خاص فيه (ECDH)، والبطاقة والاختيار يمشون مشفّرين (AES-GCM).
+   والرابط فيه بصمة مفتاح الشاشة (h) — رسالة من أي أحد ثاني ينتحل الشاشة ما تنقبل. */
+document.addEventListener("DOMContentLoaded", function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  var els = { stage:$("stage"), conn:$("conn"), connText:$("connText") };
+  var hp = new URLSearchParams(location.hash.replace(/^#/, ""));
+  var room = (hp.get("r") || "").trim().toLowerCase(), pin = (hp.get("h") || "").trim();
+  var subtle = window.crypto && window.crypto.subtle;
+  var ROLES = { mafia:"var(--mafia)", detective:"var(--trivia-bright)", doctor:"var(--gold)", citizen:"var(--tx-2)" };
+  var ART = { mafia:"cards/mafia.webp", detective:"cards/detective.webp", doctor:"cards/doctor.webp", citizen:"cards/citizen.webp" };   /* صورة كل دور */
+  var WHY = {
+    taken: "هالاسم مربوط بجوال ثاني. لو هو اسمك، قل للمقدّم يفك الربط من شاشته.",
+    unlinked: "المقدّم فك ربط جوالك. اختر اسمك الصحيح.",
+    gone: "اسمك ما عاد موجود بالقائمة. اختر اسمك من جديد."
+  };
+
+  function esc(t){ return String(t == null ? "" : t).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+  function msgBox(icon, title, sub){ return '<div class="msg"><div class="big">' + icon + '</div><h2>' + esc(title) + '</h2>' + (sub ? '<p>' + esc(sub) + '</p>' : '') + '</div>'; }
+  function fatal(icon, title, sub){ els.conn.hidden = true; els.stage.innerHTML = msgBox(icon, title, sub); }
+
+  if(!/^[a-z0-9]{4,16}$/.test(room) || !/^[\w-]{22}$/.test(pin)){
+    fatal("📷", "امسح الباركود من الشاشة", "افتح «المافيا» من طاولة السهرة، وامسح الباركود اللي يطلع عند المقدّم.");
+    return;
+  }
+  if(!subtle || !window.TextEncoder){ fatal("⚠️", "متصفحك ما يدعم البطاقات", "حدّث المتصفح، أو افتح الرابط بـ Chrome أو Safari."); return; }
+  if(typeof window.supabase === "undefined" || !window.supabase.createClient){ fatal("⚠️", "ما قدرنا نحمّل الصفحة", "تأكد من الإنترنت وحدّث الصفحة."); return; }
+  if(!window.SAHRA_SUPABASE_URL || !window.SAHRA_SUPABASE_ANON_KEY || window.SAHRA_SUPABASE_URL.indexOf("xxxx") !== -1){
+    fatal("⚠️", "إعدادات الموقع ناقصة", "ملف config.js ما فيه بيانات Supabase."); return;
+  }
+
+  var enc = new TextEncoder(), dec = new TextDecoder();
+  function b64(buf){ var b = new Uint8Array(buf), s = ""; for(var i = 0; i < b.length; i++) s += String.fromCharCode(b[i]); return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); }
+  function unb64(s){ s = String(s).replace(/-/g, "+").replace(/_/g, "/"); while(s.length % 4) s += "="; var bin = atob(s), b = new Uint8Array(bin.length); for(var i = 0; i < bin.length; i++) b[i] = bin.charCodeAt(i); return b; }
+  function b64ok(s, max){ return typeof s === "string" && s.length > 0 && s.length <= max && /^[\w-]+$/.test(s); }
+  function str(x, max){ return typeof x === "string" ? x.slice(0, max) : ""; }
+  function idOk(x){ return typeof x === "string" && /^[\w-]{1,40}$/.test(x); }
+
+  /* جوالك بهالغرفة: رقم عشوائي + مفتاح — ينحفظون عشان لو سكّرت الصفحة ورجعت تكمّل باسمك */
+  var REC_KEY = "sahra-mcard:" + room, rec = null, priv = null;
+  function saveRec(){ try{ localStorage.setItem(REC_KEY, JSON.stringify(rec)); }catch(e){} }
+  function newKeys(){
+    return subtle.generateKey({ name:"ECDH", namedCurve:"P-256" }, true, ["deriveKey"]).then(function(kp){
+      return Promise.all([subtle.exportKey("raw", kp.publicKey), subtle.exportKey("jwk", kp.privateKey)]).then(function(x){
+        priv = kp.privateKey;
+        rec = { pid:"c" + b64(crypto.getRandomValues(new Uint8Array(9))), pub:b64(x[0]), priv:x[1], me:null, hs:0, ms:0 };
+        saveRec();
+      });
+    });
+  }
+  function loadKeys(){
+    var r = null;
+    try{ r = JSON.parse(localStorage.getItem(REC_KEY) || "null"); }catch(e){}
+    if(!r || !idOk(r.pid) || !b64ok(r.pub, 100) || !r.priv || typeof r.priv !== "object") return newKeys();
+    return subtle.importKey("jwk", r.priv, { name:"ECDH", namedCurve:"P-256" }, false, ["deriveKey"]).then(function(k){
+      priv = k; rec = r;
+      if(!idOk(rec.me)) rec.me = null;
+      rec.hs = +rec.hs || 0; rec.ms = +rec.ms || 0;
+    }, newKeys);
+  }
+
+  /* الحالة: الشاشة هي الحكم — هنا نعرض آخر «عرض» وصلنا منها، ونرسل الاسم والاختيار */
+  var S = { conn:"connecting", connSince:Date.now(), view:null, viewAt:0, hostAt:0, hiAt:0, claiming:null, confirm:null,
+            why:null, whyName:"", reveal:false, cardKey:"", seenAt:0, pending:null, okHk:"", key:null, keyHk:"", html:"",
+            chatPend:[], msgs:null };   /* chatPend = رسايل انرسلت وتنتظر تأكيد الشاشة */
+  var client = null, ch = null;
+
+  /* مفتاح الشاشة: نتأكد إن بصمته نفس اللي بالباركود، وبعدها نطلع المفتاح المشترك */
+  function hostKey(hk){
+    if(S.okHk && hk !== S.okHk) return Promise.reject(new Error("host"));
+    if(S.key && S.keyHk === hk) return S.key;
+    var p = subtle.digest("SHA-256", unb64(hk)).then(function(h){
+      if(b64(h).slice(0, 22) !== pin) throw new Error("pin");
+      return subtle.importKey("raw", unb64(hk), { name:"ECDH", namedCurve:"P-256" }, false, []);
+    }).then(function(pub){
+      return subtle.deriveKey({ name:"ECDH", public:pub }, priv, { name:"AES-GCM", length:256 }, false, ["encrypt", "decrypt"]);
+    }).then(function(k){ S.okHk = hk; return k; });
+    S.key = p; S.keyHk = hk;
+    p.catch(function(){ if(S.key === p){ S.key = null; S.keyHk = ""; } });
+    return p;
+  }
+
+  function setConn(c){ if(S.conn !== c){ S.conn = c; S.connSince = Date.now(); } }
+  function connect(){
+    setConn("connecting");
+    var c = client.channel("sahra-mcard-" + room, { config: { broadcast: { self:false }, presence: { key:rec.pid } } });
+    c.on("broadcast", { event:"v" }, function(m){ if(ch === c) onView(m && m.payload); });
+    c.on("broadcast", { event:"host" }, function(m){ if(ch === c) onHost(m && m.payload); });
+    c.subscribe(function(status){
+      if(ch !== c) return;
+      if(status === "SUBSCRIBED"){ setConn("on"); track(); hi(); }
+      else if(status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED"){ setConn("error"); }
+      render();
+    });
+    ch = c;
+  }
+  function reconnect(){
+    var old = ch; ch = null;
+    if(old){ try{ client.removeChannel(old); }catch(e){} }
+    connect();
+  }
+  function send(event, payload){
+    if(!ch || S.conn !== "on") return false;
+    try{ var p = ch.send({ type:"broadcast", event:event, payload:payload }); if(p && p.catch) p.catch(function(){}); return true; }catch(e){ return false; }
+  }
+  function track(){ try{ var p = ch.track({ pid:rec.pid }); if(p && p.catch) p.catch(function(){}); }catch(e){} }
+  /* x = اللاعب اختار اسمه بنفسه الحين (لو المقدّم فك ربطه، ما يرجع للاسم لحاله إلا لو اختاره بنفسه) */
+  function hi(){ S.hiAt = Date.now(); send("hi", { pid:rec.pid, pk:rec.pub, me:rec.me || S.claiming || null, x:!rec.me && S.claiming ? 1 : 0 }); }
+  /* رسالة مشفّرة للشاشة (شفت بطاقتي / اختياري) — رقمها يكبر دايمًا عشان ما أحد يعيد إرسال رسالة قديمة */
+  function sendSecret(obj){
+    if(!S.okHk) return;
+    rec.ms = Math.max(Date.now(), (rec.ms || 0) + 1); obj.s = rec.ms; saveRec();
+    hostKey(S.okHk).then(function(key){
+      var iv = crypto.getRandomValues(new Uint8Array(12));
+      return subtle.encrypt({ name:"AES-GCM", iv:iv, additionalData:enc.encode("m|" + rec.pid) }, key, enc.encode(JSON.stringify(obj))).then(function(ct){
+        send("msg", { pid:rec.pid, iv:b64(iv), ct:b64(ct) });
+      });
+    }).catch(function(){});
+  }
+
+  function onHost(p){
+    if(!p || !b64ok(p.hk, 100)) return;
+    hostKey(p.hk).then(function(){
+      S.hostAt = Date.now();
+      if(!S.view || Date.now() - S.viewAt > 45000) hi();   /* الشاشة رجعت أو فاتنا شي */
+      render();
+    }).catch(function(){});
+  }
+  function onView(p){
+    if(!p || p.to !== rec.pid || !b64ok(p.hk, 100) || !b64ok(p.iv, 16) || !b64ok(p.ct, 30000)) return;
+    hostKey(p.hk).then(function(key){
+      return subtle.decrypt({ name:"AES-GCM", iv:unb64(p.iv), additionalData:enc.encode("v|" + rec.pid) }, key, unb64(p.ct));
+    }).then(function(pt){
+      var v = JSON.parse(dec.decode(pt));
+      if(!v || typeof v.s !== "number" || v.s <= rec.hs) return;   /* قديمة أو مكررة */
+      rec.hs = v.s;
+      applyView(clean(v));
+    }).catch(function(){});
+  }
+  /* اللي يوصل من الشاشة نرتبه ونقصّه قبل ما نعرضه */
+  function clean(v){
+    var o = { live:!!v.live, round:v.round | 0, night:Math.max(1, v.night | 0), me:idOk(v.me) ? v.me : null, name:str(v.name, 24), seen:!!v.seen,
+              why:WHY[v.why] ? v.why : null, roster:[], card:null };
+    if(Array.isArray(v.roster)) o.roster = v.roster.slice(0, 40).filter(function(x){ return x && idOk(x.id); })
+      .map(function(x){ return { id:x.id, n:str(x.n, 24) || "لاعب", on:!!x.on }; });
+    var c = v.card;
+    if(c && typeof c === "object" && ROLES[c.role]){
+      o.card = { caseId:str(c.caseId, 12), round:c.round | 0, night:Math.max(1, c.night | 0), role:c.role, label:str(c.label, 20), icon:str(c.icon, 4),
+                 body:str(c.body, 900), team:str(c.team, 400), ask:str(c.ask, 80), pick:idOk(c.pick) ? c.pick : null, opts:null, mates:[] };
+      if(Array.isArray(c.opts)) o.card.opts = c.opts.slice(0, 40).filter(function(x){ return x && idOk(x.id); }).map(function(x){ return { id:x.id, n:str(x.n, 24) }; });
+      if(Array.isArray(c.mates)) o.card.mates = c.mates.slice(0, 12).map(function(x){ return { n:str(x && x.n, 24), t:str(x && x.t, 24) }; });
+      o.card.chat = Array.isArray(c.chat) ? c.chat.slice(-40).map(function(x){ return { n:str(x && x.n, 24), me:!!(x && x.me), t:str(x && x.t, 200), cid:str(x && x.cid, 24) }; })
+        .filter(function(x){ return x.t; }) : null;
+    }
+    return o;
+  }
+  function nameIn(list, id){ var x = (list || []).filter(function(r){ return r.id === id; })[0]; return x ? x.n : ""; }
+  function applyView(v){
+    var prev = S.view;
+    S.view = v; S.viewAt = S.hostAt = Date.now();
+    if(v.me){
+      rec.me = v.me; S.claiming = null; S.why = null;
+    } else {
+      var lost = rec.me || (v.why && S.claiming);
+      if(lost){ S.why = v.why || "gone"; S.whyName = nameIn(prev && prev.roster, lost) || nameIn(v.roster, lost) || (prev && prev.name) || ""; }
+      if(v.why) S.claiming = null;
+      rec.me = null;
+    }
+    saveRec();
+    var c = v.card, key = c ? [c.caseId, c.round, c.role].join("|") : "";
+    if(key !== S.cardKey){
+      S.cardKey = key; S.reveal = false; S.pending = null; S.chatPend = [];
+      if(c){ try{ new Image().src = ART[c.role]; }catch(e){} }   /* نجهّز الصورة عشان تطلع على طول لما يضغط */
+      if(c && prev) buzz();   /* بطاقة جديدة */
+    }
+    if(c && S.pending && (c.pick === S.pending.t || c.night !== S.pending.night)) S.pending = null;
+    if(c && c.chat && S.chatPend.length){   /* رسايلي اللي وصلت للشاشة ما عادت «⏳» */
+      var got = {}; c.chat.forEach(function(x){ if(x.cid) got[x.cid] = 1; });
+      S.chatPend = S.chatPend.filter(function(p){ return !got[p.cid]; });
+    }
+    seenCheck();
+    render();
+  }
+  /* «شفت بطاقتي»: نرسلها لين الشاشة تأكد إنها وصلت (لو الشاشة كانت تعيد التحميل وقتها مثلًا) */
+  function seenCheck(){
+    var v = S.view;
+    if(!S.reveal || !v || !v.card || v.seen || Date.now() - S.seenAt < 4000) return;
+    S.seenAt = Date.now();
+    sendSecret({ k:"seen", round:v.card.round });
+  }
+  function buzz(){ try{ if(navigator.userActivation && !navigator.userActivation.hasBeenActive) return; if(navigator.vibrate) navigator.vibrate([90, 60, 90]); }catch(e){} }
+
+  /* ---------- العرض ---------- */
+  function notMe(name){ return name ? '<p class="notme">مو «' + esc(name) + '»؟ قل للمقدّم يفك ربط جوالك من شاشته.</p>' : ''; }
+  function pickerHtml(v){
+    if(S.claiming) return msgBox("⏳", "نربط جوالك باسم «" + (nameIn(v.roster, S.claiming) || "…") + "»", "");
+    if(S.confirm){
+      return '<div class="confirm"><h2 class="ttl">أنت «' + esc(nameIn(v.roster, S.confirm)) + '»؟</h2>'
+        + '<p class="sub">جوالك ينربط بهالاسم، وما يتغيّر بعدها إلا من شاشة المقدّم.</p>'
+        + '<div class="row"><button class="btn-primary" type="button" data-yes>إيه، هذا أنا</button><button class="btn-ghost" type="button" data-no>لا، رجوع</button></div></div>';
+    }
+    var why = S.why ? '<div class="note bad">' + (S.whyName ? "«" + esc(S.whyName) + "» — " : "") + esc(WHY[S.why]) + '</div>' : '';
+    if(!v.roster.length) return why + msgBox("📝", "ما فيه أسماء للحين", "المقدّم يكتب أسماء اللاعبين — انتظر شوي.");
+    return why + '<h2 class="ttl">مين أنت؟</h2><p class="sub">اختر اسمك — مرة وحدة بس</p><div class="names">'
+      + v.roster.map(function(x){
+        return '<button type="button" class="nm' + (x.on ? ' taken' : '') + '" data-claim="' + esc(x.id) + '"' + (x.on ? ' disabled' : '') + '>' + esc(x.n) + (x.on ? '<small>مأخوذ</small>' : '') + '</button>';
+      }).join("") + '</div>';
+  }
+  function choiceHtml(c){
+    var picked = S.pending ? S.pending.t : c.pick;
+    return '<div class="choose"><h3>' + esc(c.ask) + '<small>الليلة ' + c.night + '</small></h3><div class="opts">'
+      + c.opts.map(function(o){ return '<button type="button" class="opt' + (o.id === picked ? ' on' : '') + '" data-pick="' + esc(o.id) + '">' + esc(o.n) + '</button>'; }).join("")
+      + '</div><p class="ack">' + (S.pending ? "⏳ يوصل للمقدّم…" : c.pick ? "✅ وصل اختيارك للمقدّم — تقدر تغيّره" : "اختر من القائمة") + '</p>'
+      + (c.mates.length ? '<div class="mates">' + c.mates.map(function(m){ return '<span>' + esc(m.n) + ': ' + (m.t ? "🎯 " + esc(m.t) : "⏳ ما اختار") + '</span>'; }).join("") + '</div>' : '')
+      + '</div>';
+  }
+  /* البطاقة: صورة الدور + نصه. الاختيار (يتغيّر كثير) ينرسم لحاله بـ #cdyn عشان الصورة ما تعيد تتحمّل وتنقلب مع كل ضغطة */
+  function cardHtml(c, name){
+    return '<article class="card" style="--rc:' + ROLES[c.role] + '">'
+      + '<img class="c-art" src="' + ART[c.role] + '" alt="' + esc(c.label) + '" width="332" height="497" decoding="async">'
+      + '<div class="c-top"><span class="badge">' + esc(c.icon + " " + c.label) + '</span>'
+      + '<span class="c-case" dir="ltr">' + esc(c.caseId) + ' · R' + c.round + '</span></div>'
+      + '<p class="c-who">' + esc(name) + '، هذي بطاقتك — لا تورّيها أحد 🤫</p>'
+      + '<p class="c-body">' + esc(c.body) + '</p>'
+      + (c.team ? '<p class="c-team">' + esc(c.team) + '</p>' : '')
+      + '<div id="cdyn"></div>'
+      + (c.chat ? '<div class="chat"><h3>💬 شات العصابة</h3><div class="msgs" id="cmsgs"></div>'
+        + '<form class="cform" id="cform" autocomplete="off"><input id="cin" maxlength="200" placeholder="اكتب لزملائك…" enterkeyhint="send" aria-label="رسالة للعصابة"><button type="submit">إرسال</button></form>'
+        + '<p class="cnote">يشوفها بس اللي معك بالعصابة (والمقدّم).</p></div>' : '')
+      + '<button class="hide" type="button" data-hide>🙈 اخفِ البطاقة</button></article>';
+  }
+  /* رسايل الشات (تنرسم لحالها عشان اللي تكتبه بالخانة ما ينمسح لما توصل رسالة) */
+  function msgsHtml(c){
+    var h = c.chat.map(function(x){ return '<p class="m' + (x.me ? ' me' : '') + '"><b>' + (x.me ? "أنت" : esc(x.n)) + '</b>' + esc(x.t) + '</p>'; }).join("")
+      + S.chatPend.map(function(p){ return '<p class="m me pend"><b>أنت ⏳</b>' + esc(p.t) + '</p>'; }).join("");
+    return h || '<p class="mempty">ما فيه رسائل للحين — نسّقوا هنا بصمت 🤫</p>';
+  }
+  function render(){
+    var on = S.conn === "on", hostGone = on && S.view && Date.now() - S.hostAt > 30000;
+    els.conn.className = "conn" + (on && !hostGone ? " on" : S.conn === "error" || hostGone ? " bad" : "");
+    els.connText.textContent = !on ? (S.conn === "error" ? "انقطع — نحاول نرجع" : "نتصل…") : hostGone ? "شاشة المقدّم مو متصلة" : "متصل";
+    var v = S.view, h, dyn = null;
+    if(!v) h = msgBox("⏳", on ? "ننتظر شاشة المقدّم…" : "نتصل بالطاولة…", on && Date.now() - S.connSince > 8000 ? "تأكد إن صفحة «المافيا» مفتوحة عند المقدّم." : "");
+    else if(!v.me) h = pickerHtml(v);
+    else if(!v.card) h = msgBox("🕯️", "أهلًا " + v.name + " 👋", v.live ? "ننتظر بطاقتك…" : "ننتظر المقدّم يوزّع الأدوار. بطاقتك تطلع هنا لحالها، وكل جولة تتحدث.") + notMe(v.name);
+    else if(!S.reveal){
+      h = '<div class="sealed"><div class="seal-ic">📩</div><h2>بطاقتك جاهزة</h2><p class="sub" dir="ltr">' + esc(v.card.caseId) + ' · R' + v.card.round + '</p>'
+        + '<button class="reveal" type="button" data-reveal>👁️ اضغط عشان تشوف دورك</button><p class="hint">🤫 تأكد ما أحد يشوف شاشتك</p></div>' + notMe(v.name);
+    } else { h = cardHtml(v.card, v.name); dyn = v.card.opts ? choiceHtml(v.card) : ""; }
+    if(h !== S.html){ S.html = h; S.dyn = null; S.msgs = null; els.stage.innerHTML = h; }
+    var box = dyn !== null && $("cdyn");
+    if(box && dyn !== S.dyn){ S.dyn = dyn; box.innerHTML = dyn; }
+    var mb = $("cmsgs");
+    if(mb && v && v.card && v.card.chat){
+      var mh = msgsHtml(v.card);
+      if(mh !== S.msgs){
+        var atEnd = S.msgs === null || mb.scrollHeight - mb.scrollTop - mb.clientHeight < 60;
+        S.msgs = mh; mb.innerHTML = mh;
+        if(atEnd) mb.scrollTop = mb.scrollHeight;   /* آخر رسالة تبان (لو كان تحت) */
+      }
+    }
+  }
+  /* إرسال رسالة للعصابة */
+  els.stage.addEventListener("submit", function(e){
+    if(e.target.id !== "cform") return;
+    e.preventDefault();
+    var inp = $("cin"), v = S.view, t = String(inp.value || "").replace(/\s+/g, " ").trim().slice(0, 200);
+    if(!t || !v || !v.card || !v.card.chat || S.chatPend.length >= 5) return;
+    var p = { cid:"m" + b64(crypto.getRandomValues(new Uint8Array(6))), t:t, round:v.card.round, at:Date.now() };
+    S.chatPend.push(p); inp.value = "";
+    sendSecret({ k:"chat", round:p.round, t:p.t, cid:p.cid });
+    render();
+    var mb = $("cmsgs"); if(mb) mb.scrollTop = mb.scrollHeight;
+  });
+
+  els.stage.addEventListener("click", function(e){
+    var b = e.target.closest("button"); if(!b || b.disabled) return;
+    var v = S.view;
+    if(b.hasAttribute("data-claim")){ S.confirm = b.getAttribute("data-claim"); render(); return; }
+    if(b.hasAttribute("data-no")){ S.confirm = null; render(); return; }
+    if(b.hasAttribute("data-yes") && S.confirm){ S.claiming = S.confirm; S.confirm = null; S.why = null; hi(); render(); return; }
+    if(b.hasAttribute("data-reveal") && v && v.card){ S.reveal = true; S.seenAt = 0; seenCheck(); render(); return; }
+    if(b.hasAttribute("data-hide")){ S.reveal = false; render(); return; }
+    if(b.hasAttribute("data-pick") && v && v.card && v.card.opts){
+      var t = b.getAttribute("data-pick");
+      if(S.pending ? S.pending.t === t : v.card.pick === t) return;
+      S.pending = { t:t, night:v.card.night, at:Date.now() };
+      sendSecret({ k:"pick", round:v.card.round, night:v.card.night, t:t });
+      render();
+    }
+  });
+
+  document.addEventListener("visibilitychange", function(){
+    if(document.visibilityState !== "visible") return;
+    if(S.conn !== "on") reconnect(); else hi();
+    render();
+  });
+  /* مراقبة: نعيد الاتصال لو طوّل الانقطاع، ونعيد الطلب لو الشاشة ما ردّت، ونعيد إرسال الاختيار لو ما تأكد */
+  setInterval(function(){
+    var now = Date.now(), v = S.view;
+    if(S.conn === "error" && now - S.connSince > 8000) reconnect();
+    else if(S.conn === "connecting" && now - S.connSince > 20000) reconnect();
+    else if(S.conn === "on" && (!v || S.claiming) && now - S.hiAt > 5000) hi();
+    if(S.pending && now - S.pending.at > 6000 && v && v.card){
+      S.pending.at = now;
+      sendSecret({ k:"pick", round:v.card.round, night:v.card.night, t:S.pending.t });
+    }
+    S.chatPend.forEach(function(p){   /* رسالة ما تأكدت؟ نعيد نرسلها (الشاشة تتجاهل المكرر) */
+      if(now - p.at > 6000){ p.at = now; sendSecret({ k:"chat", round:p.round, t:p.t, cid:p.cid }); }
+    });
+    seenCheck();
+    render();
+  }, 1000);
+
+  render();
+  loadKeys().then(function(){
+    client = window.supabase.createClient(window.SAHRA_SUPABASE_URL, window.SAHRA_SUPABASE_ANON_KEY, {
+      auth: { persistSession:false, autoRefreshToken:false, detectSessionInUrl:false }
+    });
+    connect();
+  }).catch(function(){ fatal("⚠️", "متصفحك ما يدعم البطاقات", "حدّث المتصفح، أو افتح الرابط بـ Chrome أو Safari."); });
+});
+</script>
+</body>
+</html>

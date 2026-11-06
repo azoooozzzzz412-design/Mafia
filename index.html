@@ -34,7 +34,7 @@
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script defer src="config.js"></script>
 <!-- صفحة اللعب 3 ملفات: هذي الصفحة + الشكل (index.css) + الكود (index.js آخر الصفحة). ارفعهم الثلاثة مع بعض -->
-<link rel="stylesheet" href="index.css?v=14">
+<link rel="stylesheet" href="index.css?v=17">
 </head>
 
 <body>
@@ -406,7 +406,7 @@
       <button class="mode-card" data-view="mafia" type="button" style="--accent:var(--mafia);--accent-bright:var(--mafia-bright)">
         <span class="g-tile"><svg class="ic"><use href="#i-mafia"/></svg></span><span class="mc-badge" data-badge="mafia"></span>
         <h3>المافيا</h3>
-        <p>وزّع أدوار المافيا والمحقق والطبيب سرًا، وابعث لكل لاعب دوره بالواتساب.</p>
+        <p>وزّع أدوار المافيا والمحقق والطبيب سرًا، وكل لاعب يشوف دوره بجواله.</p>
         <span class="mc-cta">ابدأ اللعبة<svg class="ic"><use href="#i-arrow"/></svg></span>
         <span class="mc-art" aria-hidden="true"><svg class="ic"><use href="#i-mafia"/></svg></span>
       </button>
@@ -578,7 +578,7 @@
   <section id="view-mafia" class="view" hidden>
     <div class="back-row"><button class="back-btn" data-view="home" type="button">→ الرئيسية</button></div>
     <div class="mode-header" style="--accent:var(--mafia);--accent-bright:var(--mafia-bright)">
-      <div class="mh-main"><span class="g-tile"><svg class="ic"><use href="#i-mafia"/></svg></span><div><h2>المافيا</h2><p id="mafiaSubtitle">أدخل أرقام اللاعبين، وسيجهّز لكل واحد رسالة واتساب فيها دوره سرًا.</p></div></div>
+      <div class="mh-main"><span class="g-tile"><svg class="ic"><use href="#i-mafia"/></svg></span><div><h2>المافيا</h2><p id="mafiaSubtitle">اكتب أسماء اللاعبين، وكل واحد يمسح الباركود بجواله ويشوف دوره سرًا.</p></div></div>
       <span class="case-stamp" id="mafiaCaseStamp"></span>
     </div>
     <a class="mafia-online" href="mafia.html?host=1" id="mafiaOnline">
@@ -592,24 +592,37 @@
       <div class="intake" id="mafiaIntake">
         <div class="field-row">
           <input type="text" id="mNameInput" placeholder="اسم اللاعب" maxlength="24">
-          <input type="tel" id="mPhoneInput" placeholder="رقم واتساب: ⁦9665xxxxxxx⁩" maxlength="18">
+          <input type="tel" id="mPhoneInput" placeholder="رقم واتساب (اختياري): ⁦9665xxxxxxx⁩" maxlength="18">
           <button class="btn-add" id="mAddPlayerBtn" type="button">إضافة +</button>
         </div>
         <ul class="player-list" id="mPlayerList"></ul>
         <p class="empty-hint" id="mEmptyHint">أضف ٤ لاعبين على الأقل لبدء القضية</p>
         <button class="clear-all-btn" id="mClearAllBtn" type="button" hidden>مسح كل اللاعبين ✕</button>
         <div class="role-config" id="mRoleConfig"></div>
+        <label class="m-manual"><input type="checkbox" id="mManual" data-mmanual> 🎯 أختار مين المافيا والطبيب والمحقق بنفسي</label>
         <div class="m-round" id="mRoundLine"></div>
         <button class="btn-primary" id="mStartBtn" disabled type="button" style="width:100%">فتح القضية وتوزيع الأدوار</button>
         <p class="form-warn" id="mFormWarn"></p>
       </div>
       <div id="mafiaActive" hidden>
+        <!-- (v16) 📱 باركود واحد للكل: كل لاعب يختار اسمه، وبطاقته تطلع بجواله وتتحدث كل جولة -->
+        <div class="m-link">
+          <div class="ml-qr" id="mLinkQr"></div>
+          <div class="ml-txt">
+            <b>📱 امسحوا الباركود</b>
+            <p>كل لاعب يمسحه بجواله مرة وحدة ويختار اسمه، وتطلع له بطاقته سرًا. وكل جولة جديدة، بطاقته تتحدث لحالها.</p>
+            <div class="ml-st" id="mLinkSt"></div>
+            <button class="btn-ghost btn-sm" id="mLinkBig" type="button">⛶ كبّر الباركود</button>
+          </div>
+        </div>
         <div class="folder-note">
           <b>🌙 الأدوار تدور تلقائيًا.</b>
-          <p>الطبيب والمحقق والمافيا ينتقلون بين اللاعبين كل جولة، ولا يتكرر نفس الدور على نفس اللاعب. اضغط على أي لاعب لفتح رسالته.</p>
+          <p>الطبيب والمحقق والمافيا ينتقلون بين اللاعبين كل جولة، ولا يتكرر نفس الدور على نفس اللاعب. اللي ما مسح الباركود، اضغط على اسمه وارسل له بطاقته بالواتساب.</p>
         </div>
         <div class="player-grid" id="mPlayerGrid"></div>
+        <div class="m-night" id="mNight" hidden></div>
         <div class="m-round" id="mRoundLine2"></div>
+        <label class="m-manual"><input type="checkbox" id="mManual2" data-mmanual> 🎯 أختار مين المافيا والطبيب والمحقق بنفسي</label>
         <button class="btn-primary" id="mAutoSendBtn" type="button" style="width:100%" hidden>🤖 إرسال الأدوار تلقائيًا</button>
         <p class="form-warn" id="mAutoSendMsg"></p>
         <div class="folder-actions">
@@ -671,7 +684,32 @@
       <a class="btn-primary" id="mTicketWaLink" href="#" target="_blank" rel="noopener">فتح واتساب وإرسال ←</a>
       <button class="btn-ghost" id="mTicketCopyBtn" type="button">نسخ النص</button>
     </div>
+    <button class="btn-ghost btn-block" id="mTicketUnlink" type="button" hidden style="margin-top:10px">🔗 فك ربط جواله (لو اختار اسم غلط)</button>
     <p class="ticket-hint" id="mTicketHint"></p>
+  </div>
+</div>
+
+<!-- (v16) باركود بطاقات المافيا — مكبّر عشان يمسحونه من بعيد -->
+<div class="modal-overlay" id="mQrOverlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-label="باركود بطاقات المافيا">
+    <button class="ticket-close" id="mQrClose" aria-label="إغلاق" type="button">✕</button>
+    <h3 style="font-size:1.3rem;margin-bottom:14px">📱 امسحوا الباركود</h3>
+    <div class="m-qr-big" id="mQrBig"></div>
+    <p class="m-qr-cap">كل لاعب يختار اسمه — مرة وحدة بس</p>
+  </div>
+</div>
+
+<!-- (v16) 🎯 توزيع الأدوار بنفسك (لو شغّلت الخيار): اللي يبقى «🎲 عشوائي» ياخذ الباقي -->
+<div class="modal-overlay" id="mPickOverlay" hidden>
+  <div class="modal m-pick" role="dialog" aria-modal="true" aria-labelledby="mprTitle">
+    <button class="ticket-close" id="mprClose" aria-label="إغلاق" type="button">✕</button>
+    <h3 id="mprTitle" style="font-size:1.3rem;margin-bottom:6px">🎯 وزّع الأدوار بنفسك</h3>
+    <p class="mpr-sub">اختر دور كل لاعب. اللي تخليه «🎲 عشوائي» تتوزع عليه الأدوار الباقية حسب العدد.</p>
+    <p class="mpr-key">🎲 عشوائي · 🔪 مافيا · 💉 طبيب · 🔍 محقق · 👤 مواطن</p>
+    <div class="mpr-list" id="mprList"></div>
+    <p class="mpr-sum" id="mprSum"></p>
+    <p class="form-warn" id="mprWarn"></p>
+    <button class="btn-primary btn-block" id="mprGo" type="button">🎭 وزّع الأدوار</button>
   </div>
 </div>
 
@@ -898,6 +936,6 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="index.js?v=14"></script>
+<script src="index.js?v=17"></script>
 </body>
 </html>

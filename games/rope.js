@@ -1307,7 +1307,7 @@ Host.prototype.pads = function(){
 };
 /* ---- الجوالات (تجي من index.html عن طريق hooks) ---- */
 Host.prototype.netMsg = function(m){
-  if(!m || typeof m !== "object" || typeof m.pid !== "string") return;
+  if(!m || typeof m !== "object" || typeof m.pid !== "string" || !/^[\w-]{1,40}$/.test(m.pid)) return;   /* (v15) رقم الجوال حروف وأرقام بس */
   var pid = m.pid.slice(0, 40), p = this.players.find(function(x){ return x.kind === "phone" && x.pid === pid; });
   var name = String(m.name || "").replace(/\s+/g, " ").trim().slice(0, 14);
   if(m.t === "join" || m.t === "hello"){
