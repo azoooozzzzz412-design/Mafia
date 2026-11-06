@@ -719,6 +719,13 @@ section.gated .game-body, section.gated .game-only{ display:none !important; }
 .lt-hex.locked{ background:rgba(255,255,255,.06); color:var(--tx-3); font-size:calc(var(--hw) * .3); }
 @keyframes ltWin{ from{ transform:scale(1); } to{ transform:scale(1.07); } }
 .lt-actions{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+/* (v17) الحروف: السؤال يطلع كلمة كلمة (الكلمات محجوزة مكانها عشان النافذة ما تتحرك) */
+.tm-question .lw{ visibility:hidden; }
+.tm-question .lw.on{ visibility:visible; animation:lwIn .3s var(--ease-out); }
+@keyframes lwIn{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:none; } }
+@media (prefers-reduced-motion: reduce){ .tm-question .lw.on{ animation:none; } }
+.lt-skip{ position:absolute; top:14px; inset-inline-end:14px; z-index:2; }   /* بزاوية النافذة: لما يختفي ما تتحرك الأزرار */
+.lt-skip[hidden]{ display:none; }
 .lt-big{
   width:92px; height:106px; margin:0 auto 16px;
   clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);

@@ -236,7 +236,8 @@
   var PLAY_DEFAULTS = { trivia_pts:[1,2,3,4], pts:{ emoji:1, flags:1, charades:1, heads:1, letters:1 }, win_target:0, emoji_secs:20, char_secs:60, heads_dur:60,
                         buzz_pen_timeout:1, buzz_pen_wrong:1, buzz_steal_secs:10,
                         million:{ step_pts:1, lv_pts:[1,2,3], speed_bonus:1, all_secs:20, vote_secs:15, friend_secs:30, life:{ fifty:true, aud:true, friend:true, swap:true } },
-                        helps:{ x2:true, steal:true, swap:true }, mc:{ secs:20, bonus:1 } };   /* «أسرع إصبع»: buzz_pen_timeout = الخصم المقترح لما يخلص الوقت (المقدّم يختار على مين) + زر «غلط وخصم» (0 = بدون) */
+                        helps:{ x2:true, steal:true, swap:true }, mc:{ secs:20, bonus:1 },
+                        letters:{ level:"hard", reveal:true, speed:"normal" } };   /* «أسرع إصبع»: buzz_pen_timeout = الخصم المقترح لما يخلص الوقت (المقدّم يختار على مين) + زر «غلط وخصم» (0 = بدون) */
   function clampInt(v, lo, hi, def){ v = Math.round(+v); if(!isFinite(v)) v = def; return Math.max(lo, Math.min(hi, v)); }
   function cfgSize(g){
     var d = SIZE_DEFAULTS[g]; if(!d) return null;
@@ -277,6 +278,10 @@
     /* (v11) 📱 الإجابة من الجوال بالأعلام والصور: وقت السؤال + بونص الأسرع */
     var mc = isObj(p.mc) ? p.mc : {}, mcd = PLAY_DEFAULTS.mc;
     out.mc = { secs: clampInt(mc.secs, 5, 120, mcd.secs), bonus: clampInt(mc.bonus, 0, 999, mcd.bonus) };
+    /* (v17) 🔤 الحروف: السؤال كلمة كلمة + سرعته (الصعوبة يقررها السيرفر وقت الجولة) */
+    var lt = isObj(p.letters) ? p.letters : {};
+    out.letters = { level: lt.level === "normal" ? "normal" : "hard", reveal: lt.reveal !== false,
+                    speed: ["slow", "normal", "fast"].indexOf(lt.speed) !== -1 ? lt.speed : PLAY_DEFAULTS.letters.speed };
     return out;
   }
   /* الحجم اللي اختاره المقدّم (لو طلع برا حدود الأدمن يرجع للافتراضي) */
@@ -3658,6 +3663,7 @@
     modal: document.getElementById("ltModal"),
     mLetter: document.getElementById("ltmLetter"),
     mQuestion: document.getElementById("ltmQuestion"),
+    mSkip: document.getElementById("ltmSkipBtn"),
     mHint: document.getElementById("ltmHint"),
     mHintBtn: document.getElementById("ltmHintBtn"),
     mAnswer: document.getElementById("ltmAnswer"),
@@ -3799,10 +3805,52 @@
     ltRenderModal();
     ltEls.modal.hidden = false;
   }
+  /* ============ (v17) السؤال يطلع كلمة كلمة ============
+     يوقف لما أحد يضغط الزر (مثل المذيع)، ويكمل لو رجع الدور للخصم. وجوالات «أسرع إصبع» تشوف نفس الكلمات اللي طلعت بس.
+     الكلمات كلها موجودة من البداية بس مخفية — عشان النافذة ما تتمدد وتتحرك مع كل كلمة */
+  var LTW = { t:null, words:[], n:0, key:"" };
+  var LT_SPEED = { slow:1.45, normal:1, fast:0.65 };
+  function ltWordsStop(){ clearTimeout(LTW.t); LTW.t = null; }
+  function ltWordsStart(text, key){
+    ltWordsStop();
+    var cfg = cfgPlay().letters;
+    LTW.words = String(text).split(/\s+/).filter(Boolean); LTW.key = key;
+    LTW.n = cfg.reveal ? 0 : LTW.words.length;
+    ltEls.mQuestion.innerHTML = LTW.words.map(function(w, i){ return '<span class="lw' + (i < LTW.n ? ' on' : '') + '">' + escapeHtml(w) + '</span>'; }).join(" ");
+    ltWordsShow();
+    if(LTW.n < LTW.words.length) LTW.t = setTimeout(ltWordsTick, Math.round(500 * (LT_SPEED[cfg.speed] || 1)));
+  }
+  function ltWordsTick(){
+    LTW.t = null;
+    if(!LT.cur || ltEls.modal.hidden) return;
+    var held = buzzActive() && buzz.state === "locked";   /* أحد ضغط: نوقف لين يرجع الدور */
+    if(!held && LTW.n < LTW.words.length){
+      var sp = ltEls.mQuestion.children[LTW.n++];
+      if(sp) sp.classList.add("on");
+      ltWordsShow();
+    }
+    if(LTW.n < LTW.words.length){
+      var w = LTW.words[LTW.n] || "", f = LT_SPEED[cfgPlay().letters.speed] || 1;
+      LTW.t = setTimeout(ltWordsTick, held ? 250 : Math.round(Math.min(900, 260 + 45 * w.length) * f));   /* الكلمة الطويلة تاخذ وقت أطول */
+    }
+  }
+  function ltWordsAll(){
+    ltWordsStop();
+    LTW.n = LTW.words.length;
+    Array.prototype.forEach.call(ltEls.mQuestion.children, function(sp){ sp.classList.add("on"); });
+    ltWordsShow();
+  }
+  function ltWordsShow(){
+    var more = LTW.n < LTW.words.length;
+    ltEls.mSkip.hidden = !more;
+    /* الجوالات: نفس الكلمات اللي طلعت (ونقاط لو باقي) */
+    if(!buzz.q || buzz.q.k !== "letters" || buzz.qid !== LTW.key) return;
+    var t = LTW.words.slice(0, LTW.n).join(" ") + (more ? " …" : "");
+    if(buzz.q.text !== t){ buzz.q.text = t; buzzSend(); }
+  }
   function ltRenderModal(){
     var qs = store.letters.qmap[LT.cur.letter], q = qs[LT.cur.qi];
     ltEls.mLetter.textContent = LT.cur.letter;
-    ltEls.mQuestion.textContent = q.q;
     ltEls.mHint.hidden = true; ltEls.mHint.textContent = ltAnswerShape(q.a);
     ltEls.mHintBtn.hidden = false;
     ltEls.mAnswer.hidden = true; ltEls.mAnswer.textContent = "الإجابة: " + q.a;
@@ -3815,11 +3863,13 @@
     ltEls.mTeams.querySelectorAll("[data-ltaward]").forEach(function(b){
       b.addEventListener("click", function(){ lettersClaim(b.getAttribute("data-ltaward")); });
     });
-    buzzArm("lt:" + LT.cur.idx + ":" + LT.cur.qi, false, { k:"letters", letter: LT.cur.letter, text: q.q });
+    var qid = "lt:" + LT.cur.idx + ":" + LT.cur.qi;
+    buzzArm(qid, false, { k:"letters", letter: LT.cur.letter, text: cfgPlay().letters.reveal ? "…" : q.q });   /* (v17) الجوالات تاخذ الكلمات أول بأول */
+    ltWordsStart(q.q, qid);
     markBuzzButtons();
     TTS.auto("lt:" + LT.cur.idx + ":" + LT.cur.qi + ":" + q.q.length, ltSpeech());
   }
-  function ltClose(){ ltEls.modal.hidden = true; LT.cur = null; buzzIdle(); TTS.stop(true); }
+  function ltClose(){ ltWordsStop(); ltEls.modal.hidden = true; LT.cur = null; buzzIdle(); TTS.stop(true); }
   function ltSpeech(){
     if(!LT.cur) return [];
     var qs = store.letters.qmap[LT.cur.letter], q = qs && qs[LT.cur.qi];
@@ -3852,7 +3902,8 @@
     var open = store.letters.board.filter(function(l, i){ return l && !store.letters.owners[i]; }).length;
     if(!open){ toast("خلصت الحروف بدون فوز — انتهت الجولة"); lettersEndRound(); }
   }
-  ltEls.mReveal.addEventListener("click", function(){ ltEls.mAnswer.hidden = false; ltEls.mReveal.hidden = true; });
+  ltEls.mReveal.addEventListener("click", function(){ ltWordsAll(); ltEls.mAnswer.hidden = false; ltEls.mReveal.hidden = true; });
+  ltEls.mSkip.addEventListener("click", ltWordsAll);   /* (v17) «⏩ اعرض السؤال كامل» */
   ltEls.mHintBtn.addEventListener("click", function(){ ltEls.mHint.hidden = false; ltEls.mHintBtn.hidden = true; });
   ltEls.mOther.addEventListener("click", function(){
     if(!LT.cur) return;

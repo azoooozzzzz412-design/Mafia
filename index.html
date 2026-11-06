@@ -34,7 +34,7 @@
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script defer src="config.js"></script>
 <!-- صفحة اللعب 3 ملفات: هذي الصفحة + الشكل (index.css) + الكود (index.js آخر الصفحة). ارفعهم الثلاثة مع بعض -->
-<link rel="stylesheet" href="index.css?v=17">
+<link rel="stylesheet" href="index.css?v=18">
 </head>
 
 <body>
@@ -718,6 +718,7 @@
   <div class="modal" role="dialog" aria-modal="true">
     <div class="lt-big" id="ltmLetter"></div>
     <p class="tm-question" id="ltmQuestion"></p>
+    <button class="btn-ghost btn-sm lt-skip" id="ltmSkipBtn" type="button" hidden>⏩ اعرض السؤال كامل</button>
     <button class="tts-say" type="button" data-tts="lt" aria-label="اقرأ السؤال بصوت"><svg class="ic" aria-hidden="true"><use href="#i-volume"/></svg><span>اقرأ السؤال</span></button>
     <div class="tm-hint" id="ltmHint" hidden></div>
     <div class="tm-answer" id="ltmAnswer" hidden></div>
@@ -936,6 +937,6 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="index.js?v=17"></script>
+<script src="index.js?v=18"></script>
 </body>
 </html>
