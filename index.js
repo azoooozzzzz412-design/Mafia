@@ -421,7 +421,7 @@
       store.teams.forEach(function(t){ var k = OLD_PALETTE.indexOf(String(t.color || "").toLowerCase()); if(k !== -1) t.color = TEAM_PALETTE[k]; });
       if(isObj(saved.mafia) && Array.isArray(saved.mafia.players)) store.mafia = saved.mafia;
       var T = saved.trivia;
-      if(isObj(T) && validRound(T.round) && isTriviaCellsValid(T.cells)) store.trivia = { round:T.round, cells:T.cells, helps: isObj(T.helps) ? T.helps : {} };
+      if(isObj(T) && validRound(T.round) && isTriviaCellsValid(T.cells)) store.trivia = { round:T.round, cells:T.cells, helps: isObj(T.helps) ? T.helps : {}, hsw: clampInt(T.hsw, 0, 99, 0) };   /* (v23) hsw = كم مرة غيّر المقدّم السؤال باللوحة */
       var E = saved.emoji;
       if(isObj(E)){
         if(E.mode === "v1" || E.mode === "v2") store.emoji.mode = E.mode;
@@ -446,6 +446,7 @@
           /* (v22) كل خلية لها سؤالها: cq = سؤال كل خلية، qdone = الأسئلة اللي انلعبت من كل حرف (الجولات القديمة: من qpos) */
           store.letters.cq = isObj(L.cq) ? L.cq : {};
           store.letters.qdone = isObj(L.qdone) ? L.qdone : {};
+          store.letters.hsw = clampInt(L.hsw, 0, 99, 0);   /* (v23) كم مرة غيّر المقدّم السؤال باللوحة */
           if(!isObj(L.qdone)) Object.keys(store.letters.qpos).forEach(function(l){ var n = store.letters.qpos[l] | 0, a = []; for(var k = 0; k < n; k++) a.push(k); store.letters.qdone[l] = a; });
           store.letters.owners = isObj(L.owners) ? L.owners : {};
           store.letters.history = Array.isArray(L.history) ? L.history : [];
@@ -870,7 +871,8 @@
     teamBtns: document.getElementById("tmTeamBtns"),
     skipBtn: document.getElementById("tmSkipBtn"),
     helps: document.getElementById("tmHelps"),
-    helpsBar: document.getElementById("trivHelpsBar")
+    helpsBar: document.getElementById("trivHelpsBar"),
+    change: document.getElementById("tmChangeBtn")   /* (v23) 🔄 غيّر السؤال (للمقدّم) */
   };
   var TIERS = [100,200,300,400];
   /* النقاط تنعرض وتنحسب 1-4 (بقاعدة البيانات المستوى 100-400) */
@@ -898,6 +900,7 @@
         store.trivia.round = { id: d.round, kind: d.kind };
         store.trivia.cells = d.items.map(function(i){ return { id: String(i.id), cat: i.cat, points: i.points, q: i.q, a: i.a, used: false }; });
         store.trivia.helps = {};   /* لوحة جديدة = كل الوسائل ترجع */
+        store.trivia.hsw = 0;      /* (v23) ومرات «غيّر السؤال» ترجع */
         persist();
         trivOpen();
         ansStart("trivia", d.round);
@@ -951,6 +954,7 @@
     trivEls.answer.textContent = "الإجابة: " + cell.a;
     trivEls.award.hidden = true;
     trivEls.revealBtn.hidden = false;
+    hostSwapBtn(trivEls.change, "trivia", TH.busy);
     renderTriviaAwardButtons();
     renderTrivHelps();
   }
@@ -1149,8 +1153,45 @@
       var m = String((e && (e.message || e.code)) || e || "");
       var code = Object.keys(SWAP_ERR).filter(function(k){ return m.indexOf(k) !== -1; })[0];
       toast(code ? SWAP_ERR[code] : isMissingFn(e) ? "تبديل السؤال يحتاج تحديث قاعدة البيانات (ملف SQL)" : "ما قدرنا نبدّل السؤال — تأكد من النت");
-    }).then(function(){ TH.busy = false; if(activeCell === cell) renderTrivHelps(); });
+    }).then(function(){ TH.busy = false; if(activeCell === cell) renderTrivHelps(); if(activeCell) hostSwapBtn(trivEls.change, "trivia", false); });   /* (v23) زر المقدّم يرجع لحالته */
   }
+  /* ===== (v23) 🔄 «غيّر السؤال» للمقدّم: سؤال ثاني من نفس الفئة والنقاط — 3 مرات بكل لوحة (سين جيم والحروف، كل لعبة لحالها)
+     ما ياخذ من وسائل الفرق، ويشتغل حتى بعد ما ينكشف الجواب (لو طلع السؤال غلط أو مكرر) ===== */
+  var HOST_SWAPS = 3;
+  function hostSwapsLeft(g){ var s = store[g], n = s && typeof s.hsw === "number" ? s.hsw : 0; return Math.max(0, HOST_SWAPS - n); }
+  function hostSwapBtn(btn, g, busy){
+    if(!btn) return;
+    var left = hostSwapsLeft(g);
+    btn.disabled = !left || !!busy;
+    btn.textContent = busy ? "⏳ لحظة…" : left ? "🔄 غيّر السؤال · باقي " + left : "🔄 خلصت مرات التغيير";
+    btn.title = "المقدّم يقدر يغيّر السؤال " + HOST_SWAPS + " مرات بكل لوحة";
+  }
+  function trivHostSwap(){
+    var cell = activeCell, R = store.trivia.round;
+    if(!cell || !R || TH.busy) return;
+    if(!hostSwapsLeft("trivia")){ toast("خلصت مرات تغيير السؤال بهاللوحة (" + HOST_SWAPS + ")"); return; }
+    var oldId = cell.id;
+    TH.busy = true; renderTrivHelps(); hostSwapBtn(trivEls.change, "trivia", true);
+    sbReady.then(function(sb){ return sb.rpc("trivia_swap", { p_round: R.id, p_item: oldId }); }).then(function(r){
+      if(r.error) throw r.error;
+      var d = parseJ(r.data);
+      if(!d || typeof d.q !== "string" || typeof d.a !== "string" || !d.id) throw new Error("bad_item");
+      if(store.trivia.round !== R || cell.id !== oldId) return;   /* اللوحة تغيّرت وقت الانتظار */
+      cell.prev = (Array.isArray(cell.prev) ? cell.prev : []).concat([oldId]).slice(-6);
+      cell.id = String(d.id); cell.q = d.q; cell.a = d.a;
+      store.trivia.hsw = (store.trivia.hsw | 0) + 1;
+      TH.open = false; TH.steal = null;
+      persist(); renderTriviaBoard();
+      if(activeCell === cell){ trivShowCell(cell); trivArm(cell); }
+      var left = hostSwapsLeft("trivia");
+      toast("🔄 تغيّر السؤال — " + (left ? "باقي " + left : "هذي آخر مرة بهاللوحة"));
+    }).catch(function(e){
+      var m = String((e && (e.message || e.code)) || e || "");
+      var code = Object.keys(SWAP_ERR).filter(function(k){ return m.indexOf(k) !== -1; })[0];
+      toast(code ? SWAP_ERR[code] : isMissingFn(e) ? "تغيير السؤال يحتاج تحديث قاعدة البيانات (ملف SQL)" : "ما قدرنا نغيّر السؤال — تأكد من النت");
+    }).then(function(){ TH.busy = false; if(activeCell){ renderTrivHelps(); hostSwapBtn(trivEls.change, "trivia", false); } });
+  }
+  trivEls.change.addEventListener("click", trivHostSwap);
   /* شريط الوسائل تحت اللوحة: وش باقي لكل فريق */
   function renderTrivHelpsBar(){
     var bar = trivEls.helpsBar, keys = helpsOn();
@@ -3736,7 +3777,7 @@
             letters.slice(0, 25).forEach(function(l, k){ board[LT_TRIAL_ORDER[k]] = l; });
           }
           L.round = { id: d.round, kind: d.kind };
-          L.board = board; L.qmap = qmap; L.qpos = {}; L.cq = {}; L.qdone = {};
+          L.board = board; L.qmap = qmap; L.qpos = {}; L.cq = {}; L.qdone = {}; L.hsw = 0;   /* (v23) hsw = مرات «غيّر السؤال» */
           L.owners = {}; L.history = []; L.lastWin = null;
           persist(); lettersOpen();
           ansStart("letters", d.round);
@@ -3904,6 +3945,7 @@
     ltEls.mAnswer.hidden = true; ltEls.mAnswer.textContent = "الإجابة: " + q.a;
     ltEls.mReveal.hidden = false;
     ltEls.mOther.hidden = qs.length < 2;
+    hostSwapBtn(ltEls.mOther, "letters", false);   /* (v23) 3 مرات بكل لوحة */
     var t = ltTeams();
     ltEls.mTeams.innerHTML = [t[0], t[1]].filter(Boolean).map(function(team){
       return '<button type="button" style="background:' + team.color + '" data-ltaward="' + team.id + '">✔ ' + escapeHtml(team.name) + '</button>';
@@ -3957,12 +3999,17 @@
     if(!LT.cur) return;
     var qs = store.letters.qmap[LT.cur.letter];
     if(!qs || qs.length < 2){ toast("ما فيه سؤال ثاني لهالحرف بهالجولة"); return; }
+    if(!hostSwapsLeft("letters")){ toast("خلصت مرات تغيير السؤال بهاللوحة (" + HOST_SWAPS + ")"); return; }   /* (v23) */
     /* (v22) السؤال اللي تخطّيناه ينحسب منلعب، والجديد ما يكون سؤال خلية ثانية من نفس الحرف */
     var k = ltPickQ(LT.cur.idx, LT.cur.letter, LT.cur.qi);
     if(k === LT.cur.qi){ toast("ما فيه سؤال ثاني لهالحرف بهالجولة"); return; }
     ltDone(LT.cur.letter, LT.cur.qi);
-    LT.cur.qi = k; store.letters.cq[LT.cur.idx] = k; persist();
+    LT.cur.qi = k; store.letters.cq[LT.cur.idx] = k;
+    store.letters.hsw = (store.letters.hsw | 0) + 1;
+    persist();
     ltRenderModal();
+    var left = hostSwapsLeft("letters");
+    toast("🔄 تغيّر السؤال — " + (left ? "باقي " + left : "هذي آخر مرة بهاللوحة"));
   });
   ltEls.mNone.addEventListener("click", ltClose);
   ltEls.modal.addEventListener("click", function(e){ if(e.target === ltEls.modal) ltClose(); });
