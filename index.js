@@ -2324,7 +2324,8 @@
                log:[], logPts:[], turn:0, qStart:0, logHidden:false,      /* خانة «مين ضغط»: كل الضغطات بالسؤال بالترتيب */
                only:null, onlyEnd:0, onlyT:null,                           /* فرصة الفريق الخصم بعد ما يخلص الوقت */
                decide:false, twhy:null, ok:null,
-               span:0, lastTick:-1, pmic:{}, micPids:{} };                                      /* (v12) مدة العدّاد كاملة · آخر تيك بآخر 3 ثواني */                         /* (v10) خلص الوقت والمقدّم يقرر صح/غلط · ليش رجع الزر للخصم · آخر «✅ صح» */
+               span:0, lastTick:-1, pmic:{}, micPids:{},                   /* (v12) مدة العدّاد كاملة · آخر تيك بآخر 3 ثواني */                         /* (v10) خلص الوقت والمقدّم يقرر صح/غلط · ليش رجع الزر للخصم · آخر «✅ صح» */
+               sendQ:0, sendQT:null, beatAt:0, oldPhones:false, chk:null, sig:"" };   /* (v25) جمع الإرسال · وقت آخر نبضة · فيه جوال بالصفحة القديمة؟ · فحص التغيير كل ثانية · بصمة آخر حالة انرسلت */
   var buzzEls = {
     openBtn: document.getElementById("buzzOpenBtn"),
     homeBtn: document.getElementById("buzzHomeBtn"),
@@ -2352,11 +2353,60 @@
   }
   function buzzActive(){ return buzz.status === "on" || buzz.status === "connecting"; }
   function buzzCleanName(n){ return String(n || "").replace(/\s+/g, " ").trim().slice(0, 20); }
+  /* (v25) الإرسال: أي تغيير ينرسل فورًا مثل قبل، بس الطلبات اللي تصير بنفس اللحظة تطلع برسالة وحدة فيها آخر حالة */
   function buzzSend(){
+    if(!buzz.channel || buzz.status !== "on" || buzz.sendQ === 1) return;
+    clearTimeout(buzz.sendQT); buzz.sendQ = 1;
+    Promise.resolve().then(buzzFlush);
+  }
+  /* (v25) رد على جوال دخل («hello»): لو دخلوا كذا جوال بنفس الوقت تكفيهم رسالة وحدة */
+  function buzzSendSoon(){
+    if(!buzz.channel || buzz.status !== "on" || buzz.sendQ) return;
+    buzz.sendQ = 2; buzz.sendQT = setTimeout(buzzFlush, 150);
+  }
+  /* (v25) النبضة تذكير بس لو ما صار شي: كل 30 ثانية (كانت 6)، وكل 6 ثواني لو فيه جوال فاتح الصفحة القديمة
+     (يحسب الشاشة طافية بعد 16 ثانية)، وما تنرسل أبد لو ما فيه جوالات أزرار متصلة. أي إرسال يحسب نبضة */
+  function buzzHbSecs(){ return buzz.oldPhones ? 6 : 30; }
+  function buzzHbArm(){
+    clearTimeout(buzz.hb); buzz.hb = null;
+    if(!buzz.channel) return;
+    buzz.hb = setTimeout(buzzBeat, Math.max(500, buzzHbSecs() * 1000 - (Date.now() - buzz.beatAt)));
+  }
+  function buzzBeat(){
+    buzz.hb = null;
+    if(!buzz.channel) return;
+    if(buzz.status === "on" && Object.keys(buzz.presence || {}).length) buzzSend();
+    else { buzz.beatAt = Date.now(); buzzHbArm(); }
+  }
+  function buzzFlush(){
+    if(!buzz.sendQ) return;
+    buzz.sendQ = 0; clearTimeout(buzz.sendQT); buzz.sendQT = null;
     if(!buzz.channel || buzz.status !== "on") return;
+    buzz.beatAt = Date.now(); buzzHbArm();
     try{
-      buzz.channel.send({ type:"broadcast", event:"state", payload:{
-        v:1, state:buzz.state, qid:buzz.qid, winner:buzz.winner, winnerName:buzz.winnerName, winnerPid:buzz.winnerPid, excluded:buzz.excluded,
+      var p = buzzPayload();
+      buzz.sig = buzzSig(p);
+      buzz.channel.send({ type:"broadcast", event:"state", payload:p });
+    }catch(e){}
+  }
+  /* (v25) بصمة الحالة بدون الأوقات اللي تتغير كل ثانية (العدّادات و«قبل كم ثانية») */
+  function buzzSig(p){
+    return JSON.stringify(p, function(k, v){
+      if(k === "ts" || k === "left" || k === "wleft" || k === "ago") return undefined;
+      if(k === "ok") return buzz.ok ? buzz.ok.at : null;
+      return v;
+    });
+  }
+  /* (v25) كل ثانية: لو تغيّر شي يهم الجوالات وما انرسل (مثل لو المقدّم طلع من «طريق المليون») نرسله على طول.
+     قبل كانت النبضة (كل 6 ثواني) هي اللي توصّله */
+  function buzzCheck(){
+    if(buzz.status !== "on" || buzz.sendQ || !Object.keys(buzz.presence || {}).length) return;
+    try{ if(buzzSig(buzzPayload()) !== buzz.sig) buzzSend(); }catch(e){}
+  }
+  function buzzPayload(){
+    return {
+        v:1, hb:buzzHbSecs(),                                             /* (v25) hb: كل كم ثانية النبضة — الجوال الجديد يضبط صبره عليها */
+        state:buzz.state, qid:buzz.qid, winner:buzz.winner, winnerName:buzz.winnerName, winnerPid:buzz.winnerPid, excluded:buzz.excluded,
         teams: store.teams.map(function(t){ return { id:t.id, name:t.name, color:t.color }; }),
         q: buzz.q,                                                        /* السؤال (بدون الإجابة) يطلع بالجوالات */
         left: buzz.state === "locked" && buzz.endAt ? Math.max(0, (buzz.endAt - Date.now()) / 1000) : 0,   /* الوقت الباقي للجواب */
@@ -2371,8 +2421,7 @@
         pens: buzzPensOut(),                                              /* الخصم بهالسؤال: {فريق: {n, kind, ago}} */
         adds: buzzAddsOut(),                                              /* الزيادة اللي عطاها المقدّم بعد ما خلص الوقت */
         mq: mlPhone() || mcPhone()                                        /* «طريق المليون» + (v11) الأعلام والصور: السؤال والخيارات للجوالات */
-      }});
-    }catch(e){}
+    };
   }
   function buzzUnlockAudio(){
     try{
@@ -2421,7 +2470,7 @@
     });
     ch.on("broadcast", { event:"buzz" }, function(m){ onBuzz((m && m.payload) || {}); });
     ch.on("broadcast", { event:"hello" }, function(m){
-      buzzSend();
+      buzzSendSoon();
       var p = (m && m.payload) || {};
       if(p.role === "heads" && typeof p.team === "string") headsSendTurn(p.team);
     });
@@ -2431,16 +2480,18 @@
     ch.on("broadcast", { event:"rp" }, function(m){ recPhoneChunk((m && m.payload) || {}); });   /* (v12) 🔁 مقطع الإعادة من جوال اللي ضغط */
     ch.on("broadcast", { event:"rope" }, function(m){ if(RP.host) RP.host.netMsg((m && m.payload) || {}); });
     ch.on("presence", { event:"sync" }, function(){
-      var st = ch.presenceState(), per = {}, mic = {}, micP = {};
+      var st = ch.presenceState(), per = {}, mic = {}, micP = {}, old = false;
       Object.keys(st).forEach(function(k){
         (st[k] || []).forEach(function(meta){
           if(!meta || !meta.team) return;
+          if(!(+meta.v >= 25)) old = true;                                   /* (v25) جوال فاتح الصفحة القديمة */
           (per[meta.team] || (per[meta.team] = [])).push(buzzCleanName(meta.name) || "لاعب");
           (mic[meta.team] || (mic[meta.team] = [])).push(!!meta.mic);           /* (v12) 🎙️ مايك الجوال جاهز للإعادة */
           if(meta.mic && typeof meta.pid === "string") micP[meta.pid] = true;
         });
       });
       buzz.presence = per; buzz.pmic = mic; buzz.micPids = micP; renderBuzzUI();
+      if(old !== buzz.oldPhones){ buzz.oldPhones = old; buzzHbArm(); }   /* (v25) إيقاع النبضة يتغير على طول */
     });
     ch.subscribe(function(status){
       if(buzz.channel !== ch) return;
@@ -2449,17 +2500,20 @@
       renderBuzzUI();
     });
     buzz.channel = ch;
-    clearInterval(buzz.hb);
-    buzz.hb = setInterval(buzzSend, 6000);   /* نبضة: الجوالات تعرف إن الشاشة شغالة، واللي دخل متأخر يتزامن */
+    buzz.beatAt = Date.now(); buzzHbArm();   /* نبضة: الجوالات تعرف إن الشاشة شغالة (v25: شوف buzzHbArm) */
+    clearInterval(buzz.chk); buzz.chk = setInterval(buzzCheck, 1000);
   }
   function buzzDisconnect(keepEnabled){
-    clearInterval(buzz.hb); buzz.hb = null; buzzStopTimer(); buzzStopWindow(); buzz.q = null; buzz.tout = null; buzz.pens = {}; buzz.adds = {}; buzz.timeUp = false; tuHide();
+    if(buzz.sendQ) buzzFlush();               /* (v25) لو فيه إرسال بالانتظار يطلع قبل ما نقفل القناة (مثل قبل) */
+    /* (v25) المقدّم طفّى الأزرار: الجوالات الجديدة تعرف على طول (النبضة صارت أبطأ، فما ننتظرها). القديمة تتجاهلها */
+    if(!keepEnabled && buzz.channel && buzz.status === "on"){ try{ buzz.channel.send({ type:"broadcast", event:"bye", payload:{ t:Date.now() } }); }catch(e){} }
+    clearTimeout(buzz.hb); buzz.hb = null; clearInterval(buzz.chk); buzz.chk = null; buzz.sig = ""; buzzStopTimer(); buzzStopWindow(); buzz.q = null; buzz.tout = null; buzz.pens = {}; buzz.adds = {}; buzz.timeUp = false; tuHide();
     buzz.decide = false; buzz.twhy = null; buzz.ok = null; bdHide();
     recDiscard(); if(!keepEnabled) recRelease();
     buzz.only = null; buzz.onlyEnd = 0; buzzClearLog();
     var ch = buzz.channel; buzz.channel = null;
     if(ch && buzz.client){ try{ buzz.client.removeChannel(ch); }catch(e){} }
-    buzz.status = "off"; buzz.state = "idle"; buzz.winner = null; buzz.winnerName = ""; buzz.winnerPid = null; buzz.excluded = []; buzz.presence = {}; buzz.pmic = {}; buzz.micPids = {};
+    buzz.status = "off"; buzz.state = "idle"; buzz.winner = null; buzz.winnerName = ""; buzz.winnerPid = null; buzz.excluded = []; buzz.presence = {}; buzz.pmic = {}; buzz.micPids = {}; buzz.oldPhones = false;
     if(!keepEnabled){ store.buzz.enabled = false; persist(); }
     renderBuzzUI();
   }
@@ -3437,7 +3491,8 @@
      store.ans[g] = { round, key (سر الباركود), chan (القناة الحية — تجي بعد ما يحجز الجوال) }
      ====================================================================== */
   var ANS_GAMES = ["trivia", "emoji", "letters", "million"];
-  var ANS = { g:null, pollT:null, tickT:null, keyAt:{}, polled:{}, busy:{}, kbusy:{}, ch:{}, chOn:{}, last:{}, lastAt:{}, closeT:null, err:{} };
+  var ANS = { g:null, pollT:null, tickT:null, keyAt:{}, polled:{}, busy:{}, kbusy:{}, ch:{}, chOn:{}, last:{}, lastAt:{}, closeT:null, err:{},
+              v2:{}, seenAt:{} };   /* (v25) جوال الإجابات بالصفحة الجديدة؟ · آخر مرة كانت نافذة الباركود مفتوحة */
   var ansEls = { modal: document.getElementById("ansModal"), sub: document.getElementById("ansSub"), qr: document.getElementById("ansQr"), st: document.getElementById("ansSt"),
                  go: document.getElementById("ansGo"), nw: document.getElementById("ansNew"), copy: document.getElementById("ansCopy"), auto: document.getElementById("ansAuto"),
                  close: document.getElementById("ansClose") };
@@ -3454,7 +3509,7 @@
     if(store.ans.auto !== false) ansShow(g);
   }
   function ansLeave(g){
-    var ch = ANS.ch[g]; ANS.ch[g] = null; ANS.chOn[g] = false; ANS.last[g] = "";
+    var ch = ANS.ch[g]; ANS.ch[g] = null; ANS.chOn[g] = false; ANS.last[g] = ""; ANS.v2[g] = false;
     if(ch && sharedSb){ try{ sharedSb.removeChannel(ch); }catch(e){} }
   }
   function ansShow(g){
@@ -3528,7 +3583,8 @@
       ansRender();
     });
   }
-  /* ننتظر الجوال يحجز: نسأل كل ثانيتين والنافذة مفتوحة، وكل 6 ثواني وهي مسكّرة (لين 10 دقايق — وترجع لما تفتح الباركود) */
+  /* ننتظر الجوال يحجز: نسأل كل ثانيتين والنافذة مفتوحة، وكل 6 ثواني وهي مسكّرة (لين 10 دقايق — وترجع لما تفتح الباركود)
+     (v25) وبعد دقيقة من تسكير النافذة: كل 20 ثانية (الباركود ما عاد ظاهر، فالحجز وقتها نادر) */
   function ansPollStart(){ if(!ANS.pollT) ANS.pollT = setInterval(ansPollAll, 1000); ansPollAll(); }
   function ansPollAll(){
     var now = Date.now(), any = false;
@@ -3538,7 +3594,9 @@
       if(!ANS.keyAt[g]) ANS.keyAt[g] = now;
       if(!(ANS.g === g && !ansEls.modal.hidden) && now - ANS.keyAt[g] > 10 * 60 * 1000) return;
       any = true;
-      var every = (ANS.g === g && !ansEls.modal.hidden) ? 2000 : 6000;
+      var open = ANS.g === g && !ansEls.modal.hidden;
+      if(open) ANS.seenAt[g] = now;
+      var every = open ? 2000 : (now - (ANS.seenAt[g] || 0) < 60000 ? 6000 : 20000);
       if(ANS.busy[g] || now - (ANS.polled[g] || 0) < every - 50) return;
       ANS.busy[g] = true; ANS.polled[g] = now;
       sbReady.then(function(sb){ return sb.rpc("round_answer_status", { p_round: e.round }); }).then(function(r){
@@ -3557,7 +3615,7 @@
       clearTimeout(ANS.closeT); ANS.closeT = setTimeout(function(){ if(ANS.g === g) ansHide(); }, 1400);
     }
   }
-  /* القناة السرية مع الجوال: نرسل «السؤال الحين» كل ما تغيّر + نبضة كل 5 ثواني */
+  /* القناة السرية مع الجوال: نرسل «السؤال الحين» كل ما تغيّر + نبضة كل 5 ثواني (v25: كل 30 لو الجوال بالصفحة الجديدة) */
   function ansJoin(g){
     var e = store.ans[g]; if(!e || !e.chan) return;
     if(ANS.ch[g] && ANS.ch[g].__ans === e.chan) return;
@@ -3566,7 +3624,12 @@
       if(!sb || store.ans[g] !== e || !e.chan || ANS.ch[g]) return;
       var ch = sb.channel("sahra-ans-" + e.chan, { config: { broadcast: { self:false } } });
       ch.__ans = e.chan;
-      ch.on("broadcast", { event:"hi" }, function(){ if(ANS.ch[g] === ch) ansSend(g, true); });
+      ch.on("broadcast", { event:"hi" }, function(m){
+        if(ANS.ch[g] !== ch) return;
+        var p = (m && m.payload) || {};
+        ANS.v2[g] = +p.v >= 25;                /* (v25) الجوال الجديد يتحمّل نبضة كل 30 ثانية، القديم يبيها كل 5 */
+        if(!p.ack) ansSend(g, true);           /* ack = بس يعرّفنا بنفسه بعد ما وصله السؤال، ما يحتاج رد */
+      });
       ch.subscribe(function(st){
         if(ANS.ch[g] !== ch) return;
         ANS.chOn[g] = st === "SUBSCRIBED";
@@ -3585,14 +3648,15 @@
     var ch = ANS.ch[g], e = store.ans[g];
     if(!ch || !ANS.chOn[g] || !e) return;
     var live = String(ansRoundOf(g)) === String(e.round);
-    var body = { r: e.round, g: g, cur: live ? ansCurOf(g) : null, done: live ? ansDoneOf(g) : [], tp: cfgPlay().trivia_pts };
+    var hb = ANS.v2[g] ? 30 : 5;   /* (v25) كل كم ثانية نعيد نفس الرسالة — الجوال الجديد يضبط صبره عليها */
+    var body = { r: e.round, g: g, cur: live ? ansCurOf(g) : null, done: live ? ansDoneOf(g) : [], tp: cfgPlay().trivia_pts, hb: hb };
     if(live && g === "trivia"){   /* (v11) 🔄 الأسئلة اللي تبدّلت: الجوال يحدّث قائمته */
       var sw = (store.trivia.cells || []).filter(function(c){ return Array.isArray(c.prev) && c.prev.length; })
         .map(function(c){ return { o: c.prev, id: c.id, cat: c.cat, points: c.points, q: c.q, a: c.a }; });
       if(sw.length) body.sw = sw;
     }
     var key = JSON.stringify(body), now = Date.now();
-    if(!force && key === ANS.last[g] && now - (ANS.lastAt[g] || 0) < 5000) return;
+    if(!force && key === ANS.last[g] && now - (ANS.lastAt[g] || 0) < hb * 1000) return;
     ANS.last[g] = key; ANS.lastAt[g] = now;
     body.t = now;
     try{ var p = ch.send({ type:"broadcast", event:"cur", payload: body }); if(p && p.catch) p.catch(function(){}); }catch(x){}

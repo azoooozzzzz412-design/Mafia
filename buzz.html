@@ -310,11 +310,12 @@ document.addEventListener("DOMContentLoaded", function(){
       config: { broadcast: { self:false }, presence: { key:pid } }
     });
     c.on("broadcast", { event:"state" }, function(m){ if(ch === c) onState(m && m.payload); });
+    c.on("broadcast", { event:"bye" }, function(){ if(ch === c){ S.lastSeen = 0; render(); } });   /* (v25) المقدّم طفّى الأزرار — «ننتظر الشاشة» على طول */
     c.subscribe(function(status){
       if(ch !== c) return;
       if(status === "SUBSCRIBED"){
         setConn("on");
-        track();
+        track(true);
         hello();
       } else if(status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED"){
         setConn("error");
@@ -337,9 +338,14 @@ document.addEventListener("DOMContentLoaded", function(){
     }catch(e){ return false; }
   }
   function hello(){ send("hello", { team:teamId, pid:pid }); }
-  function track(){
+  /* (v25) v: الشاشة تعرف إن هالجوال بالصفحة الجديدة (تخفف النبضة) · وما نعيد الإرسال إلا لو تغيّر شي فعلًا
+     (force: بعد كل اشتراك جديد بالقناة — السيرفر نسي اللي قبله) */
+  function track(force){
     if(!ch || S.conn !== "on") return;
-    try{ var p = ch.track({ team:teamId, pid:pid, name:myName, mic: R && R.ok ? 1 : 0 }); if(p && p.catch) p.catch(function(){}); }catch(e){}
+    var meta = { team:teamId, pid:pid, name:myName, mic: R && R.ok ? 1 : 0, v:25 }, k = JSON.stringify(meta);
+    if(!force && ch.__tk === k) return;
+    ch.__tk = k;
+    try{ var p = ch.track(meta); if(p && p.catch) p.catch(function(){}); }catch(e){}
   }
 
   /* نموذج الاسم */
@@ -780,7 +786,9 @@ document.addEventListener("DOMContentLoaded", function(){
     for(var i=0;i<t.length;i++) if(t[i].id === id) return t[i];
     return null;
   }
-  function hostAlive(){ return !!S.host && (Date.now() - S.lastSeen) < 16000; }
+  /* (v25) الشاشة الجديدة تقول كل كم ثانية نبضتها (hb). 0 = الشاشة القديمة أو إيقاع الـ 6 ثواني: نفس الأرقام القديمة بالضبط */
+  function hbMs(){ var s = S.host ? +S.host.hb : 0; return (s > 6 && s <= 120) ? s * 1000 : 0; }
+  function hostAlive(){ var h = hbMs(); return !!S.host && (Date.now() - S.lastSeen) < (h ? h * 1.5 : 16000); }
   function view(){
     if(S.conn === "connecting") return hostAlive() ? viewFromHost() : "connecting";
     if(S.conn !== "on") return "error";
@@ -1057,7 +1065,12 @@ document.addEventListener("DOMContentLoaded", function(){
     var now = Date.now();
     if(S.conn === "error" && now - S.connSince > 10000){ reconnect(); }
     else if(S.conn === "connecting" && now - S.connSince > 20000){ reconnect(); }
-    else if(S.conn === "on" && S.host && now - S.lastSeen > 14000 && (Math.floor(now / 1000) % 5 === 0)){ hello(); }
+    else if(S.conn === "on" && S.host){
+      /* (v25) ما وصلت النبضة بوقتها: نطلب الحالة كل 5 ثواني (مثل قبل)، ولو طالت دقيقة كل 30 ثانية
+         (الشاشة طافية — وهي ترسل الحالة لحالها أول ما ترجع) */
+      var q = now - S.lastSeen, h = hbMs();
+      if(q > (h ? h + 5000 : 14000) && (Math.floor(now / 1000) % (q > (h ? h * 2 : 60000) ? 30 : 5) === 0)){ hello(); }
+    }
     render();
   }, 1000);
 

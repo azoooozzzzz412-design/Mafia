@@ -248,7 +248,10 @@
   }
   function onCur(p){
     if(!p || +p.r !== A.round) return;
-    A.lastAt = Date.now(); liveUi();
+    A.lastAt = Date.now();
+    A.hb = (+p.hb > 5 && +p.hb <= 120) ? +p.hb : 0;   /* (v25) الشاشة الجديدة تعيد كل 30 ثانية بس (0 = مثل قبل: كل 5) */
+    if(+p.hb > 0 && +p.hb <= 5 && CH.on && Date.now() - CH.ackAt > 30000){ CH.ackAt = Date.now(); hiSend(true); }   /* (v25) نعرّف الشاشة إننا بالصفحة الجديدة */
+    liveUi();
     if(Array.isArray(p.tp) && p.tp.length === 4){ var ch = String(p.tp) !== String(A.tp); A.tp = p.tp; if(ch && A.game === "trivia") render(); }
     if(A.game === "trivia" && Array.isArray(p.sw) && applySwaps(p.sw)) render();   /* (v11) 🔄 سؤال تبدّل باللوحة */
     A.done = {}; (Array.isArray(p.done) ? p.done : []).forEach(function(id){ A.done[String(id)] = 1; });
@@ -333,23 +336,28 @@
   });
 
   /* ---------- القناة الحية (سرّية: ما يعرفها إلا هالجوال والشاشة) ---------- */
-  var CH = { c: null, on: false, busy: false, resetAt: 0 };
+  var CH = { c: null, on: false, busy: false, resetAt: 0, ackAt: 0, verT: null };
   function liveUi(){
-    var ok = CH.on && A.lastAt && Date.now() - A.lastAt < 15000;
+    var ok = CH.on && A.lastAt && Date.now() - A.lastAt < (A.hb ? A.hb * 1500 : 15000);
     els.live.classList.toggle("ok", !!ok);
     els.liveTx.textContent = ok ? "متصل بالشاشة" : "ننتظر الشاشة";
   }
   function chOpen(){
     if(!client || !A.chan || CH.busy) return;
     var c = client.channel("sahra-ans-" + A.chan, { config: { broadcast: { self: false } } });
-    CH.c = c; CH.on = false;
+    CH.c = c; CH.on = false; CH.ackAt = 0;
     c.on("broadcast", { event: "cur" }, function(m){ if(CH.c === c) onCur(m && m.payload); });
     c.subscribe(function(st){
       if(CH.c !== c) return;
       CH.on = st === "SUBSCRIBED";
-      if(CH.on){ try{ var r = c.send({ type: "broadcast", event: "hi", payload: { t: Date.now() } }); if(r && r.catch) r.catch(function(){}); }catch(e){} }
+      if(CH.on) hiSend();
       liveUi();
     });
+  }
+  /* نطلب «السؤال الحين» من الشاشة. (v25) v: الجوال بالصفحة الجديدة · ack: بس نعرّف بنفسنا (ما نحتاج رد) */
+  function hiSend(ack){
+    var c = CH.c; if(!c || !CH.on) return;
+    try{ var r = c.send({ type: "broadcast", event: "hi", payload: ack ? { t: Date.now(), v: 25, ack: 1 } : { t: Date.now(), v: 25 } }); if(r && r.catch) r.catch(function(){}); }catch(e){}
   }
   function idleWait(rt, ms){
     return new Promise(function(res){ var t0 = Date.now(); (function chk(){ var busy = false; try{ busy = !!(rt && rt.isDisconnecting && rt.isDisconnecting()); }catch(e){} if(!busy || Date.now() - t0 > ms) return res(); setTimeout(chk, 100); })(); });
@@ -369,12 +377,18 @@
     liveUi();
     if(!A.chan || document.visibilityState !== "visible" || CH.busy) return;
     var quiet = Date.now() - (A.lastAt || 0);
-    if(quiet > 16000 && Date.now() - CH.resetAt > 12000) chReset();
+    if(quiet > (A.hb ? A.hb * 2000 : 16000) && Date.now() - CH.resetAt > 12000) chReset();
   }, 2000);
   document.addEventListener("visibilitychange", function(){
     if(document.visibilityState !== "visible") return;
     keepAwake();
-    if(A.chan && Date.now() - (A.lastAt || 0) > 8000) chReset();
+    if(!A.chan) return;
+    if(!A.hb){ if(Date.now() - (A.lastAt || 0) > 8000) chReset(); return; }   /* الشاشة القديمة: مثل قبل */
+    /* (v25) الشاشة الجديدة تعيد كل 30 ثانية بس: بدل ما نعيد الاتصال كامل كل مرة، نطلب السؤال الحين،
+       ولو ما وصل خلال 4 ثواني (الاتصال مات وهو مقفل) نعيد الاتصال مثل قبل */
+    var t0 = Date.now(); hiSend();
+    clearTimeout(CH.verT);
+    CH.verT = setTimeout(function(){ if(A.chan && (A.lastAt || 0) < t0 && document.visibilityState === "visible") chReset(); }, 4000);
   });
   window.addEventListener("online", function(){ if(A.chan) chReset(); });
 
