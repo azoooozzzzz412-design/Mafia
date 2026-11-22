@@ -12,8 +12,10 @@
 */
 (function(){
   "use strict";
-  document.documentElement.setAttribute("lang","ar");
-  document.documentElement.setAttribute("dir","rtl");
+  if(window.SAHRA_LANG !== "en"){   /* (v24) بالإنجليزي: i18n.js قلب الاتجاه لليسار */
+    document.documentElement.setAttribute("lang","ar");
+    document.documentElement.setAttribute("dir","rtl");
+  }
 
   var STORE_KEY = "sahra-table-v1";
 
@@ -182,6 +184,7 @@
 
   /* مكتبة الباركود: ما نحمّلها إلا أول ما نحتاج باركود (عشان الصفحة تفتح أسرع) */
   var QR_SRC = "https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js";
+  var QR_SRI = "sha384-mZT2gIty7ZDdOGkxfP6joZcYdMW1Jvj9dRlfpTmaJAKKXTqzygtB22k7FLe+KZC1";   /* (v23) توقيع ملف المكتبة: لو تغيّر الملف ما يشتغل */
   var qrState = 0, qrWaiters = [];   /* 0 ما انطلبت، 1 تتحمّل، 2 جاهزة، 3 فشلت */
   function needQR(cb){
     if(typeof window.qrcode === "function") return true;
@@ -190,6 +193,7 @@
     if(qrState === 0){
       qrState = 1;
       var sc = document.createElement("script");
+      sc.integrity = QR_SRI; sc.crossOrigin = "anonymous";
       sc.src = QR_SRC; sc.async = true;
       var done = function(){
         qrState = typeof window.qrcode === "function" ? 2 : 3;
@@ -421,7 +425,7 @@
       store.teams.forEach(function(t){ var k = OLD_PALETTE.indexOf(String(t.color || "").toLowerCase()); if(k !== -1) t.color = TEAM_PALETTE[k]; });
       if(isObj(saved.mafia) && Array.isArray(saved.mafia.players)) store.mafia = saved.mafia;
       var T = saved.trivia;
-      if(isObj(T) && validRound(T.round) && isTriviaCellsValid(T.cells)) store.trivia = { round:T.round, cells:T.cells, helps: isObj(T.helps) ? T.helps : {}, hsw: clampInt(T.hsw, 0, 99, 0) };   /* (v23) hsw = كم مرة غيّر المقدّم السؤال باللوحة */
+      if(isObj(T) && validRound(T.round) && isTriviaCellsValid(T.cells)) store.trivia = { round:T.round, cells:T.cells, helps: isObj(T.helps) ? T.helps : {} };
       var E = saved.emoji;
       if(isObj(E)){
         if(E.mode === "v1" || E.mode === "v2") store.emoji.mode = E.mode;
@@ -446,7 +450,6 @@
           /* (v22) كل خلية لها سؤالها: cq = سؤال كل خلية، qdone = الأسئلة اللي انلعبت من كل حرف (الجولات القديمة: من qpos) */
           store.letters.cq = isObj(L.cq) ? L.cq : {};
           store.letters.qdone = isObj(L.qdone) ? L.qdone : {};
-          store.letters.hsw = clampInt(L.hsw, 0, 99, 0);   /* (v23) كم مرة غيّر المقدّم السؤال باللوحة */
           if(!isObj(L.qdone)) Object.keys(store.letters.qpos).forEach(function(l){ var n = store.letters.qpos[l] | 0, a = []; for(var k = 0; k < n; k++) a.push(k); store.letters.qdone[l] = a; });
           store.letters.owners = isObj(L.owners) ? L.owners : {};
           store.letters.history = Array.isArray(L.history) ? L.history : [];
@@ -806,7 +809,7 @@
 
   els.addTeamBtn.addEventListener("click", function(){
     if(store.teams.length >= 6){ toast("أقصى عدد فرق هو 6"); return; }
-    store.teams.push({ id:uid(), name:"فريق "+(store.teams.length+1), color: TEAM_PALETTE[store.teams.length % TEAM_PALETTE.length], score:0 });
+    store.teams.push({ id:uid(), name:(window.SAHRA_LANG === "en" ? "Team " : "فريق ")+(store.teams.length+1), color: TEAM_PALETTE[store.teams.length % TEAM_PALETTE.length], score:0 });
     persist(); renderTeams(); renderTriviaAwardButtons(); renderEmojiAward(); renderCharTurnBanner(); teamsChanged();
   });
   els.resetScoresBtn.addEventListener("click", function(){
@@ -871,8 +874,7 @@
     teamBtns: document.getElementById("tmTeamBtns"),
     skipBtn: document.getElementById("tmSkipBtn"),
     helps: document.getElementById("tmHelps"),
-    helpsBar: document.getElementById("trivHelpsBar"),
-    change: document.getElementById("tmChangeBtn")   /* (v23) 🔄 غيّر السؤال (للمقدّم) */
+    helpsBar: document.getElementById("trivHelpsBar")
   };
   var TIERS = [100,200,300,400];
   /* النقاط تنعرض وتنحسب 1-4 (بقاعدة البيانات المستوى 100-400) */
@@ -900,7 +902,6 @@
         store.trivia.round = { id: d.round, kind: d.kind };
         store.trivia.cells = d.items.map(function(i){ return { id: String(i.id), cat: i.cat, points: i.points, q: i.q, a: i.a, used: false }; });
         store.trivia.helps = {};   /* لوحة جديدة = كل الوسائل ترجع */
-        store.trivia.hsw = 0;      /* (v23) ومرات «غيّر السؤال» ترجع */
         persist();
         trivOpen();
         ansStart("trivia", d.round);
@@ -954,7 +955,6 @@
     trivEls.answer.textContent = "الإجابة: " + cell.a;
     trivEls.award.hidden = true;
     trivEls.revealBtn.hidden = false;
-    hostSwapBtn(trivEls.change, "trivia", TH.busy);
     renderTriviaAwardButtons();
     renderTrivHelps();
   }
@@ -1153,45 +1153,8 @@
       var m = String((e && (e.message || e.code)) || e || "");
       var code = Object.keys(SWAP_ERR).filter(function(k){ return m.indexOf(k) !== -1; })[0];
       toast(code ? SWAP_ERR[code] : isMissingFn(e) ? "تبديل السؤال يحتاج تحديث قاعدة البيانات (ملف SQL)" : "ما قدرنا نبدّل السؤال — تأكد من النت");
-    }).then(function(){ TH.busy = false; if(activeCell === cell) renderTrivHelps(); if(activeCell) hostSwapBtn(trivEls.change, "trivia", false); });   /* (v23) زر المقدّم يرجع لحالته */
+    }).then(function(){ TH.busy = false; if(activeCell === cell) renderTrivHelps(); });
   }
-  /* ===== (v23) 🔄 «غيّر السؤال» للمقدّم: سؤال ثاني من نفس الفئة والنقاط — 3 مرات بكل لوحة (سين جيم والحروف، كل لعبة لحالها)
-     ما ياخذ من وسائل الفرق، ويشتغل حتى بعد ما ينكشف الجواب (لو طلع السؤال غلط أو مكرر) ===== */
-  var HOST_SWAPS = 3;
-  function hostSwapsLeft(g){ var s = store[g], n = s && typeof s.hsw === "number" ? s.hsw : 0; return Math.max(0, HOST_SWAPS - n); }
-  function hostSwapBtn(btn, g, busy){
-    if(!btn) return;
-    var left = hostSwapsLeft(g);
-    btn.disabled = !left || !!busy;
-    btn.textContent = busy ? "⏳ لحظة…" : left ? "🔄 غيّر السؤال · باقي " + left : "🔄 خلصت مرات التغيير";
-    btn.title = "المقدّم يقدر يغيّر السؤال " + HOST_SWAPS + " مرات بكل لوحة";
-  }
-  function trivHostSwap(){
-    var cell = activeCell, R = store.trivia.round;
-    if(!cell || !R || TH.busy) return;
-    if(!hostSwapsLeft("trivia")){ toast("خلصت مرات تغيير السؤال بهاللوحة (" + HOST_SWAPS + ")"); return; }
-    var oldId = cell.id;
-    TH.busy = true; renderTrivHelps(); hostSwapBtn(trivEls.change, "trivia", true);
-    sbReady.then(function(sb){ return sb.rpc("trivia_swap", { p_round: R.id, p_item: oldId }); }).then(function(r){
-      if(r.error) throw r.error;
-      var d = parseJ(r.data);
-      if(!d || typeof d.q !== "string" || typeof d.a !== "string" || !d.id) throw new Error("bad_item");
-      if(store.trivia.round !== R || cell.id !== oldId) return;   /* اللوحة تغيّرت وقت الانتظار */
-      cell.prev = (Array.isArray(cell.prev) ? cell.prev : []).concat([oldId]).slice(-6);
-      cell.id = String(d.id); cell.q = d.q; cell.a = d.a;
-      store.trivia.hsw = (store.trivia.hsw | 0) + 1;
-      TH.open = false; TH.steal = null;
-      persist(); renderTriviaBoard();
-      if(activeCell === cell){ trivShowCell(cell); trivArm(cell); }
-      var left = hostSwapsLeft("trivia");
-      toast("🔄 تغيّر السؤال — " + (left ? "باقي " + left : "هذي آخر مرة بهاللوحة"));
-    }).catch(function(e){
-      var m = String((e && (e.message || e.code)) || e || "");
-      var code = Object.keys(SWAP_ERR).filter(function(k){ return m.indexOf(k) !== -1; })[0];
-      toast(code ? SWAP_ERR[code] : isMissingFn(e) ? "تغيير السؤال يحتاج تحديث قاعدة البيانات (ملف SQL)" : "ما قدرنا نغيّر السؤال — تأكد من النت");
-    }).then(function(){ TH.busy = false; if(activeCell){ renderTrivHelps(); hostSwapBtn(trivEls.change, "trivia", false); } });
-  }
-  trivEls.change.addEventListener("click", trivHostSwap);
   /* شريط الوسائل تحت اللوحة: وش باقي لكل فريق */
   function renderTrivHelpsBar(){
     var bar = trivEls.helpsBar, keys = helpsOn();
@@ -2378,13 +2341,14 @@
     flash: document.getElementById("buzzFlash")
   };
   function buzzRoomGen(){
-    var c = "abcdefghjkmnpqrstuvwxyz23456789", r = "";
-    for(var i=0;i<6;i++) r += c.charAt(Math.floor(Math.random()*c.length));
+    var c = "abcdefghjkmnpqrstuvwxyz23456789", r = "", n = 10, a = null;
+    try{ a = (window.crypto || window.msCrypto).getRandomValues(new Uint8Array(n)); }catch(e){ a = null; }   /* (v23) عشوائي آمن */
+    for(var i=0;i<n;i++) r += c.charAt((a ? a[i] : Math.floor(Math.random()*256)) % c.length);
     return r;
   }
   function buzzTeamUrl(t){
     var base = location.origin + location.pathname.replace(/[^\/]*$/, "");
-    return base + "buzz.html?r=" + encodeURIComponent(store.buzz.room) + "&t=" + encodeURIComponent(t.id);
+    return base + "buzz.html?r=" + encodeURIComponent(store.buzz.room) + "&t=" + encodeURIComponent(t.id) + (window.SAHRA_LANG === "en" ? "&lang=en" : "");   /* (v24) الجوال بنفس لغة الشاشة */
   }
   function buzzActive(){ return buzz.status === "on" || buzz.status === "connecting"; }
   function buzzCleanName(n){ return String(n || "").replace(/\s+/g, " ").trim().slice(0, 20); }
@@ -3481,7 +3445,7 @@
     var r = g === "trivia" ? store.trivia.round : g === "emoji" ? store.emoji.round : g === "letters" ? store.letters.round : g === "million" ? store.million.round : null;
     return r && !r.done && r.id != null ? r.id : null;
   }
-  function ansUrl(e){ return location.origin + location.pathname.replace(/[^\/]*$/, "") + "answers.html#r=" + encodeURIComponent(e.round) + "&k=" + e.key; }
+  function ansUrl(e){ return location.origin + location.pathname.replace(/[^\/]*$/, "") + "answers.html#r=" + encodeURIComponent(e.round) + "&k=" + e.key + (window.SAHRA_LANG === "en" ? "&lang=en" : ""); }   /* (v24) */
   /* بداية جولة: باركود جديد (ويطلع لحاله لو الخيار شغّال) */
   function ansStart(g, rid){
     if(ANS_GAMES.indexOf(g) === -1 || rid == null) return;
@@ -3777,7 +3741,7 @@
             letters.slice(0, 25).forEach(function(l, k){ board[LT_TRIAL_ORDER[k]] = l; });
           }
           L.round = { id: d.round, kind: d.kind };
-          L.board = board; L.qmap = qmap; L.qpos = {}; L.cq = {}; L.qdone = {}; L.hsw = 0;   /* (v23) hsw = مرات «غيّر السؤال» */
+          L.board = board; L.qmap = qmap; L.qpos = {}; L.cq = {}; L.qdone = {};
           L.owners = {}; L.history = []; L.lastWin = null;
           persist(); lettersOpen();
           ansStart("letters", d.round);
@@ -3945,7 +3909,6 @@
     ltEls.mAnswer.hidden = true; ltEls.mAnswer.textContent = "الإجابة: " + q.a;
     ltEls.mReveal.hidden = false;
     ltEls.mOther.hidden = qs.length < 2;
-    hostSwapBtn(ltEls.mOther, "letters", false);   /* (v23) 3 مرات بكل لوحة */
     var t = ltTeams();
     ltEls.mTeams.innerHTML = [t[0], t[1]].filter(Boolean).map(function(team){
       return '<button type="button" style="background:' + team.color + '" data-ltaward="' + team.id + '">✔ ' + escapeHtml(team.name) + '</button>';
@@ -3999,17 +3962,12 @@
     if(!LT.cur) return;
     var qs = store.letters.qmap[LT.cur.letter];
     if(!qs || qs.length < 2){ toast("ما فيه سؤال ثاني لهالحرف بهالجولة"); return; }
-    if(!hostSwapsLeft("letters")){ toast("خلصت مرات تغيير السؤال بهاللوحة (" + HOST_SWAPS + ")"); return; }   /* (v23) */
     /* (v22) السؤال اللي تخطّيناه ينحسب منلعب، والجديد ما يكون سؤال خلية ثانية من نفس الحرف */
     var k = ltPickQ(LT.cur.idx, LT.cur.letter, LT.cur.qi);
     if(k === LT.cur.qi){ toast("ما فيه سؤال ثاني لهالحرف بهالجولة"); return; }
     ltDone(LT.cur.letter, LT.cur.qi);
-    LT.cur.qi = k; store.letters.cq[LT.cur.idx] = k;
-    store.letters.hsw = (store.letters.hsw | 0) + 1;
-    persist();
+    LT.cur.qi = k; store.letters.cq[LT.cur.idx] = k; persist();
     ltRenderModal();
-    var left = hostSwapsLeft("letters");
-    toast("🔄 تغيّر السؤال — " + (left ? "باقي " + left : "هذي آخر مرة بهاللوحة"));
   });
   ltEls.mNone.addEventListener("click", ltClose);
   ltEls.modal.addEventListener("click", function(e){ if(e.target === ltEls.modal) ltClose(); });
@@ -4329,7 +4287,7 @@
   function headsVisible(){ return !document.getElementById("view-heads").hidden; }
   function headsUrl(t){
     var base = location.origin + location.pathname.replace(/[^\/]*$/, "");
-    return base + "heads.html?r=" + encodeURIComponent(store.buzz.room) + "&t=" + encodeURIComponent(t.id);
+    return base + "heads.html?r=" + encodeURIComponent(store.buzz.room) + "&t=" + encodeURIComponent(t.id) + (window.SAHRA_LANG === "en" ? "&lang=en" : "");   /* (v24) */
   }
   function hdInt(v, lo, hi){ v = Math.round(+v); if(!isFinite(v)) v = lo; return Math.max(lo, Math.min(hi, v)); }
   function hdPoints(n){
@@ -4600,7 +4558,7 @@
     /* الفرق: فريقين بالأسماء الافتراضية — ونخلي رقم أول فريقين عشان جوالات «أسرع إصبع» تبقى شغالة */
     var keep = store.teams.slice(0, 2).map(function(t){ return t.id; });
     store.teams = [0, 1].map(function(i){
-      return { id: keep[i] || uid(), name: "فريق " + (i + 1), color: TEAM_PALETTE[i], score: 0 };
+      return { id: keep[i] || uid(), name: (window.SAHRA_LANG === "en" ? "Team " : "فريق ") + (i + 1), color: TEAM_PALETTE[i], score: 0 };
     });
     /* الألعاب: أي جولة شغالة تنتهي (سجل الأسئلة اللي طلعت محفوظ بالسيرفر، فما تتكرر) */
     store.trivia = { round:null, cells:[] };
@@ -5726,7 +5684,7 @@
     }
     else if(a === "team-add"){
       if(store.teams.length >= 6){ toast("أقصى عدد فرق هو 6"); return; }
-      store.teams.push({ id:uid(), name:"فريق " + (store.teams.length + 1), color:TEAM_PALETTE[store.teams.length % TEAM_PALETTE.length], score:0 });
+      store.teams.push({ id:uid(), name:(window.SAHRA_LANG === "en" ? "Team " : "فريق ") + (store.teams.length + 1), color:TEAM_PALETTE[store.teams.length % TEAM_PALETTE.length], score:0 });
       teamsUpdated(); renderPlan();
     }
     else if(a === "team-del"){

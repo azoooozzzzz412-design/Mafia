@@ -1817,3 +1817,7 @@ body.on-landing .topbar, body.on-landing main{ display:none; }
 .ld-stat::after{ content:""; position:absolute; inset:0 30% auto; height:1px; background:linear-gradient(90deg, transparent, rgba(162,141,255,.55), transparent); }
 .ld-game::after{ content:""; position:absolute; inset:0 18% auto; height:1px; background:linear-gradient(90deg, transparent, var(--accent-bright), transparent); opacity:.4; }
 @media (prefers-reduced-motion: reduce){ .mc-art{ transition:none; } .is-loading .spin{ animation-duration:1.6s !important; animation-iteration-count:infinite !important; } }
+
+/* (v24) زر اللغة (English / عربي) */
+.lang-btn{ display:inline-flex; align-items:center; justify-content:center; height:38px; min-width:42px; padding:0 10px; border-radius:999px; border:1px solid var(--line-2); background:rgba(255,255,255,.04); color:var(--tx-2); font:inherit; font-size:.85rem; font-weight:600; cursor:pointer; white-space:nowrap; flex:0 0 auto; }
+.lang-btn:hover{ color:var(--tx); background:rgba(255,255,255,.08); }

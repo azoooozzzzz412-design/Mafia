@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700;800&family=Cinzel:wght@600;700&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700;800&family=Cinzel:wght@600;700&display=swap"></noscript>
 <link rel="preconnect" href="https://monovczlaegaezjkmpnm.supabase.co" crossorigin>
-<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js" integrity="sha384-uteMfOloLDGt042uDz+xHGF3ym63/WQ6rFq7murQRG8Ih7QrXGEGNtWd8688sb4O" crossorigin="anonymous"></script>
 <script defer src="config.js"></script>
 <style>
 /* ==========================================================================
@@ -827,7 +827,7 @@ function errCode(e){ var m = String((e && (e.message || e.details || e.hint)) ||
 function errMsg(e){ var c = errCode(e); return ERR[c] || (navigator.onLine === false ? "ما فيه إنترنت — تأكد من الاتصال" : "صار خطأ — جرّب مرة ثانية"); }
 
 /* ---------- التفضيلات (على الجهاز) ---------- */
-var PREF_KEY = "sahra-mafia-prefs", PHOTO_KEY = "sahra-mafia-photo", LAST_KEY = "sahra-mafia-last";
+var PREF_KEY = "sahra-mafia-prefs", PHOTO_KEY = "sahra-mafia-photo", LAST_KEY = "sahra-mafia-last", ID_KEY = "sahra-mafia-id";
 var PREF = Object.assign({ narr: true, sfx: true, mic: true, name: "", look: {}, view: "3d" }, readJ(PREF_KEY) || {});
 if(typeof PREF.look !== "object" || !PREF.look) PREF.look = {};
 if(PREF.look.a == null || !(+PREF.look.a >= 0 && +PREF.look.a < 16)) PREF.look = { a: Math.floor(Math.random() * 16) };
@@ -996,7 +996,7 @@ function remainMs(){ return S.st && S.st.ends ? S.st.ends - serverNow() : null; 
 function colorOf(s){ return COLORS[((s && s.n) | 0) % COLORS.length]; }
 
 function rpc(op, p){
-  var body = Object.assign({ code: S.code, seat: S.seat, token: S.token }, p || {});
+  var body = Object.assign({ code: S.code, seat: S.seat, token: S.token }, ID.pub ? { pk: ID.pub } : {}, p || {});   /* (v23) pk = مفتاح توقيع جهازي (ينسجّل مع مقعدي) */
   return sb.rpc("mafia", { p_op: op, p: body }).then(function(r){
     if(r.error) throw r.error;
     return typeof r.data === "string" ? JSON.parse(r.data) : r.data;
@@ -1006,6 +1006,93 @@ function rpc(op, p){
 /* =====================================================================
    قناة الغرفة (Realtime): تنبيه التغيير، الشات، تعارف الصوت، الصور، ومين متصل
    ===================================================================== */
+/* =====================================================================
+   (v23) توقيع رسائل القناة الحية: تعارف الصوت، الشات، الصور
+   قناة الغرفة يدخلها أي أحد يعرف رمز الغرفة، وكانت الرسائل فيها بدون إثبات: يعني واحد يقدر يرسل «تعارف صوت»
+   أو رسالة شات باسم مقعد غيره (وكذا يسمع قناة المافيا السرية بالليل).
+   الحين كل جهاز له مفتاح توقيع خاص ما يطلع منه. المفتاح العام ينسجّل بالقاعدة مع المقعد (وما يغيّره إلا صاحب المقعد)،
+   وكل رسالة تتوقّع، والباقين يتأكدون إن التوقيع يطابق مفتاح المقعد قبل ما يقبلونها.
+   ===================================================================== */
+var ID = { pub: "", key: null, ready: null };
+function b64u(u8){ return b64(u8).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); }
+function unb64u(t){ t = String(t).replace(/-/g, "+").replace(/_/g, "/"); while(t.length % 4) t += "="; return unb64(t); }
+ID.ready = (function(){
+  var sub = window.crypto && crypto.subtle, EC = { name: "ECDSA", namedCurve: "P-256" };
+  if(!sub) return Promise.resolve(false);
+  var saved = readJ(ID_KEY);
+  return (saved && /^[\w-]{87}$/.test(saved.pub || "") && saved.priv
+      ? sub.importKey("jwk", saved.priv, EC, false, ["sign"]).then(function(k){ ID.pub = saved.pub; ID.key = k; })
+      : Promise.reject(new Error("new")))
+    .catch(function(){
+      return sub.generateKey(EC, true, ["sign", "verify"]).then(function(kp){
+        return Promise.all([sub.exportKey("raw", kp.publicKey), sub.exportKey("jwk", kp.privateKey)]).then(function(x){
+          ID.pub = b64u(new Uint8Array(x[0])); ID.key = kp.privateKey;
+          writeJ(ID_KEY, { pub: ID.pub, priv: x[1] });
+        });
+      });
+    }).then(function(){ return true; }, function(){ ID.pub = ""; ID.key = null; return false; });
+})();
+/* النص اللي يتوقّع: نوع الرسالة + رمز الغرفة + حقولها بترتيب ثابت (آخر حقل هو الوحيد اللي ممكن يكون فيه سطور) */
+var SIG_F = { rtc: ["f", "t", "k", "sid", "ts", "sdp"], chat: ["sc", "s", "id", "ts", "m"], pic: ["s", "ts", "d"] };
+function sigText(ev, p){ return ev + "\n" + String(S.code || "") + "\n" + SIG_F[ev].map(function(k){ return p[k] == null ? "" : String(p[k]); }).join("\n"); }
+var sigTs = 0;
+/* وقت التوقيع بساعة القاعدة (مو ساعة الجوال) — فننتظر أول حالة توصل (لحظات) قبل ما نوقّع */
+function stateReady(){
+  if(S.st) return Promise.resolve();
+  return new Promise(function(res){ var n = 0; (function chk(){ if(S.st || ++n > 40) return res(); setTimeout(chk, 100); })(); });
+}
+function signInto(ev, p){   /* يحط الوقت والتوقيع داخل p */
+  return ID.ready.then(stateReady).then(function(){
+    var t = Math.round(serverNow()); if(t <= sigTs) t = sigTs + 1; sigTs = t; p.ts = t;
+    if(!ID.key) return p;
+    return crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, ID.key, new TextEncoder().encode(sigText(ev, p)))
+      .then(function(sig){ p.g = b64u(new Uint8Array(sig)); return p; }, function(){ return p; });
+  });
+}
+function bcastSigned(ev, p){ return signInto(ev, p).then(function(x){ return bcast(ev, x); }); }
+var VF = { keys: {}, last: {}, q: {}, fp: null, fat: 0 };
+/* الحالة من القاعدة الحين (مرة كل ثانية ونص بالكثير) — لو وصلت رسالة من مقعد ما أعرفه أو مفتاحه تغيّر */
+function freshState(){
+  if(VF.fp) return VF.fp;
+  var wait = Math.max(0, 1500 - (Date.now() - VF.fat));
+  VF.fp = new Promise(function(res){
+    setTimeout(function(){
+      VF.fat = Date.now();
+      if(!S.inTable || S.gone){ VF.fp = null; return res(); }
+      var t0 = Date.now();
+      rpc("state").then(function(d){ applyState(d, (Date.now() - t0) / 2); }, function(){}).then(function(){ VF.fp = null; res(); });
+    }, wait);
+  });
+  return VF.fp;
+}
+function sigKey(pk){ return VF.keys[pk] || (VF.keys[pk] = crypto.subtle.importKey("raw", unb64u(pk), { name: "ECDSA", namedCurve: "P-256" }, false, ["verify"])); }
+function sigCheck(ev, p, seatId){
+  var d = S.st;
+  if(!d) return Promise.resolve(false);                       // الحالة ما وصلت للحين: نجيبها أول
+  if(!d.sig) return Promise.resolve(true);                    // القاعدة قبل تحديث v23 (ما فيها مفاتيح): مثل قبل
+  var st = seatById(seatId);
+  if(!st) return Promise.resolve(false);                      // مقعد ما أعرفه
+  if(!st.pk) return Promise.resolve(true);                    // جهاز ما سجّل مفتاح (صفحة قديمة): مثل قبل — وما أحد يقدر يمسح مفتاح غيره
+  if(typeof p.g !== "string" || p.g.length > 100 || typeof p.ts !== "number" || !window.crypto || !crypto.subtle) return Promise.resolve(false);
+  if(Math.abs(serverNow() - p.ts) > 120000) return Promise.resolve(false);   // رسالة قديمة
+  var lk = ev + ":" + seatId;
+  if(VF.last[lk] && p.ts <= VF.last[lk]) return Promise.resolve(false);      // نفس الرسالة انرسلت مرة ثانية
+  var sig; try{ sig = unb64u(p.g); }catch(e){ return Promise.resolve(false); }
+  return sigKey(st.pk).then(function(k){ return crypto.subtle.verify({ name: "ECDSA", hash: "SHA-256" }, k, sig, new TextEncoder().encode(sigText(ev, p))); })
+    .then(function(ok){ if(ok) VF.last[lk] = p.ts; return !!ok; }, function(){ return false; });
+}
+function sigOk(ev, p, seatId){
+  return sigCheck(ev, p, seatId).then(function(ok){
+    if(ok || (S.st && !S.st.sig)) return ok;
+    return freshState().then(function(){ return sigCheck(ev, p, seatId); });
+  });
+}
+/* نتحقق ثم ننفّذ — وبالترتيب لكل مرسل */
+function sigQueue(seatId, ev, p, fn){
+  var k = String(seatId);
+  VF.q[k] = (VF.q[k] || Promise.resolve()).then(function(){ return sigOk(ev, p, seatId); }).then(function(ok){ if(ok) fn(); }, function(){});
+}
+
 var RC = { tries: 0, t: 0, badAt: 0, busy: false, gen: 0, dead: 0 };
 function topicName(){ return "sahra-mafia-" + S.code.toLowerCase(); }
 function chanList(){ try{ var l = sb.getChannels ? sb.getChannels() : (sb.realtime && sb.realtime.channels); return Array.isArray(l) ? l : []; }catch(e){ return []; } }
@@ -2019,11 +2106,15 @@ var V = (function(){
     newPC(p, true).then(function(pc){
       applyGate(p);
       return pc.createOffer().then(function(o){ return pc.setLocalDescription(o); }).then(function(){ return iceDone(pc, 2500); })
-        .then(function(){ if(p.pc === pc && p.sid === sid && pc.localDescription) bcast("rtc", { f: S.seat, t: id, k: "offer", sid: sid, sdp: pc.localDescription.sdp }); });
+        .then(function(){ if(p.pc === pc && p.sid === sid && pc.localDescription) bcastSigned("rtc", { f: S.seat, t: id, k: "offer", sid: sid, sdp: pc.localDescription.sdp }); });
     }).catch(function(){ if(p.sid === sid) drop(id, true); });
   }
   function onSignal(m){
     if(!m || typeof m !== "object" || m.t !== S.seat || typeof m.f !== "string" || m.f === S.seat || !S.inTable || !window.RTCPeerConnection) return;
+    /* (v23) ما نقبل تعارف الصوت إلا لو توقيعه يطابق مفتاح المقعد المسجّل بالقاعدة — ما أحد ينتحل مقعد غيره ويسمع صوته */
+    sigQueue(m.f, "rtc", m, function(){ if(S.inTable && !S.gone) signal(m); });
+  }
+  function signal(m){
     var id = m.f, p = peers[id];
     if(m.k === "offer" && typeof m.sdp === "string"){
       if(p) closePeer(p);
@@ -2036,7 +2127,7 @@ var V = (function(){
           applyGate(p);
           return pc.createAnswer();
         }).then(function(a){ return pc.setLocalDescription(a); }).then(function(){ return iceDone(pc, 2500); })
-          .then(function(){ if(p.pc === pc && pc.localDescription) bcast("rtc", { f: S.seat, t: id, k: "answer", sid: sid, sdp: pc.localDescription.sdp }); });
+          .then(function(){ if(p.pc === pc && pc.localDescription) bcastSigned("rtc", { f: S.seat, t: id, k: "answer", sid: sid, sdp: pc.localDescription.sdp }); });
       }).catch(function(){ if(peers[id] === p) drop(id, false); });
     } else if(m.k === "answer" && typeof m.sdp === "string"){
       if(!p || !p.pc || p.sid !== m.sid || p.pc.signalingState !== "have-local-offer") return;
@@ -2089,7 +2180,7 @@ var V = (function(){
         if(fine){ askAt[id] = 0; if(p.state === "connected") askN[id] = 0; }
         else if(now - seenAt[id] < 8000){}                       // توّه ظهر: اللي يبدأ يبدأ لحاله
         else if(!askAt[id]) askAt[id] = now;
-        else if(now - askAt[id] > (p ? 6000 : 2500) * Math.min(8, Math.pow(2, askN[id] || 0))){ askAt[id] = now; askN[id] = (askN[id] || 0) + 1; bcast("rtc", { f: S.seat, t: id, k: "req" }); }
+        else if(now - askAt[id] > (p ? 6000 : 2500) * Math.min(8, Math.pow(2, askN[id] || 0))){ askAt[id] = now; askN[id] = (askN[id] || 0) + 1; bcastSigned("rtc", { f: S.seat, t: id, k: "req" }); }
       }
     }
     for(var id3 in seenAt) if(!on[id3]) delete seenAt[id3];
@@ -2111,7 +2202,7 @@ var V = (function(){
   function gate(){ for(var id in peers) applyGate(peers[id]); renderMic(); }
   window.__mafiaVoiceGate = gate;
   function stopAll(){
-    for(var id in peers){ if(S.conn === "on") bcast("rtc", { f: S.seat, t: id, k: "bye" }); closePeer(peers[id]); }
+    for(var id in peers){ if(S.conn === "on") bcastSigned("rtc", { f: S.seat, t: id, k: "bye" }); closePeer(peers[id]); }
     peers = {};
   }
   function releaseMic(){ if(local){ local.getTracks().forEach(function(t){ try{ t.stop(); }catch(e){} }); } local = null; track = null; localAn = null; }
@@ -2258,25 +2349,32 @@ els.chatForm.addEventListener("submit", function(e){
   S.lastSent = Date.now(); els.chatIn.value = "";
   var me = mySeat(), msg = { id: rid(6), s: S.seat, n: me ? me.name : S.name, m: t };
   addLog({ id: msg.id, sc: sc, s: S.seat, n: msg.n, m: t, mine: true });
-  if(sc === "all"){ chatSent(bcast("chat", { sc: "all", id: msg.id, s: S.seat, n: msg.n, m: t })); return; }
+  if(sc === "all"){ bcastSigned("chat", { sc: "all", id: msg.id, s: S.seat, n: msg.n, m: t }).then(chatSent, function(){ chatSent(false); }); return; }   /* (v23) موقّعة */
   var key = sc === "maf" ? S.me && S.me.key : S.me && S.me.dkey;
   if(!key || !window.crypto || !crypto.subtle){ toast("المتصفح هذا ما يدعم الشات السرّي"); return; }
-  seal(key, msg).then(function(x){ chatSent(bcast("chat", { sc: sc, iv: x.iv, ct: x.ct })); }, function(){ toast("ما قدرنا نرسل الرسالة"); });
+  msg.sc = sc;
+  signInto("chat", msg).then(function(sm){ return seal(key, sm); }).then(function(x){ chatSent(bcast("chat", { sc: sc, iv: x.iv, ct: x.ct })); }, function(){ toast("ما قدرنا نرسل الرسالة"); });   /* (v23) التوقيع داخل الرسالة المشفّرة */
 });
 function onChat(p){
   if(!p || typeof p !== "object" || !S.inTable) return;
   if(p.sc === "all"){
     if(typeof p.m !== "string" || typeof p.s !== "string") return;
-    var s = seatById(p.s);
-    addLog({ id: String(p.id || "").slice(0, 16), sc: "all", s: p.s, n: s ? s.name : String(p.n || "؟").slice(0, 14), m: p.m.slice(0, 300) });
+    /* (v23) لازم تكون موقّعة من صاحب المقعد نفسه — ما أحد يكتب باسم غيره */
+    sigQueue(p.s, "chat", p, function(){
+      var s = seatById(p.s);
+      addLog({ id: String(p.id || "").slice(0, 16), sc: "all", s: p.s, n: s ? s.name : String(p.n || "؟").slice(0, 14), m: p.m.slice(0, 300) });
+    });
     return;
   }
   var key = p.sc === "maf" ? S.me && S.me.key : p.sc === "dead" ? S.me && S.me.dkey : null;
   if(!key || typeof p.iv !== "string" || typeof p.ct !== "string" || !window.crypto || !crypto.subtle) return;
   unseal(key, p).then(function(m){
-    if(!m || typeof m.m !== "string") return;
-    var s2 = seatById(m.s);
-    addLog({ id: String(m.id || "").slice(0, 16), sc: p.sc, s: m.s, n: s2 ? s2.name : String(m.n || "؟").slice(0, 14), m: m.m.slice(0, 300) });
+    if(!m || typeof m.m !== "string" || typeof m.s !== "string") return;
+    if(m.sc == null) m.sc = p.sc; else if(m.sc !== p.sc) return;   /* (v23) الرسالة لازم تكون لنفس الشات اللي وصلت فيه */
+    sigQueue(m.s, "chat", m, function(){
+      var s2 = seatById(m.s);
+      addLog({ id: String(m.id || "").slice(0, 16), sc: p.sc, s: m.s, n: s2 ? s2.name : String(m.n || "؟").slice(0, 14), m: m.m.slice(0, 300) });
+    });
   }, function(){});
 }
 
@@ -2289,13 +2387,16 @@ function sendPic(req){
   if(req && req.s === S.seat) return;
   if(Date.now() - picAt < 2500){ clearTimeout(sendPic.t); sendPic.t = setTimeout(function(){ sendPic(); }, 2600); return; }
   picAt = Date.now();
-  bcast("pic", { s: S.seat, d: myPhoto });
+  bcastSigned("pic", { s: S.seat, d: myPhoto });
 }
 function onPic(p){
   if(!p || typeof p.s !== "string" || typeof p.d !== "string") return;
-  if(p.d === "") { delete S.photos[p.s]; render(); return; }
-  if(p.d.indexOf("data:image/jpeg;base64,") !== 0 || p.d.length > 70000) return;
-  S.photos[p.s] = p.d; render();
+  if(p.d !== "" && (p.d.length > 70000 || !/^data:image\/jpeg;base64,[A-Za-z0-9+\/]+=*$/.test(p.d))) return;   /* (v23) صورة JPEG بس، بدون أي حروف غريبة */
+  /* (v23) لازم تكون موقّعة من صاحب المقعد — ما أحد يغيّر صورة غيره */
+  sigQueue(p.s, "pic", p, function(){
+    if(p.d === "") delete S.photos[p.s]; else S.photos[p.s] = p.d;
+    render();
+  });
 }
 function shrinkPhoto(file){
   return new Promise(function(res, rej){
@@ -2315,7 +2416,7 @@ function shrinkPhoto(file){
 function setPhoto(d){
   myPhoto = d || null;
   try{ if(myPhoto) localStorage.setItem(PHOTO_KEY, myPhoto); else localStorage.removeItem(PHOTO_KEY); }catch(e){}
-  if(S.inTable){ if(myPhoto){ picAt = 0; sendPic(); } else bcast("pic", { s: S.seat, d: "" }); }
+  if(S.inTable){ if(myPhoto){ picAt = 0; sendPic(); } else bcastSigned("pic", { s: S.seat, d: "" }); }
   paintJoinAv(); render();
 }
 
@@ -2446,13 +2547,14 @@ function copyLink(){
 }
 function fallbackCopy(t){ var i = document.createElement("textarea"); i.value = t; i.style.position = "fixed"; i.style.opacity = "0"; document.body.appendChild(i); i.select(); try{ document.execCommand("copy"); }catch(e){} i.remove(); }
 var QR_SRC = "https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js", qrState = 0, qrWait = [];
+var QR_SRI = "sha384-mZT2gIty7ZDdOGkxfP6joZcYdMW1Jvj9dRlfpTmaJAKKXTqzygtB22k7FLe+KZC1";   /* (v23) توقيع ملف المكتبة */
 function needQR(cb){
   if(typeof window.qrcode === "function"){ cb(); return; }
   if(qrState === 3){ cb(); return; }
   qrWait.push(cb);
   if(qrState === 0){
     qrState = 1;
-    var sc = document.createElement("script"); sc.src = QR_SRC; sc.async = true;
+    var sc = document.createElement("script"); sc.integrity = QR_SRI; sc.crossOrigin = "anonymous"; sc.src = QR_SRC; sc.async = true;
     sc.onload = sc.onerror = function(){ qrState = typeof window.qrcode === "function" ? 2 : 3; var w = qrWait; qrWait = []; w.forEach(function(f){ try{ f(); }catch(e){} }); };
     document.head.appendChild(sc);
   }
@@ -2786,9 +2888,10 @@ els.joinForm.addEventListener("submit", function(e){
   try{ if(NARR.ok){ var u = new SpeechSynthesisUtterance(" "); u.volume = 0; speechSynthesis.speak(u); } }catch(x){}
   els.jGo.disabled = true; jErr("");
   var creds = S.code ? readJ(credsKey(S.code)) : null, token = creds && creds.token || rid(24), look = PREF.look || {};
-  var req = S.mode === "create"
+  /* (v23) ننتظر مفتاح التوقيع يجهز (أجزاء من الثانية) عشان ينسجّل مع المقعد */
+  var req = ID.ready.then(function(){ return S.mode === "create"
     ? rpc("create", { code: null, seat: null, token: token, name: name, look: look, settings: DEFAULT_SETTINGS })
-    : rpc("join", Object.assign({ name: name, look: look, token: token }, creds && creds.seat ? { seat: creds.seat } : { seat: undefined }));
+    : rpc("join", Object.assign({ name: name, look: look, token: token }, creds && creds.seat ? { seat: creds.seat } : { seat: undefined })); });
   req.then(function(r){
     S.code = r.code; S.seat = r.seat; S.token = token; S.name = name;
     writeJ(credsKey(S.code), { seat: r.seat, token: token, at: Date.now() });

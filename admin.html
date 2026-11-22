@@ -15,7 +15,7 @@ if(window.top !== window.self){ var same = false; try{ same = window.top.locatio
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap"></noscript>
 <link rel="stylesheet" href="theme.css?v=7">
 <link rel="preconnect" href="https://monovczlaegaezjkmpnm.supabase.co" crossorigin>
-<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js" integrity="sha384-uteMfOloLDGt042uDz+xHGF3ym63/WQ6rFq7murQRG8Ih7QrXGEGNtWd8688sb4O" crossorigin="anonymous"></script>
 <script defer src="config.js"></script>
 <style>
   :root{ --series-1:#7c5cff; --grid:rgba(255,255,255,.08); }
@@ -303,9 +303,6 @@ if(window.top !== window.self){ var same = false; try{ same = window.top.locatio
   .imp-prev{ font-size:.86rem; color:var(--tx-2); margin:8px 0; line-height:1.8; max-height:180px; overflow-y:auto; }
   .imp-prev .bad{ color:#fecaca; }
   .imp-prev .good{ color:#a7f3d0; }
-  .imp-file{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:2px 0 12px; }   /* (v23) 📂 اختر ملف */
-  .imp-file label{ cursor:pointer; }
-  .imp-file span{ font-size:.84rem; color:var(--tx-2); }
 </style>
 </head>
 <body>
@@ -1098,41 +1095,7 @@ document.addEventListener("DOMContentLoaded", function(){
     return '<button class="mini' + (on ? '' : ' on') + '" type="button" data-tog="' + id + '" aria-label="' + (on ? "إخفاء" : "إظهار") + '" title="' + (on ? "إخفاء من الجولات" : "إظهار بالجولات") + '">' + (on ? "👁️" : "🙈") + '</button>'
       + '<button class="mini" type="button" data-edit="' + id + '" aria-label="تعديل">✏️</button><button class="mini" type="button" data-del="' + id + '" aria-label="حذف">🗑️</button>';
   }
-  /* (v23) 📂 الاستيراد من ملف: txt بنفس صيغة اللصق، أو csv / نص من إكسل (حتى ملف «📤 تصدير» نفسه — عمود «ظاهر» ينشال لحاله).
-     الملف يعبّي المربع، وتشوف المعاينة قبل ما تضغط «استيراد» */
-  var IMP_MAX = 3 * 1024 * 1024;
-  function impDecode(buf){
-    var b = new Uint8Array(buf), enc = "utf-8", t;
-    if(b.length >= 2 && b[0] === 0xFF && b[1] === 0xFE) enc = "utf-16le";        /* «نص يونيكود» من إكسل */
-    else if(b.length >= 2 && b[0] === 0xFE && b[1] === 0xFF) enc = "utf-16be";
-    t = new TextDecoder(enc).decode(b);
-    if(enc === "utf-8" && t.indexOf("\uFFFD") !== -1){ try{ t = new TextDecoder("windows-1256").decode(b); }catch(e){} }   /* إكسل العربي القديم (ANSI) */
-    return t.replace(/^\uFEFF/, "");
-  }
-  function impRows(text, sep){
-    var rows = [], row = [], cur = "", q = false;
-    for(var i = 0; i < text.length; i++){
-      var c = text.charAt(i);
-      if(q){ if(c === '"'){ if(text.charAt(i + 1) === '"'){ cur += '"'; i++; } else q = false; } else cur += c; continue; }
-      if(c === '"' && cur === "") q = true;
-      else if(c === sep){ row.push(cur); cur = ""; }
-      else if(c === "\n" || c === "\r"){ if(c === "\r" && text.charAt(i + 1) === "\n") i++; row.push(cur); rows.push(row); row = []; cur = ""; }
-      else cur += c;
-    }
-    if(cur !== "" || row.length){ row.push(cur); rows.push(row); }
-    return rows;
-  }
-  function impFileText(text, help){
-    var lines = text.split(/\r\n?|\n/), first = "";
-    for(var i = 0; i < lines.length && !first; i++) first = lines[i].trim();
-    if(first.indexOf("|") !== -1) return text.replace(/\r\n?/g, "\n");   /* نفس صيغة اللصق */
-    var sep = first.indexOf("\t") !== -1 ? "\t" : (first.split(";").length > first.split(",").length ? ";" : ",");
-    var rows = impRows(text, sep).map(function(r){ return r.map(function(x){ return String(x == null ? "" : x).replace(/[|\t\r\n]+/g, " ").trim(); }); })
-      .filter(function(r){ return r.some(function(x){ return x; }); });
-    if(rows.length && help.head && rows[0][0] === help.head) rows.shift();   /* سطر عناوين الأعمدة */
-    return rows.map(function(r){ return help.cols ? help.cols(r) : r.join(" | "); }).filter(Boolean).join("\n");
-  }
-  /* نافذة الاستيراد (لصق أسطر — أو (v23) 📂 ملف) */
+  /* نافذة الاستيراد (لصق أسطر) */
   function importModal(title, help, parse, save){
     openModal(title, [{ k:"txt", label:"الصق الأسطر هنا", type:"textarea", rows:8, ph:help.ph }], {}, function(v){
       var res = parse(v.txt || "");
@@ -1140,9 +1103,7 @@ document.addEventListener("DOMContentLoaded", function(){
       return save(res.ok).then(function(){ toast("📥 انضاف " + arN(res.ok.length, W.line) + (res.bad.length ? " (وانتجاهل " + arN(res.bad.length, W.line) + ")" : "")); });
     }, "استيراد", {
       wide:true,
-      html:'<p class="hint">' + help.text + '</p>'
-        + '<div class="imp-file"><label class="btn-ghost sm"><input type="file" id="impFile" accept=".txt,.csv,.tsv,text/plain,text/csv" hidden>📂 اختر ملف</label>'
-        + '<span id="impFname">ملف txt أو csv (حتى ملف «📤 تصدير») — أو الصق الأسطر تحت</span></div>',   /* (v23) */
+      html:'<p class="hint">' + help.text + '</p>',
       after:'<div class="imp-prev" id="impPrev"></div>',
       bind:function(body){
         var ta = body.querySelector("textarea"), pv = body.querySelector("#impPrev");
@@ -1153,19 +1114,6 @@ document.addEventListener("DOMContentLoaded", function(){
             + (res.bad.length > 12 ? '<div class="bad">… و' + (res.bad.length - 12) + ' أخطاء ثانية</div>' : '');
         };
         ta.addEventListener("input", upd);
-        /* (v23) 📂 اختر ملف → يعبّي المربع ويطلع المعاينة */
-        var fi = body.querySelector("#impFile"), fn = body.querySelector("#impFname");
-        if(fi) fi.addEventListener("change", function(){
-          var f = fi.files && fi.files[0]; fi.value = "";
-          if(!f) return;
-          if(f.size > IMP_MAX){ fn.textContent = "⚠️ الملف كبير — أقصى شي 3 ميقا"; return; }
-          fn.textContent = "⏳ أقرا الملف…";
-          f.arrayBuffer().then(function(buf){
-            ta.value = impFileText(impDecode(buf), help);
-            fn.textContent = "📄 " + f.name;
-            upd();
-          }).catch(function(){ fn.textContent = "⚠️ ما قدرنا نقرا الملف — جرّب تنسخ وتلصق"; });
-        });
       }
     });
   }
@@ -1240,8 +1188,7 @@ document.addEventListener("DOMContentLoaded", function(){
     var have = {}; TV.rows.forEach(function(r){ have[r.question.trim()] = 1; });
     importModal("📥 استيراد أسئلة سين جيم", {
       text:"كل سؤال بسطر: <b>الفئة | النقاط (1 إلى 4) | السؤال | الإجابة</b> — تقدر تنسخها من إكسل (أعمدة) وتلصقها.",
-      ph:"رياضة | 1 | كم لاعب بفريق كرة القدم؟ | 11\nجغرافيا | 3 | وش عاصمة أستراليا؟ | كانبرا",
-      head:"الفئة", cols:function(r){ return (r.length >= 4 ? r.slice(0, 4) : r).join(" | "); }   /* (v23) ملف csv: عمود «ظاهر» ينشال */
+      ph:"رياضة | 1 | كم لاعب بفريق كرة القدم؟ | 11\nجغرافيا | 3 | وش عاصمة أستراليا؟ | كانبرا"
     }, function(txt){
       var ok = [], bad = [], seen = {};
       txt.split(/\r?\n/).forEach(function(l, i){
@@ -1321,12 +1268,7 @@ document.addEventListener("DOMContentLoaded", function(){
     var have = {}; LQ.rows.forEach(function(r){ have[r.letter + "|" + r.question.trim()] = 1; });
     importModal("📥 استيراد أسئلة الحروف", {
       text:"كل سؤال بسطر: <b>السؤال | الإجابة</b> (الحرف ينحسب من أول حرف بالإجابة) — أو <b>الحرف | السؤال | الإجابة</b>." + (LQ.lv ? " ولو تبيه صعب، زِد بآخر السطر <b>| صعب</b> أو <b>| صعب جدا</b>" + (lqMax() >= 5 ? " أو <b>| خارق</b>." : ".") : ""),
-      ph:"حيوان يعيش بالصحراء | جمل\nب | فاكهة صفراء طويلة | موز",
-      head:"الحرف", cols:function(r){   /* (v23) ملف csv: الصعوبة من آخر عمود، وعمود «ظاهر» ينشال */
-        if(r.length < 3) return r.join(" | ");
-        var lv = [r[4], r[3]].filter(function(x){ return x && /^(خارق|صعب جد(ا|ًا)|صعب|عادي)$/.test(x); })[0];
-        return r.slice(0, 3).concat(lv ? [lv] : []).join(" | ");
-      }
+      ph:"حيوان يعيش بالصحراء | جمل\nب | فاكهة صفراء طويلة | موز"
     }, function(txt){
       var ok = [], bad = [], seen = {};
       txt.split(/\r?\n/).forEach(function(l, i){
@@ -1509,8 +1451,7 @@ document.addEventListener("DOMContentLoaded", function(){
     var have = {}; MQ.rows.forEach(function(r){ have[mqNorm(r.question)] = 1; });
     importModal("📥 استيراد أسئلة طريق المليون", {
       text:"كل سؤال بسطر: <b>السؤال | الجواب الصح | غلط 1 | غلط 2 | غلط 3 | الصعوبة | الفئة</b> — الصعوبة 1 أو 2 أو 3 (أو سهل/متوسط/صعب)، والصعوبة والفئة اختيارية. تقدر تنسخها من إكسل (أعمدة) وتلصقها.",
-      ph:"كم لاعب بفريق كرة القدم؟ | 11 | 9 | 10 | 12 | سهل | رياضة\nوش عاصمة أستراليا؟ | كانبرا | سيدني | ملبورن | بيرث | 2 | جغرافيا",
-      head:"السؤال", cols:function(r){ return r.slice(0, 7).join(" | "); }   /* (v23) ملف csv: عمود «ظاهر» ينشال */
+      ph:"كم لاعب بفريق كرة القدم؟ | 11 | 9 | 10 | 12 | سهل | رياضة\nوش عاصمة أستراليا؟ | كانبرا | سيدني | ملبورن | بيرث | 2 | جغرافيا"
     }, function(txt){
       var ok = [], bad = [], seen = {};
       txt.split(/\r?\n/).forEach(function(l, i){

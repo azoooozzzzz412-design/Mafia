@@ -2,6 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
+<script src="i18n.js?v=24"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>طاولة السهرة — ألعاب جماعية للسهرات بالعربي</title>
 <meta name="description" content="تسع ألعاب جماعية للسهرات بالعربي: سين جيم، الحروف، تحدي الصور، حزر العلم، حطها على راسك، التمثيل الصامت، طريق المليون، مربوطين والمافيا. شاشة وحدة والجوالات تصير أزرار، ومخطط السهرة يرتّب لكم الجولات — جرّب كل لعبة مجانًا.">
@@ -31,10 +32,10 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap"></noscript>
 <link rel="stylesheet" href="theme.css?v=7">
-<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js" integrity="sha384-uteMfOloLDGt042uDz+xHGF3ym63/WQ6rFq7murQRG8Ih7QrXGEGNtWd8688sb4O" crossorigin="anonymous"></script>
 <script defer src="config.js"></script>
 <!-- صفحة اللعب 3 ملفات: هذي الصفحة + الشكل (index.css) + الكود (index.js آخر الصفحة). ارفعهم الثلاثة مع بعض -->
-<link rel="stylesheet" href="index.css?v=19">
+<link rel="stylesheet" href="index.css?v=20">
 </head>
 
 <body>
@@ -88,6 +89,7 @@
         <a href="#ldGamesSec">الألعاب</a><a href="#ldFeatures">المميزات</a><a href="#ldHow">كيف تشتغل</a><a href="#ldPrices">الأسعار</a><a href="#ldFaq">الأسئلة</a>
       </nav>
       <div class="ld-nav-cta">
+        <button class="ld-login" type="button" data-lang-btn translate="no">English</button>
         <button class="ld-login" id="ldLoginBtn" type="button">دخول</button>
         <button class="btn-primary btn-sm" id="ldNavTrial" type="button">ابدأ مجانًا</button>
       </div>
@@ -302,6 +304,7 @@
     <button data-view="mafia" type="button"><svg class="ic"><use href="#i-mafia"/></svg>المافيا</button>
   </nav>
   <div class="top-actions" id="topActions">
+    <button class="lang-btn" type="button" data-lang-btn="short" translate="no">EN</button>
     <button class="plan-chip" id="planChip" type="button" hidden><svg class="ic"><use href="#i-plan"/></svg><span class="lbl">السهرة</span><small id="planChipN"></small></button>
     <button class="teams-btn" id="teamsBtn" type="button"><svg class="ic"><use href="#i-users"/></svg><span class="lbl">الفرق والنقاط</span></button>
     <button class="buzz-btn-top" id="buzzOpenBtn" type="button"><svg class="ic"><use href="#i-buzz"/></svg><span class="lbl" id="buzzOpenLbl">أسرع إصبع</span></button>
@@ -665,7 +668,6 @@
     <div class="tm-btn-row">
       <button class="btn-primary" id="tmRevealBtn" type="button">إظهار الإجابة</button>
       <button class="btn-ghost" id="tmHintBtn" type="button">تلميح 💡</button>
-      <button class="btn-ghost" id="tmChangeBtn" type="button">🔄 غيّر السؤال</button>
     </div>
     <div class="tm-award" id="tmAward" hidden style="margin-top:18px">
       <p>مين جاوب صح؟</p>
@@ -737,7 +739,7 @@
     <div class="tm-btn-row">
       <button class="btn-primary" id="ltmRevealBtn" type="button">إظهار الإجابة</button>
       <button class="btn-ghost" id="ltmHintBtn" type="button">تلميح 💡</button>
-      <button class="btn-ghost" id="ltmOtherBtn" type="button">🔄 غيّر السؤال</button>
+      <button class="btn-ghost" id="ltmOtherBtn" type="button">سؤال ثاني 🔄</button>
     </div>
     <div class="tm-award" style="margin-top:18px">
       <p>مين جاوب صح؟ (ياخذ الخلية)</p>
@@ -949,6 +951,6 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="index.js?v=22"></script>
+<script src="index.js?v=23"></script>
 </body>
 </html>
