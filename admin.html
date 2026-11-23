@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" class="adm" data-fx="premium">
 <head>
 <meta charset="utf-8">
 <script>/* (v15) لوحة الأدمن ما تنفتح داخل موقع ثاني (حماية من الخداع بالنقر) */
@@ -304,33 +304,64 @@ if(window.top !== window.self){ var same = false; try{ same = window.top.locatio
   .imp-prev .bad{ color:#fecaca; }
   .imp-prev .good{ color:#a7f3d0; }
 </style>
+<script>/* مستوى الجودة واللغة وحالة القائمة: تتطبق قبل الرسم عشان ما يصير وميض */
+try{ var f = localStorage.getItem("sahra-admin-fx"); document.documentElement.setAttribute("data-fx", (f === "balanced" || f === "performance") ? f : "premium");
+  var lg = localStorage.getItem("sahra-lang") === "en" ? "en" : "ar"; document.documentElement.lang = lg; document.documentElement.dir = lg === "en" ? "ltr" : "rtl";
+  if(localStorage.getItem("sahra-admin-side") === "1") document.documentElement.classList.add("side-min"); }catch(e){}
+window.SAHRA_ADMIN_VER = "v29-m2a";</script>
+<link rel="stylesheet" href="admin-assets/admin.css?v=2">
 </head>
-<body>
+<body class="adm-body">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
   <symbol id="i-moon" viewBox="0 0 24 24"><path d="M15.2 3.6a8.6 8.6 0 1 0 5.2 14.1A9.6 9.6 0 0 1 15.2 3.6z" fill="#fff" stroke="none"/><path d="m18.6 4 .55 1.45 1.45.55-1.45.55-.55 1.45-.55-1.45-1.45-.55 1.45-.55z" fill="#fff" stroke="none"/></symbol>
 </svg>
-<div class="page-bg" aria-hidden="true"></div>
-<header class="top">
-  <a class="brand" href="./"><span class="logo-mark"><svg><use href="#i-moon"/></svg></span>طاولة السهرة</a>
-  <span class="badge-admin">لوحة التحكم</span>
-  <div class="me" id="me"></div>
-  <a class="back" href="./">↩️ رجوع للطاولة</a>
-</header>
+<div class="adm-bg" aria-hidden="true"><i class="o1"></i><i class="o2"></i><i class="o3"></i><i class="o4"></i></div>
+<div class="adm-scrim"></div>
+<div class="adm-shell" id="shell">
+  <aside class="adm-side" aria-label="القائمة">
+    <a class="adm-brand" href="./" title="طاولة السهرة"><span class="adm-logo"><svg viewBox="0 0 24 24"><use href="#ai-card"/></svg></span><span class="adm-bt"><b data-ar="طاولة السهرة" data-en="Sahra Table">طاولة السهرة</b><small><svg viewBox="0 0 24 24"><use href="#ai-crown"/></svg><span data-ar="لوحة الإدارة" data-en="Admin panel">لوحة الإدارة</span></small></span></a>
+    <nav class="adm-nav" id="tabs" aria-label="أقسام لوحة التحكم">
+      <i class="adm-ind" id="admInd"></i>
+      <button type="button" data-tab="overview" data-ic="home" data-lb="نظرة عامة"><svg viewBox="0 0 24 24"><use href="#ai-home"/></svg><span class="lb" data-ar="نظرة عامة" data-en="Overview">نظرة عامة</span></button>
+      <button type="button" data-tab="users" data-ic="users" data-lb="الحسابات والعملاء"><svg viewBox="0 0 24 24"><use href="#ai-users"/></svg><span class="lb" data-ar="الحسابات والعملاء" data-en="Accounts &amp; customers">الحسابات والعملاء</span><span class="count" id="pendingCount" hidden></span></button>
+      <button type="button" data-tab="sales" data-ic="cart" data-lb="الطلبات والمبيعات"><svg viewBox="0 0 24 24"><use href="#ai-cart"/></svg><span class="lb" data-ar="الطلبات والمبيعات" data-en="Orders &amp; sales">الطلبات والمبيعات</span><span class="count" id="trCount" hidden></span></button>
+      <button type="button" class="soon" disabled aria-disabled="true" data-ar-title="الباقات والأسعار — قريبًا" data-en-title="Packages &amp; prices — soon" title="الباقات والأسعار — قريبًا"><svg viewBox="0 0 24 24"><use href="#ai-layers"/></svg><span class="lb" data-ar="الباقات والأسعار" data-en="Packages &amp; prices">الباقات والأسعار</span><span class="soon-t" data-ar="قريبًا" data-en="Soon">قريبًا</span></button>
+      <button type="button" class="soon" disabled aria-disabled="true" data-ar-title="أكواد الخصم — قريبًا" data-en-title="Discount codes — soon" title="أكواد الخصم — قريبًا"><svg viewBox="0 0 24 24"><use href="#ai-tag"/></svg><span class="lb" data-ar="أكواد الخصم" data-en="Discount codes">أكواد الخصم</span><span class="soon-t" data-ar="قريبًا" data-en="Soon">قريبًا</span></button>
+      <button type="button" class="soon" disabled aria-disabled="true" data-ar-title="مخطط السهرة — قريبًا" data-en-title="Night planner — soon" title="مخطط السهرة — قريبًا"><svg viewBox="0 0 24 24"><use href="#ai-calendar"/></svg><span class="lb" data-ar="مخطط السهرة" data-en="Night planner">مخطط السهرة</span><span class="soon-t" data-ar="قريبًا" data-en="Soon">قريبًا</span></button>
+      <button type="button" data-tab="content" data-ic="library" data-lb="إدارة المحتوى"><svg viewBox="0 0 24 24"><use href="#ai-library"/></svg><span class="lb" data-ar="إدارة المحتوى" data-en="Content">إدارة المحتوى</span></button>
+      <button type="button" data-tab="games" data-ic="gamepad" data-lb="إدارة الألعاب"><svg viewBox="0 0 24 24"><use href="#ai-gamepad"/></svg><span class="lb" data-ar="إدارة الألعاب" data-en="Games &amp; settings">إدارة الألعاب</span></button>
+      <button type="button" data-tab="stats" data-ic="chart" data-lb="الإحصائيات والتقارير"><svg viewBox="0 0 24 24"><use href="#ai-chart"/></svg><span class="lb" data-ar="الإحصائيات والتقارير" data-en="Stats &amp; reports">الإحصائيات والتقارير</span></button>
+      <button type="button" data-tab="reports" data-ic="flag" data-lb="البلاغات"><svg viewBox="0 0 24 24"><use href="#ai-flag"/></svg><span class="lb" data-ar="البلاغات" data-en="Reports">البلاغات</span><span class="count" id="repCount" hidden></span></button>
+      <button type="button" class="soon" disabled aria-disabled="true" data-ar-title="سجل العمليات — قريبًا" data-en-title="Audit log — soon" title="سجل العمليات — قريبًا"><svg viewBox="0 0 24 24"><use href="#ai-history"/></svg><span class="lb" data-ar="سجل العمليات" data-en="Audit log">سجل العمليات</span><span class="soon-t" data-ar="قريبًا" data-en="Soon">قريبًا</span></button>
+      <button type="button" class="soon" disabled aria-disabled="true" data-ar-title="الإعدادات والأمان — قريبًا" data-en-title="Settings &amp; security — soon" title="الإعدادات والأمان — قريبًا"><svg viewBox="0 0 24 24"><use href="#ai-settings"/></svg><span class="lb" data-ar="الإعدادات والأمان" data-en="Settings &amp; security">الإعدادات والأمان</span><span class="soon-t" data-ar="قريبًا" data-en="Soon">قريبًا</span></button>
+    </nav>
+    <div class="adm-ver"><span class="d"></span><span class="nm"><small data-ar="الإصدار الحالي" data-en="Current version">الإصدار الحالي</small><b id="admVer">—</b></span></div>
+  </aside>
+  <div class="adm-col">
+    <header class="adm-top">
+      <button type="button" class="adm-ic adm-menu-btn" data-admmenu aria-label="القائمة"><svg viewBox="0 0 24 24"><use href="#ai-menu"/></svg></button>
+      <button type="button" class="adm-ic" data-admmin aria-label="طي القائمة" title="طي/توسيع القائمة"><svg viewBox="0 0 24 24"><use href="#ai-chevrons"/></svg></button>
+      <h1 id="admTitle" data-ar="لوحة التحكم" data-en="Control panel">لوحة التحكم</h1>
+      <button type="button" class="adm-search" data-admpal aria-label="بحث"><svg viewBox="0 0 24 24"><use href="#ai-search"/></svg><span data-ar="بحث سريع (حساب، طلب، سؤال…)" data-en="Quick search (account, order, question…)">بحث سريع (حساب، طلب، سؤال…)</span><kbd>Ctrl K</kbd></button>
+      <span class="sp"></span>
+      <button type="button" class="adm-ic" id="admFull" aria-label="ملء الشاشة" title="ملء الشاشة"><svg viewBox="0 0 24 24"><use href="#ai-maximize"/></svg></button>
+      <button type="button" class="adm-ic" id="admLang" data-admlang aria-label="Language" title="العربية / English">EN</button>
+      <div class="adm-pop-w"><button type="button" class="adm-ic" id="admBell" aria-label="التنبيهات" title="التنبيهات" aria-expanded="false"><svg viewBox="0 0 24 24"><use href="#ai-bell"/></svg><span class="count" id="admBellN" hidden></span></button>
+        <div class="adm-pop" id="admBellPop" hidden></div></div>
+      <span class="adm-sep" aria-hidden="true"></span>
+      <div class="adm-pop-w"><button type="button" class="adm-user" id="admUser" aria-expanded="false"><span id="me" style="display:contents"></span><svg class="cv" viewBox="0 0 24 24"><use href="#ai-chevdown"/></svg></button>
+        <div class="adm-pop" id="admUserPop" hidden>
+          <a href="./"><svg viewBox="0 0 24 24"><use href="#ai-back"/></svg><span data-ar="الرجوع للموقع" data-en="Back to the site">الرجوع للموقع</span></a>
+          <button type="button" id="admOut"><svg viewBox="0 0 24 24"><use href="#ai-logout"/></svg><span data-ar="تسجيل الخروج" data-en="Sign out">تسجيل الخروج</span></button>
+        </div></div>
+    </header>
+    <div class="adm-main" id="admMain">
 
 <div class="gate" id="gate"><div class="big">⏳</div>جاري التحقق من حسابك…</div>
 
 <div id="app" hidden>
-  <div class="tabs-wrap">
-    <nav class="tabs" id="tabs" aria-label="أقسام لوحة التحكم">
-      <button type="button" data-tab="users">👥 <span>الحسابات</span> <span class="count" id="pendingCount" hidden></span></button>
-      <button type="button" data-tab="sales">💰 <span>المبيعات</span> <span class="count" id="trCount" hidden></span></button>
-      <button type="button" data-tab="content">📝 <span>المحتوى</span></button>
-      <button type="button" data-tab="games">⚙️ <span>الإعدادات</span></button>
-      <button type="button" data-tab="stats">📊 <span>إحصائيات</span></button>
-      <button type="button" data-tab="reports">🚩 <span>البلاغات</span> <span class="count" id="repCount" hidden></span></button>
-    </nav>
-  </div>
   <main>
+    <section id="tab-overview" hidden><div id="ovBox"></div></section>
     <section id="tab-users" hidden>
       <h2 class="sec">👥 الحسابات</h2>
       <p class="hint">أي أحد يسجل بحساب Google يقدر يجرب كل لعبة مرة وحدة على طول. من هنا تضيف له جولات، أو ترجّع تجربته، أو تحظره.</p>
@@ -393,6 +424,16 @@ if(window.top !== window.self){ var same = false; try{ same = window.top.locatio
       <p class="hint">كل اللي تغيّره هنا يوصل للكل أول ما يفتحون الموقع أو يحدّثونه.</p>
       <div id="gErr"></div>
 
+      <div class="card adm-glass" id="fxCard">
+        <h3 data-ar="🎨 مظهر لوحة الأدمن" data-en="🎨 Admin appearance">🎨 مظهر لوحة الأدمن</h3>
+        <p class="hint" data-ar="يُحفظ على هذا الجهاز بس (ما يرسل شي لقاعدة البيانات). لو جهازك بطيء جرّب «متوازن» أو «أداء»." data-en="Saved on this device only (nothing is sent to the database). On a slow device try Balanced or Performance.">يُحفظ على هذا الجهاز بس (ما يرسل شي لقاعدة البيانات). لو جهازك بطيء جرّب «متوازن» أو «أداء».</p>
+        <div class="fx-opts">
+          <button type="button" class="fx-opt" data-fxset="premium" aria-pressed="true"><b>Premium</b><small data-ar="أقصى جودة: زجاج واضح، خلفية متحركة، كل الحركات والرسوم." data-en="Max quality: clear glass, animated background, all motion and charts.">أقصى جودة: زجاج واضح، خلفية متحركة، كل الحركات والرسوم.</small></button>
+          <button type="button" class="fx-opt" data-fxset="balanced" aria-pressed="false"><b>Balanced</b><small data-ar="شفافية متوسطة، حركات متوازنة، إضاءة وضبابية أخف." data-en="Medium transparency, balanced motion, lighter glow and blur.">شفافية متوسطة، حركات متوازنة، إضاءة وضبابية أخف.</small></button>
+          <button type="button" class="fx-opt" data-fxset="performance" aria-pressed="false"><b>Performance</b><small data-ar="بدون خلفية متحركة وبدون ضبابية: للأجهزة الضعيفة." data-en="No animated background or blur: for weak devices.">بدون خلفية متحركة وبدون ضبابية: للأجهزة الضعيفة.</small></button>
+        </div>
+      </div>
+
       <h3 class="sub-h">🎮 إظهار وإخفاء الألعاب</h3>
       <p class="hint">اللعبة المخفية تختفي من القائمة والرئيسية عند الكل (إلا أنت).</p>
       <div class="games" id="gamesList"></div>
@@ -440,6 +481,10 @@ if(window.top !== window.self){ var same = false; try{ same = window.top.locatio
     </section>
   </main>
 </div>
+    </div>
+  </div>
+</div>
+<div class="adm-pal" id="admPal" hidden><div class="box"><input id="admPalIn" type="text" autocomplete="off" placeholder="ابحث أو انتقل لقسم…" data-en-ph="Search or jump to a section…"><ul id="admPalList"></ul></div></div>
 
 <div class="ov" id="ov" hidden>
   <div class="modal" role="dialog" aria-modal="true" id="mBox">
@@ -450,6 +495,8 @@ if(window.top !== window.self){ var same = false; try{ same = window.top.locatio
   </div>
 </div>
 <div class="tip" id="tip" hidden></div>
+<script src="admin-assets/fx.js?v=2"></script>
+<script src="admin-assets/overview.js?v=2"></script>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script>
 /* v7: المكتبة تتحمّل بدون ما توقف رسم الصفحة — السكربت يشتغل أول ما تجهز */
@@ -514,7 +561,7 @@ document.addEventListener("DOMContentLoaded", function(){
 
   /* ================= الاتصال والتحقق ================= */
   var SB = null, ME = null;
-  function gate(html){ $("gate").innerHTML = html; $("gate").hidden = false; $("app").hidden = true; }
+  function gate(html){ document.documentElement.classList.remove("adm-ready"); $("gate").innerHTML = html; $("gate").hidden = false; $("app").hidden = true; }
   function fetchAll(table, cols, orderCol){
     var out = [], size = 1000;
     function page(from){
@@ -567,24 +614,39 @@ document.addEventListener("DOMContentLoaded", function(){
   }
   function start(){
     $("gate").hidden = true; $("app").hidden = false;
-    $("me").innerHTML = (ME.avatar_url ? '<img src="' + esc(ME.avatar_url) + '" alt="" referrerpolicy="no-referrer">' : '') + '<span>' + esc(ME.full_name || ME.email) + '</span>';
+    $("me").innerHTML = (ME.avatar_url ? '<img src="' + esc(ME.avatar_url) + '" alt="" referrerpolicy="no-referrer">' : '<span class="av">' + esc(((ME.full_name || ME.email || "A").charAt(0) || "A").toUpperCase()) + '</span>') + '<span class="nm"><b>' + esc(ME.full_name || "المدير العام") + '</b><small data-ar="مشرف النظام" data-en="System admin">مشرف النظام</small></span>';
+    $("admUser").title = ME.email || "";
+    var vv = String(window.SAHRA_ADMIN_VER || "—").split("-")[0]; $("admVer").textContent = vv;
+    if(window.Adm) Adm.applyLang();
     var t = ORDER_ID ? "sales" : (location.hash || "").replace("#", "");
     if(t === "settings") t = "games";
-    openTab(["users", "sales", "content", "games", "stats", "reports"].indexOf(t) !== -1 ? t : "users");
+    document.documentElement.classList.add("adm-ready");
+    openTab(["overview", "users", "sales", "content", "games", "stats", "reports"].indexOf(t) !== -1 ? t : "overview");
     repBadge();
     if(ORDER_ID) trFocus(ORDER_ID);   /* (v14) */
     if(TAB !== "sales") trLoadOrders();
     setInterval(trLoadOrders, 60000);
   }
 
+  /* ================= (M2a) نظرة عامة ================= */
+  function maskEmail(e){ var i = String(e || "").indexOf("@"); if(i < 1) return e || ""; return e.slice(0, Math.min(2, i)) + "•••" + e.slice(i); }
+  function overviewLoad(){
+    if(!window.AdmOverview) return;
+    AdmOverview.load({ SB: SB, box: $("ovBox"), rpcData: rpcData, esc: esc, errText: errText, maskEmail: maskEmail, games: function(){ return GAMES; }, go: function(t){ var b = $("tabs").querySelector('[data-tab="' + t + '"]'); if(b) b.click(); }, isOpen: function(){ return TAB === "overview"; } });
+  }
+  /* بحث سريع Ctrl+K: لو ما لقى قسم، يفتح الحسابات ويبحث */
+  window.AdmSearchHook = function(q){ var b = $("tabs").querySelector('[data-tab="users"]'); if(b) b.click(); setTimeout(function(){ var i = document.getElementById("uSearch") || document.querySelector("#tab-users input.input"); if(i){ i.value = q; i.dispatchEvent(new Event("input", { bubbles:true })); } }, 350); };
   /* ================= التبويبات ================= */
   var TAB = "";
   function openTab(name){
     if(TAB === "games" && name !== "games" && setDirty() && !confirm("فيه تغييرات بالإعدادات ما انحفظت — تطلع بدون حفظ؟")) return;
     TAB = name;
     Array.prototype.forEach.call($("tabs").querySelectorAll("[data-tab]"), function(b){ b.classList.toggle("on", b.getAttribute("data-tab") === name); });
-    ["users", "sales", "content", "games", "stats", "reports"].forEach(function(k){ $("tab-" + k).hidden = k !== name; });
+    ["overview", "users", "sales", "content", "games", "stats", "reports"].forEach(function(k){ var e = $("tab-" + k); e.hidden = k !== name; if(k === name){ e.classList.remove("adm-tab-in"); void e.offsetWidth; e.classList.add("adm-tab-in"); } });
     history.replaceState(null, "", "#" + name);
+    var tt = $("tabs").querySelector('[data-tab="' + name + '"]'); if($("admTitle") && tt){ $("admTitle").textContent = (document.documentElement.lang === "en" ? tt.querySelector(".lb").getAttribute("data-en") : tt.getAttribute("data-lb")); }
+    if(window.Adm) Adm.moveInd();
+    if(name === "overview") overviewLoad();
     if(name === "users") loadUsers();
     if(name === "sales") loadSales();
     if(name === "content") openSub(SUB || "trivia");
@@ -2086,6 +2148,7 @@ document.addEventListener("DOMContentLoaded", function(){
   $("statsBody").addEventListener("focusin", function(e){ var el = e.target.closest("[data-tip]"); if(!el) return; var r = el.getBoundingClientRect(); showTip(el, r.left + r.width / 2, r.top); });
   $("statsBody").addEventListener("focusout", function(){ $("tip").hidden = true; });
 
+  $("admOut").addEventListener("click", function(){ var go = function(){ location.href = "./"; }; if(SB) SB.auth.signOut().then(go, go); else go(); });
   boot();
 });
 </script>
