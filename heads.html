@@ -636,7 +636,7 @@ document.addEventListener("DOMContentLoaded", function(){
       var go = function(){
         bzJoin().then(rtJoin, function(e){
           var c = e && e.code;
-          if(c === "bad_key" || c === "no_room" || c === "bad_team"){ try{ localStorage.removeItem(ID_KEY); }catch(x){} rtStale(); return; }
+          if(c === "bad_key" || c === "no_room" || c === "bad_team" || c === "room_full"){ try{ localStorage.removeItem(ID_KEY); }catch(x){} rtStale(); return; }
           tries++; setTimeout(go, Math.min(8000, 1500 * tries));
         });
       };

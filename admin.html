@@ -486,6 +486,10 @@ document.addEventListener("DOMContentLoaded", function(){
     { id:"heads", icon:"🤳", name:"حطها على راسك" }, { id:"charades", icon:"🎬", name:"التمثيل الصامت" },
     { id:"million", icon:"💰", name:"طريق المليون" }, { id:"rope", icon:"🪢", name:"مربوطين" }, { id:"mafia", icon:"🕵️", name:"المافيا" }
   ];
+  /* (M1) الألعاب الظاهرة للعملاء: مو مخفية، وبسجل الألعاب (لو الجدول موجود) */
+  function visibleGameIds(){
+    return GAMES.map(function(g){ return g.id; }).filter(function(id){ return HIDDEN.indexOf(id) === -1 && (!U.reg || U.reg.indexOf(id) !== -1); });
+  }
   function gameName(id){ for(var i=0;i<GAMES.length;i++) if(GAMES[i].id === id) return GAMES[i].icon + " " + GAMES[i].name; return id; }
   function ago(ts){
     if(!ts) return "ما دخل للحين";
@@ -736,9 +740,14 @@ document.addEventListener("DOMContentLoaded", function(){
     return Promise.all([
       SB.from("profiles").select("id,email,full_name,avatar_url,role,status,credits,created_at,last_seen").order("created_at", { ascending:false }),
       SB.from("trial_usage").select("user_id,game"),
-      SB.from("orders").select("user_id,status,amount,rounds")
+      SB.from("orders").select("user_id,status,amount,rounds"),
+      SB.from("app_settings").select("value").eq("key", "hidden_games").maybeSingle(),   /* (M1) عدّاد «من N ألعاب» = الظاهرة بس */
+      SB.from("games").select("id,sort").order("sort", { ascending:true })
     ]).then(function(res){
-      res.forEach(must);
+      res.slice(0, 3).forEach(must);
+      var hv = res[3] && !res[3].error && res[3].data && res[3].data.value;
+      if(Array.isArray(hv)) HIDDEN = hv.slice();
+      U.reg = res[4] && !res[4].error && Array.isArray(res[4].data) && res[4].data.length ? res[4].data.map(function(g){ return g.id; }) : null;   /* جدول games ما انثبّت للحين = null */
       U.rows = res[0].data || []; U.trials = {}; U.buys = {};
       (res[1].data || []).forEach(function(t){ (U.trials[t.user_id] || (U.trials[t.user_id] = [])).push(t.game); });
       (res[2].data || []).forEach(function(o){
@@ -770,7 +779,7 @@ document.addEventListener("DOMContentLoaded", function(){
     });
     if(!rows.length){ $("usersList").innerHTML = '<div class="empty">ما فيه حسابات هنا</div>'; return; }
     $("usersList").innerHTML = rows.map(function(x){
-      var self = ME && x.id === ME.id, acts = "", tr = U.trials[x.id] || [], bu = U.buys[x.id];
+      var self = ME && x.id === ME.id, acts = "", tr = U.trials[x.id] || [], bu = U.buys[x.id], vis = visibleGameIds(), trv = tr.filter(function(g){ return vis.indexOf(g) !== -1; });
       if(self) acts = '<span class="tag approved">هذا أنت</span>';
       else {
         acts = '<button class="btn-ok" type="button" data-act="grant" data-id="' + x.id + '">➕ جولات</button>'
@@ -783,7 +792,7 @@ document.addEventListener("DOMContentLoaded", function(){
         + '<div class="who"><b>' + esc(x.full_name || "بدون اسم") + (x.role === "admin" ? '<span class="tag admin">أدمن</span>' : '') + (x.status === "blocked" ? '<span class="tag blocked">محظور</span>' : '') + '</b>'
         + '<div class="em">' + esc(x.email || "") + '</div>'
         + '<div class="meta">سجّل ' + ago(x.created_at) + ' · آخر دخول: ' + ago(x.last_seen) + '</div>'
-        + (x.role === "admin" ? '' : '<div class="bal">🎟️ الرصيد: <b>' + roundsTxt(x.credits) + '</b> · 🎁 جرّب ' + tr.length + ' من ' + GAMES.length + ' ألعاب'
+        + (x.role === "admin" ? '' : '<div class="bal">🎟️ الرصيد: <b>' + roundsTxt(x.credits) + '</b> · 🎁 جرّب ' + trv.length + ' من ' + vis.length + ' ألعاب'
           + (bu ? ' · 🛒 اشترى ' + (bu.n === 1 ? "مرة" : bu.n === 2 ? "مرتين" : bu.n + " مرات") + ' (' + sar(bu.sar) + ')' : '') + '</div>')
         + '</div><div class="acts">' + acts + '</div></div>';
     }).join("");
@@ -1865,7 +1874,7 @@ document.addEventListener("DOMContentLoaded", function(){
     if(next.length >= GAMES.length){ cb.checked = true; toast("لازم تبقى لعبة وحدة على الأقل ظاهرة"); return; }
     cb.disabled = true;
     SB.from("app_settings").upsert({ key:"hidden_games", value:next, updated_at:new Date().toISOString() }, { onConflict:"key" }).then(function(r){
-      must(r); HIDDEN = next; renderGames();
+      must(r); HIDDEN = next; renderGames(); if(U.loaded) renderUsers();
       toast(cb.checked ? "✅ صارت ظاهرة للكل" : "🙈 انخفت عن الكل");
     }).catch(function(err){ toast("⚠️ " + errText(err)); cb.checked = !cb.checked; cb.disabled = false; });
   });

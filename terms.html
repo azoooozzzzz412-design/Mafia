@@ -121,8 +121,12 @@ document.addEventListener("DOMContentLoaded", function(){
       if(d.pay === true){
         document.getElementById("payText").innerHTML = 'الدفع عن طريق بوابة الدفع <b>ميسّر</b> (مدى، فيزا، ماستركارد، Apple Pay). بيانات بطاقتك تنكتب في صفحة ميسّر الآمنة وما توصل لنا أبدًا، وحنا نحفظ بس سجل الطلب (الباقة، المبلغ، حالة الدفع، رقم الفاتورة).';
       } else {
-        sb.from("app_settings").select("value").eq("key", "transfer").maybeSingle().then(function(t){
-          var v = t && t.data && t.data.value, l = (v && Array.isArray(v.methods) ? v.methods : []).filter(function(m){ return m && String(m.label || "").trim() && String(m.num || "").trim(); })
+        /* (v27) أسماء التطبيقات بس (من دالة تنرجع الأسماء بدون أرقام)، ولو الدالة ما انثبّتت نقرا الجدول مثل قبل */
+        sb.rpc("transfer_methods").then(function(r){
+          if(r && !r.error && r.data) return { data: { value: typeof r.data === "string" ? JSON.parse(r.data) : r.data } };
+          return sb.from("app_settings").select("value").eq("key", "transfer").maybeSingle();
+        }, function(){ return sb.from("app_settings").select("value").eq("key", "transfer").maybeSingle(); }).then(function(t){
+          var v = t && t.data && t.data.value, l = (v && Array.isArray(v.methods) ? v.methods : []).filter(function(m){ return m && String(m.label || "").trim(); })
             .map(function(m){ return String(m.label).trim().slice(0, 30); }).slice(0, 4);
           if(l.length) document.getElementById("payApps").textContent = " (" + (l.length === 1 ? l[0] : l.slice(0, -1).join("، ") + " أو " + l[l.length - 1]) + ")";
         }, function(){});

@@ -1182,6 +1182,7 @@ document.addEventListener("DOMContentLoaded", function(){
       var start = function(){
         bzJoin(false).then(function(){ connect(); render(); }, function(e){
           var c = e && e.code;
+          if(c === "room_full"){ fatal("🚪", "الغرفة ممتلئة", "اطلب من المقدّم باركود جديد (🔄 باركود جديد)."); return; }
           if(c === "bad_key" || c === "no_room" || c === "bad_team"){
             try{ localStorage.removeItem(ID_KEY); }catch(x){}
             fatal("📷", "الباركود هذا قديم", "المقدّم سوّى باركود جديد — امسح باركود فريقك من الشاشة من جديد.");

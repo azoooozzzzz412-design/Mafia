@@ -2607,14 +2607,31 @@
       buzz.pvBusy = true;
       var hadOld = !!store.buzz.room && store.buzz.pv !== 2;
       buzzSecure().then(function(ok){
-        buzz.pvBusy = false; buzz.pvDone = true; buzz.pv = !!ok;
+        buzz.pvBusy = false; buzz.pvDone = true; buzz.pv = !!ok; buzz.prevRoom = null; buzz.pvTries = 0;
         if(ok && (hadOld || buzz.reissued) && store.buzz.enabled) toast("📱 باركود جديد للأزرار (صار محمي) — خلّوا الفرق يمسحونه من جديد");
         if(!buzzEls.panel.hidden) renderBuzzPanel();   /* الباركود (مع سر الفريق) يطلع الحين */
         if(headsVisible()) renderHeadsGrid();
         if(buzz.wantRt) rtConnect();
-      }, function(){
-        buzz.pvBusy = false;   /* انقطاع: نعيد المحاولة */
-        setTimeout(function(){ if(buzz.wantRt && !buzz.channel && !buzz.pvDone) rtConnect(); }, 4000);
+      }, function(err){
+        buzz.pvBusy = false;
+        /* (v27) حدود قاعدة البيانات (غرف كثيرة نشطة / إنشاء كثير بالساعة / حساب موقوف): ما نعيد المحاولة بالحلقة، نقول للمقدّم ونرجّع غرفته السابقة لو عنده */
+        var lm = /room_limit|rate_limited|blocked/.exec(String((err && err.message) || ""));
+        if(lm){
+          toast(lm[0] === "rate_limited" ? "⏳ وصلت للحد المؤقت لإنشاء غرف الأزرار — جرّب بعد شوي"
+              : lm[0] === "room_limit" ? "⚠️ عندك غرف أزرار كثيرة نشطة — جرّب بعد ما تخلص غرفة قديمة"
+              : "⚠️ تعذّر فتح غرفة الأزرار لهذا الحساب");
+          var pr = buzz.prevRoom; buzz.prevRoom = null;
+          if(pr && store.buzz.room !== pr.room){   /* ضغط «باركود جديد» وانرفض: نرجع لغرفته السابقة (نفس الباركود) */
+            store.buzz.room = pr.room; store.buzz.pv = pr.pv; persist();
+            buzz.pvDone = false; buzz.pv = false;
+            if(buzz.wantRt) rtConnect();
+          } else { buzz.status = "error"; renderBuzzUI(); }
+          return;
+        }
+        /* انقطاع (أو خطأ ما نعرفه): نعيد المحاولة بتباعد (4 ثواني ثم الضعف… لين دقيقة)، وبعد 12 محاولة نوقف ونطلع الخطأ بدل ما نضل نكرر */
+        buzz.pvTries = (buzz.pvTries || 0) + 1;
+        if(buzz.pvTries > 12){ buzz.pvTries = 0; buzz.status = "error"; renderBuzzUI(); return; }
+        setTimeout(function(){ if(buzz.wantRt && !buzz.channel && !buzz.pvDone) rtConnect(); }, Math.min(60000, 4000 * Math.pow(2, buzz.pvTries - 1)));
       });
       return;
     }
@@ -2628,6 +2645,16 @@
     var ch = buzz.client.channel("sahra-buzz-" + store.buzz.room, {
       config: { broadcast: { self:false }, presence: { key:"host" } }
     });
+    /* (v27) كل ساعتين نجدّد الغرفة بقاعدة البيانات (طلب واحد خفيف): الغرفة اللي المقدّم فاتحها ما تنحسب خاملة أبد، وبدون Realtime */
+    clearInterval(buzz.keepT); buzz.keepT = null;
+    if(buzz.pv) buzz.keepT = setInterval(function(){
+      if(!(buzz.pv && buzz.channel && buzz.wantRt && sharedSb)) return;
+      /* تجديد فقط (ما ينشئ شي): لو الغرفة اختفت (مثلًا الجهاز نام أكثر من 48 ساعة) نعيد فتحها بنفس الباركود، وأي رفض يطلع للمقدّم */
+      sharedSb.rpc("buzz_room_touch", { p_room: store.buzz.room }).then(function(r){
+        var d = r && !r.error && r.data;
+        if(d && d.ok === false){ buzzDisconnect(true); buzz.pvDone = false; buzz.pv = false; buzzConnect(); }
+      }, function(){});
+    }, 2 * 3600 * 1000);
     var PV = buzz.pv;   /* (v26) غرفة محمية: كل رسالة جوال لازم تكون موقّعة، والضغطة القديمة ما تنقبل */
     var pay = function(m){ return (m && m.payload) || {}; };
     ch.on("broadcast", { event:"buzz" }, function(m){ if(!PV) onBuzz(pay(m)); });
@@ -2689,7 +2716,7 @@
       var qd = buzz.sigQ.then(function(){ if(!keepEnabled) return bzSendSignedNow(pvCh, "bye", {}, true); }).catch(function(){});
       qd.then(function(){ try{ if(buzz.client) buzz.client.removeChannel(pvCh); }catch(e){} });
     } else if(!keepEnabled && buzz.channel && buzz.status === "on"){ try{ buzz.channel.send({ type:"broadcast", event:"bye", payload:{ t:Date.now() } }); }catch(e){} }
-    clearTimeout(buzz.hb); buzz.hb = null; clearInterval(buzz.chk); buzz.chk = null; buzz.sig = ""; buzzStopTimer(); buzzStopWindow(); buzz.q = null; buzz.tout = null; buzz.pens = {}; buzz.adds = {}; buzz.timeUp = false; tuHide();
+    clearTimeout(buzz.hb); buzz.hb = null; clearInterval(buzz.chk); buzz.chk = null; clearInterval(buzz.keepT); buzz.keepT = null; buzz.sig = ""; buzzStopTimer(); buzzStopWindow(); buzz.q = null; buzz.tout = null; buzz.pens = {}; buzz.adds = {}; buzz.timeUp = false; tuHide();
     buzz.decide = false; buzz.twhy = null; buzz.ok = null; bdHide();
     recDiscard(); if(!keepEnabled) recRelease();
     buzz.only = null; buzz.onlyEnd = 0; buzzClearLog();
@@ -3654,6 +3681,7 @@
   buzzEls.auto.addEventListener("change", function(){ store.buzz.auto = buzzEls.auto.checked; persist(); });
   buzzEls.test.addEventListener("click", function(){ buzzUnlockAudio(); buzzArm("test:" + Date.now(), true); closeBuzzPanel(); toast("الأزرار مفتوحة — جرّبوا تضغطون 📱"); });
   buzzEls.newRoom.addEventListener("click", function(){
+    buzz.prevRoom = buzz.pv && store.buzz.pv === 2 ? { room: store.buzz.room, pv: 2 } : null;   /* (v27) لو انرفض الجديد نرجع له */
     buzzDisconnect(true);
     store.buzz.room = buzzRoomGen();
     if(buzz.pv){ store.buzz.pv = 0; buzz.pvDone = false; buzz.pv = false; buzz.certs = {}; buzz.metaOk = {}; buzz.names = {}; }   /* (v26) غرفة محمية جديدة بسر ومفاتيح جديدة */
@@ -6361,6 +6389,13 @@
   function setCatalog(c){
     CATALOG = c || {};
     HIDDEN_GAMES = Array.isArray(CATALOG.hidden) ? CATALOG.hidden.filter(function(x){ return typeof x === "string" && x !== "home"; }) : [];
+    /* (M1) سجل الألعاب (جدول games بقاعدة البيانات): لعبة مو بالسجل = غير متاحة مثل المخفية، والترتيب من السجل. لو الحقل ما وصل (SQL قديم) ما يتغير شي */
+    if(Array.isArray(CATALOG.games) && CATALOG.games.length){
+      var reg = {};
+      CATALOG.games.forEach(function(g){ if(g && typeof g.id === "string") reg[g.id] = +g.sort || 0; });
+      GAME_ORDER.forEach(function(g){ if(!(g in reg) && HIDDEN_GAMES.indexOf(g) === -1) HIDDEN_GAMES.push(g); });
+      GAME_ORDER.sort(function(a, b){ return (reg[a] != null ? reg[a] : 1e6) - (reg[b] != null ? reg[b] : 1e6); });
+    }
   }
   function loadCatalog(){
     return sbReady.then(function(sb){ return sb.rpc("catalog"); }).then(function(r){
@@ -6427,6 +6462,17 @@
     var c = CATALOG && CATALOG.counts; if(!c) return 0;
     return (c.trivia | 0) + emojiTotal(c) + (c.letters | 0) + (c.flags | 0) + (c.heads | 0) + (c.charades | 0) + (c.million | 0);
   }
+  /* (M1) عدد الألعاب بالنصوص التسويقية: يطلع من الألعاب الظاهرة (hidden_games)، والنص الثابت بالصفحة بدون رقم (للمحركات وقبل التحميل) */
+  var GC_AR = { 3:"ثلاث", 4:"أربع", 5:"خمس", 6:"ست", 7:"سبع", 8:"ثماني", 9:"تسع", 10:"عشر" };
+  var GC_EN = { 3:"Three", 4:"Four", 5:"Five", 6:"Six", 7:"Seven", 8:"Eight", 9:"Nine", 10:"Ten" };
+  function renderGameCounts(n){
+    var en = window.SAHRA_LANG === "en", w = (en ? GC_EN : GC_AR)[n] || "";
+    var sub = document.getElementById("ldSub"), h2 = document.getElementById("ldGamesH2");
+    if(sub) sub.textContent = en
+      ? (w ? w + " group games" : "Group games") + " in Arabic on one screen, with phones turning into buzzers. No apps, no setup — pick your time and teams, and the table arranges the rest."
+      : (w ? w + " " : "") + "ألعاب جماعية بالعربي على شاشة وحدة، والجوالات تصير أزرار. بدون تطبيقات، وبدون تجهيز — اختاروا وقتكم وفرقكم، والطاولة ترتّب الباقي.";
+    if(h2) h2.textContent = en ? (w ? w + " games" : "Games") + ", one game night" : (w ? w + " " : "") + "ألعاب، سهرة وحدة";
+  }
   function renderLanding(){
     var hidden = HIDDEN_GAMES, games = GAME_ORDER.filter(function(g){ return hidden.indexOf(g) === -1; });
     document.getElementById("ldGames").innerHTML = games.map(function(g){
@@ -6438,6 +6484,7 @@
         + (cl ? '<li><b>المحتوى:</b><span>' + cl + (rl ? " — " + rl : "") + '</span></li>' : '')
         + '</ul></article>';
     }).join("");
+    renderGameCounts(games.length);   /* (M1) العدد من الألعاب الظاهرة فعلًا، مو رقم ثابت */
     var one = games.map(function(g){ return '<span>' + icon(GAME_INFO[g].ic) + GAME_INFO[g].name + '</span>'; }).join("");
     document.getElementById("ldMarquee").innerHTML = one + one + one + one;
     var total = contentTotal();
@@ -6597,10 +6644,16 @@
   function trLoad(force){
     if(!force && TR.methods && Date.now() - TR.at < 60000) return Promise.resolve(TR.methods);
     if(TR.loading) return TR.loading;
-    TR.loading = sbReady.then(function(sb){ return sb.from("app_settings").select("value").eq("key", "transfer").maybeSingle(); }).then(function(r){
+    /* (v27) الأرقام تطلع بدالة للمسجّلين بس؛ لو الدالة ما انثبّتت للحين نقرا الجدول مثل قبل */
+    TR.loading = sbReady.then(function(sb){
+      return sb.rpc("transfer_methods").then(function(r){
+        if(r && !r.error && r.data) return { data: { value: parseJ(r.data) } };
+        return sb.from("app_settings").select("value").eq("key", "transfer").maybeSingle();
+      }, function(){ return sb.from("app_settings").select("value").eq("key", "transfer").maybeSingle(); });
+    }).then(function(r){
       if(r && r.error) throw r.error;
       var v = r && r.data && r.data.value, list = v && Array.isArray(v.methods) ? v.methods : [];
-      TR.methods = list.filter(function(m){ return m && typeof m === "object"; }).map(trClean).filter(function(m){ return m.label && m.num; }).slice(0, 4);
+      TR.methods = list.filter(function(m){ return m && typeof m === "object"; }).map(trClean).filter(function(m){ return m.label && (m.num || !ME); }).slice(0, 4);   /* (v27) الزائر بدون حساب ياخذ الأسماء بس (للسؤال «كيف أدفع؟») */
       TR.at = Date.now();
       return TR.methods;
     }).catch(function(){ return TR.methods || []; }).then(function(x){ TR.loading = null; return x; });
