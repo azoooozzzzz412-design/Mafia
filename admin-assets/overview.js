@@ -6,22 +6,26 @@
   var T = {
     ar:{ rng:function(n){ return "آخر " + n + (n === 7 ? " أيام" : " يوم"); },
       accounts:"إجمالي الحسابات", active:"عملاء نشطون", activeT:"لعبوا خلال الفترة", fresh:"حسابات جديدة", freshT:"سجّلوا خلال الفترة", sales:"إجمالي المبيعات", salesT:function(t, o){ return "اليوم " + t + " · " + o + " طلب مدفوع بالفترة"; },
-      status:"الوضع العام", sUp:"المنصة تعمل", sUpT:"الاتصال بقاعدة البيانات", sPay:"الدفع الإلكتروني", sPayOn:"مفعّل (ميسّر)", sPayOff:"غير مفعّل", sTr:"التحويل البنكي", sTrOk:function(n){ return n + " وسيلة مضبوطة"; }, sTrNo:"ما فيه وسيلة مضبوطة", sMaint:"وضع الصيانة", sMaintT:"غير مفعّل (التحكم فيه يجي مع M2b)",
+      status:"الوضع العام", sUp:"المنصة تعمل", sUpT:"الاتصال بقاعدة البيانات", sPay:"الدفع الإلكتروني", sPayOn:"مفعّل (ميسّر)", sPayOff:"غير مفعّل", sTr:"التحويل البنكي", sTrOk:function(n){ return n + " وسيلة مضبوطة"; }, sTrNo:"ما فيه وسيلة مضبوطة", sMaint:"وضع الصيانة", sMaintOff:"مطفي", sMaintOn:"مفعّل — العملاء ما يبدأون جولات",
+      aBlock:"حظر", aUnblock:"رفع حظر", aStatus:"حالة", aCredit:"رصيد", aTrial:"تجربة", aOrder:"طلب", aSetting:"إعداد", aMaint:"صيانة",
+      tBlock:"حظر حساب", tUnblock:"رفع حظر عن حساب", tStatus:"تغيير حالة حساب", tCredit:function(d){ return (d.delta > 0 ? "إضافة " : "خصم ") + Math.abs(d.delta | 0) + " جولة"; }, tTrial:"إرجاع تجربة مجانية", tConfirm:function(d){ return "تفعيل طلب #" + (d.code || "—"); }, tCancel:function(d){ return "رفض طلب #" + (d.code || "—"); }, tMaint:function(d){ return d.on ? "تفعيل وضع الصيانة" : "إيقاف وضع الصيانة"; }, SN:{ hidden_games:"ظهور الألعاب", buzz_timer:"مؤقت أسرع إصبع", round_sizes:"حجم الجولة", play:"إعدادات اللعب", payments_enabled:"الدفع أونلاين", contact:"رقم الواتساب", seller:"بيانات البائع", transfer:"طرق التحويل" }, tSetting:function(k){ return "تعديل إعداد: " + (this.SN[k] || k); },
       games:"حالة الألعاب", gShown:"ألعاب ظاهرة", gHidden:"ألعاب مخفية", gTotal:"إجمالي الألعاب",
       act:"نشاط الألعاب (عدد الجولات)", details:"عرض التفاصيل",
       quick:"إجراءات سريعة", qGrant:"منح جولات", qAdd:"إضافة سؤال", qImport:"استيراد أسئلة", qPack:"إنشاء باقة", qPromo:"كود خصم جديد", qSoon:"قريبًا", qReports:"البلاغات", qStats:"التقارير", qGames:"إعدادات الألعاب",
       content:"ملخص المحتوى", total:"الإجمالي", rest:"باقي الألعاب",
-      orders:"أحدث الطلبات", all:"عرض الكل", ops:"آخر العمليات الإدارية", opsAll:"عرض الطلبات", opTag:"تفعيل طلب", opTxt:function(c, a){ return "طلب #" + c + " · " + a; }, opsNote:"تفعيلات الطلبات فقط حاليًا — السجل الكامل يتفعّل مع «سجل العمليات».",
+      orders:"أحدث الطلبات", all:"عرض الكل", ops:"آخر العمليات الإدارية", opsAll:"عرض السجل", opTag:"تفعيل طلب", opTxt:function(c, a){ return "طلب #" + c + " · " + a; }, opsNote:"سجل العمليات غير مفعّل بعد (ملف SQL رقم 14) — نعرض تفعيلات الطلبات فقط.",
       none:"ما فيه بيانات بعد", noOrders:"ما فيه طلبات", noOps:"ما فيه عمليات بعد", cur:"ر.س",
       stWait:"بانتظار التحقق", stOpen:"بانتظار الدفع", stPaid:"مدفوع", stCancel:"ملغى", stFail:"مرفوض", err:"تعذّر تحميل بعض البيانات" },
     en:{ rng:function(n){ return "Last " + n + " days"; },
       accounts:"Total accounts", active:"Active customers", activeT:"played in range", fresh:"New accounts", freshT:"signed up in range", sales:"Total sales", salesT:function(t, o){ return "Today " + t + " · " + o + " paid orders in range"; },
-      status:"System status", sUp:"Platform is up", sUpT:"Database connection", sPay:"Online payment", sPayOn:"On (Moyasar)", sPayOff:"Off", sTr:"Bank transfer", sTrOk:function(n){ return n + " method(s) set"; }, sTrNo:"No method set", sMaint:"Maintenance mode", sMaintT:"Off (control arrives with M2b)",
+      status:"System status", sUp:"Platform is up", sUpT:"Database connection", sPay:"Online payment", sPayOn:"On (Moyasar)", sPayOff:"Off", sTr:"Bank transfer", sTrOk:function(n){ return n + " method(s) set"; }, sTrNo:"No method set", sMaint:"Maintenance mode", sMaintOff:"Off", sMaintOn:"On — customers can't start rounds",
+      aBlock:"Block", aUnblock:"Unblock", aStatus:"Status", aCredit:"Credits", aTrial:"Trial", aOrder:"Order", aSetting:"Setting", aMaint:"Maintenance",
+      tBlock:"Blocked an account", tUnblock:"Unblocked an account", tStatus:"Changed account status", tCredit:function(d){ return (d.delta > 0 ? "Added " : "Removed ") + Math.abs(d.delta | 0) + " round(s)"; }, tTrial:"Reset a free trial", tConfirm:function(d){ return "Activated order #" + (d.code || "—"); }, tCancel:function(d){ return "Rejected order #" + (d.code || "—"); }, tMaint:function(d){ return d.on ? "Turned maintenance on" : "Turned maintenance off"; }, SN:{ hidden_games:"game visibility", buzz_timer:"buzzer timer", round_sizes:"round size", play:"play settings", payments_enabled:"online payment", contact:"WhatsApp number", seller:"seller details", transfer:"transfer methods" }, tSetting:function(k){ return "Changed setting: " + (this.SN[k] || k); },
       games:"Game status", gShown:"Visible games", gHidden:"Hidden games", gTotal:"Total games",
       act:"Game activity (rounds)", details:"View details",
       quick:"Quick actions", qGrant:"Grant rounds", qAdd:"Add a question", qImport:"Import questions", qPack:"Create a package", qPromo:"New discount code", qSoon:"Soon", qReports:"Reports", qStats:"Analytics", qGames:"Game settings",
       content:"Content summary", total:"Total", rest:"Other games",
-      orders:"Latest orders", all:"View all", ops:"Latest admin actions", opsAll:"View orders", opTag:"Order activated", opTxt:function(c, a){ return "Order #" + c + " · " + a; }, opsNote:"Order activations only for now — the full log arrives with the Audit log.",
+      orders:"Latest orders", all:"View all", ops:"Latest admin actions", opsAll:"View log", opTag:"Order activated", opTxt:function(c, a){ return "Order #" + c + " · " + a; }, opsNote:"The audit log isn't enabled yet (SQL file 14) — showing order activations only.",
       none:"No data yet", noOrders:"No orders", noOps:"No actions yet", cur:"SAR",
       stWait:"Awaiting review", stOpen:"Awaiting payment", stPaid:"Paid", stCancel:"Canceled", stFail:"Rejected", err:"Some data could not be loaded" }
   };
@@ -49,7 +53,8 @@
       C.SB.rpc("catalog"),                                                                    // 3 المحتوى + حالة الدفع
       C.SB.rpc("transfer_methods"),                                                           // 4 وسائل التحويل
       C.SB.from("question_reports").select("id", { count:"exact", head:true }).eq("status", "open"),   // 5 البلاغات
-      C.SB.from("app_settings").select("value").eq("key", "hidden_games").maybeSingle()        // 6 الألعاب المخفية
+      C.SB.from("app_settings").select("value").eq("key", "hidden_games").maybeSingle(),       // 6 الألعاب المخفية
+      C.SB.from("admin_audit_log").select("id,at,action,details").order("id", { ascending:false }).limit(4)   // 7 آخر عمليات السجل (ما يكسر لو الجدول ما اتفعّل)
     ]);
   }
   function kpi(i, icn, label, valHtml, title, go){
@@ -78,13 +83,13 @@
       + '</div>';
 
     /* الصف 2: الوضع العام · حالة الألعاب · نشاط الألعاب */
-    var nTr = Array.isArray(tm.methods) ? tm.methods.length : 0, up = failed.length < 7;
+    var nTr = Array.isArray(tm.methods) ? tm.methods.length : 0, up = failed.length < 7, maint = !!(cat.maintenance && cat.maintenance.on);
     var stRow = function(state, name, title){ var icn = state === "ok" ? "okcircle" : state === "bad" ? "xcircle" : "circle"; return '<div class="ov-st ' + state + '" title="' + esc(title) + '"><b>' + name + '</b>' + ic(icn) + '</div>'; };
     var statusBody = '<div class="ov-status">'
       + stRow(up ? "ok" : "bad", l.sUp, l.sUpT)
       + stRow(ok(R[3]) ? (cat.pay === true ? "ok" : "bad") : "off", l.sPay, ok(R[3]) ? (cat.pay === true ? l.sPayOn : l.sPayOff) : "—")
       + stRow(ok(R[4]) ? (nTr ? "ok" : "bad") : "off", l.sTr, ok(R[4]) ? (nTr ? l.sTrOk(nTr) : l.sTrNo) : "—")
-      + stRow("off", l.sMaint, l.sMaintT) + '</div>';
+      + stRow(maint ? "bad" : "off", l.sMaint, maint ? l.sMaintOn : l.sMaintOff) + '</div>';
     h += '<div class="ov-grid">'
       + card(6, "c-3", l.status, null, statusBody)
       + card(7, "c-4", l.games, null, '<div id="ovVis"></div>')
@@ -101,7 +106,7 @@
     h += '<div class="ov-grid">'
       + card(10, "c-4", l.content, null, '<div class="ov-list" id="ovContent"></div>')
       + card(11, "c-4", l.orders, ["sales", l.all], '<div class="ov-list" id="ovOrders"></div>')
-      + card(12, "c-4", l.ops, ["sales", l.opsAll], '<div class="ov-list" id="ovOps"></div><p class="ov-note">' + l.opsNote + '</p>')
+      + card(12, "c-4", l.ops, ["audit", l.opsAll], '<div class="ov-list" id="ovOps"></div><p class="ov-note">' + l.opsNote + '</p>')
       + '</div>' + (failed.length ? '<p class="ov-note">⚠️ ' + l.err + ' (' + failed.length + ')</p>' : "");
     C.box.innerHTML = h;
 
@@ -128,6 +133,18 @@
       return '<div class="ov-row"><span class="bx">' + ic(oic(o)) + '</span><div class="m"><b>' + esc(who) + '</b><small dir="ltr">' + esc(sub) + '</small><small>' + hm(o.created_at) + ' · ' + dm(o.created_at) + '</small></div>' + pill(o) + '<span class="am">' + money((+o.amount || 0) / 100) + '</span></div>';
     }).join("") : '<div class="ov-empty">' + l.noOrders + '</div>';
     /* آخر العمليات الإدارية: تفعيل طلبات التحويل (المصدر الموثوق الوحيد حاليًا) */
+    var aud = ok(R[7]) && Array.isArray(R[7].data) ? R[7].data : null;
+    var opOf = function(r){ var d = r.details || {}, a = r.action;
+      if(a === "user.status") return d.to === "blocked" ? ["bad", l.aBlock, l.tBlock] : d.to === "approved" ? ["ok", l.aUnblock, l.tUnblock] : ["info", l.aStatus, l.tStatus];
+      if(a === "user.credits") return ["ok", l.aCredit, l.tCredit(d)]; if(a === "user.reset_trials") return ["info", l.aTrial, l.tTrial];
+      if(a === "order.confirm") return ["ok", l.aOrder, l.tConfirm(d)]; if(a === "order.cancel") return ["bad", l.aOrder, l.tCancel(d)];
+      if(a === "site.maintenance") return ["bad", l.aMaint, l.tMaint(d)];
+      return ["info", l.aSetting, l.tSetting.call(l, String(a).replace(/^setting\./, ""))]; };
+    if(aud){
+      document.getElementById("ovOps").innerHTML = aud.length ? aud.map(function(r){ var o = opOf(r); return '<div class="ov-op"><span class="tg ' + o[0] + '">' + o[1] + '</span><span class="t">' + esc(o[2]) + '</span><small>' + hm(r.at) + '</small></div>'; }).join("") : '<div class="ov-empty">' + l.noOps + '</div>';
+      var nt = document.querySelector("#ovOps + .ov-note"); if(nt) nt.remove();
+      return;
+    }
     var ops = (orders.rows || []).filter(function(o){ return o.status === "paid" && o.paid_at; }).sort(function(a, b){ return new Date(b.paid_at) - new Date(a.paid_at); }).slice(0, 4);
     document.getElementById("ovOps").innerHTML = ops.length ? ops.map(function(o){
       return '<div class="ov-op"><span class="tg">' + ic("cart") + l.opTag + '</span><span class="t">' + esc(l.opTxt(o.code || "—", money((+o.amount || 0) / 100))) + '</span><small>' + hm(o.paid_at) + '</small></div>';

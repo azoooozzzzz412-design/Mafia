@@ -308,8 +308,8 @@ if(window.top !== window.self){ var same = false; try{ same = window.top.locatio
 try{ var f = localStorage.getItem("sahra-admin-fx"); document.documentElement.setAttribute("data-fx", (f === "balanced" || f === "performance") ? f : "premium");
   var lg = localStorage.getItem("sahra-lang") === "en" ? "en" : "ar"; document.documentElement.lang = lg; document.documentElement.dir = lg === "en" ? "ltr" : "rtl";
   if(localStorage.getItem("sahra-admin-side") === "1") document.documentElement.classList.add("side-min"); }catch(e){}
-window.SAHRA_ADMIN_VER = "v29-m2a";</script>
-<link rel="stylesheet" href="admin-assets/admin.css?v=2">
+window.SAHRA_ADMIN_VER = "v30-m2b";</script>
+<link rel="stylesheet" href="admin-assets/admin.css?v=3">
 </head>
 <body class="adm-body">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
@@ -332,7 +332,7 @@ window.SAHRA_ADMIN_VER = "v29-m2a";</script>
       <button type="button" data-tab="games" data-ic="gamepad" data-lb="إدارة الألعاب"><svg viewBox="0 0 24 24"><use href="#ai-gamepad"/></svg><span class="lb" data-ar="إدارة الألعاب" data-en="Games &amp; settings">إدارة الألعاب</span></button>
       <button type="button" data-tab="stats" data-ic="chart" data-lb="الإحصائيات والتقارير"><svg viewBox="0 0 24 24"><use href="#ai-chart"/></svg><span class="lb" data-ar="الإحصائيات والتقارير" data-en="Stats &amp; reports">الإحصائيات والتقارير</span></button>
       <button type="button" data-tab="reports" data-ic="flag" data-lb="البلاغات"><svg viewBox="0 0 24 24"><use href="#ai-flag"/></svg><span class="lb" data-ar="البلاغات" data-en="Reports">البلاغات</span><span class="count" id="repCount" hidden></span></button>
-      <button type="button" class="soon" disabled aria-disabled="true" data-ar-title="سجل العمليات — قريبًا" data-en-title="Audit log — soon" title="سجل العمليات — قريبًا"><svg viewBox="0 0 24 24"><use href="#ai-history"/></svg><span class="lb" data-ar="سجل العمليات" data-en="Audit log">سجل العمليات</span><span class="soon-t" data-ar="قريبًا" data-en="Soon">قريبًا</span></button>
+      <button type="button" data-tab="audit" data-ic="history" data-lb="سجل العمليات"><svg viewBox="0 0 24 24"><use href="#ai-history"/></svg><span class="lb" data-ar="سجل العمليات" data-en="Audit log">سجل العمليات</span></button>
       <button type="button" class="soon" disabled aria-disabled="true" data-ar-title="الإعدادات والأمان — قريبًا" data-en-title="Settings &amp; security — soon" title="الإعدادات والأمان — قريبًا"><svg viewBox="0 0 24 24"><use href="#ai-settings"/></svg><span class="lb" data-ar="الإعدادات والأمان" data-en="Settings &amp; security">الإعدادات والأمان</span><span class="soon-t" data-ar="قريبًا" data-en="Soon">قريبًا</span></button>
     </nav>
     <div class="adm-ver"><span class="d"></span><span class="nm"><small data-ar="الإصدار الحالي" data-en="Current version">الإصدار الحالي</small><b id="admVer">—</b></span></div>
@@ -424,6 +424,12 @@ window.SAHRA_ADMIN_VER = "v29-m2a";</script>
       <p class="hint">كل اللي تغيّره هنا يوصل للكل أول ما يفتحون الموقع أو يحدّثونه.</p>
       <div id="gErr"></div>
 
+      <div class="card adm-glass" id="mtCard">
+        <h3>🛠️ وضع الصيانة</h3>
+        <p class="hint">لو فعّلته: العملاء ما يقدرون يبدأون جولة جديدة (الجولات الجارية تكمل، وأنت كأدمن تقدر تلعب وتجرّب). التشغيل والإيقاف يتسجّلون بسجل العمليات مع السبب.</p>
+        <div class="mt-row"><span class="mt-st" id="mtState">…</span><button type="button" class="btn-ghost sm" id="mtBtn">…</button></div>
+      </div>
+
       <div class="card adm-glass" id="fxCard">
         <h3 data-ar="🎨 مظهر لوحة الأدمن" data-en="🎨 Admin appearance">🎨 مظهر لوحة الأدمن</h3>
         <p class="hint" data-ar="يُحفظ على هذا الجهاز بس (ما يرسل شي لقاعدة البيانات). لو جهازك بطيء جرّب «متوازن» أو «أداء»." data-en="Saved on this device only (nothing is sent to the database). On a slow device try Balanced or Performance.">يُحفظ على هذا الجهاز بس (ما يرسل شي لقاعدة البيانات). لو جهازك بطيء جرّب «متوازن» أو «أداء».</p>
@@ -472,6 +478,15 @@ window.SAHRA_ADMIN_VER = "v29-m2a";</script>
       <div id="statsBody"></div>
     </section>
 
+    <section id="tab-audit" hidden>
+      <h2 class="sec">🧾 سجل العمليات</h2>
+      <p class="hint">كل عملية حساسة تسوّيها (حظر، رصيد، تفعيل طلب، تغيير إعداد، صيانة) تتسجّل هنا مع السبب، ولا أحد يقدر يعدّلها أو يحذفها.</p>
+      <div class="row" id="auFilters"></div>
+      <div id="auErr"></div>
+      <div class="au-list" id="auList"><div class="empty">جاري التحميل…</div></div>
+      <div class="row" style="justify-content:center;margin-top:12px"><button class="btn-ghost sm" id="auMore" type="button" hidden>عرض أقدم</button></div>
+    </section>
+
     <section id="tab-reports" hidden>
       <h2 class="sec">🚩 بلاغات الأسئلة</h2>
       <p class="hint">المقدّم يبلّغ من صفحة <b>الإجابات بجواله</b> لما يلقى سؤال فيه غلط. صلّحه بـ ✏️، أو خبّه 🙈 عشان ما يطلع بالجولات — وبعدها ينتقل لـ«تم» لحاله.</p>
@@ -495,8 +510,8 @@ window.SAHRA_ADMIN_VER = "v29-m2a";</script>
   </div>
 </div>
 <div class="tip" id="tip" hidden></div>
-<script src="admin-assets/fx.js?v=2"></script>
-<script src="admin-assets/overview.js?v=2"></script>
+<script src="admin-assets/fx.js?v=3"></script>
+<script src="admin-assets/overview.js?v=3"></script>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script>
 /* v7: المكتبة تتحمّل بدون ما توقف رسم الصفحة — السكربت يشتغل أول ما تجهز */
@@ -519,6 +534,8 @@ document.addEventListener("DOMContentLoaded", function(){
   function toast(msg){ var t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(function(){ t.classList.remove("show"); }, 2600); }
   function errText(e){
     var m = (e && (e.message || e.error_description)) || String(e);
+    var CODES = { reason_required:"اكتب السبب (3 أحرف على الأقل).", self_not_allowed:"ما تقدر تغيّر حالة حسابك أنت.", bad_status:"حالة غير صالحة.", bad_users:"اختيار حسابات غير صالح.", bad_key:"إعداد غير مسموح.", bad_value:"قيمة غير صالحة.", no_user:"الحساب غير موجود.", bad_amount:"اكتب رقم صحيح (من 1 إلى 1000).", audit_log_immutable:"سجل العمليات ما ينعدّل." };
+    for(var ck in CODES){ if(m.indexOf(ck) !== -1) return CODES[ck]; }
     if(/row-level security|permission denied|not allowed/i.test(m)) return "ما عندك صلاحية لهذي العملية — تأكد إن حسابك أدمن.";
     if(/Failed to fetch|NetworkError/i.test(m)) return "ما فيه اتصال — تأكد من الإنترنت.";
     if(/column .*active.* does not exist|active/i.test(m) && /does not exist/i.test(m)) return "قاعدة البيانات تحتاج تحديث — شغّل سكربت sahra_setup.sql الجديد في Supabase.";
@@ -621,7 +638,7 @@ document.addEventListener("DOMContentLoaded", function(){
     var t = ORDER_ID ? "sales" : (location.hash || "").replace("#", "");
     if(t === "settings") t = "games";
     document.documentElement.classList.add("adm-ready");
-    openTab(["overview", "users", "sales", "content", "games", "stats", "reports"].indexOf(t) !== -1 ? t : "overview");
+    openTab(["overview", "users", "sales", "content", "games", "stats", "reports", "audit"].indexOf(t) !== -1 ? t : "overview");
     repBadge();
     if(ORDER_ID) trFocus(ORDER_ID);   /* (v14) */
     if(TAB !== "sales") trLoadOrders();
@@ -642,7 +659,7 @@ document.addEventListener("DOMContentLoaded", function(){
     if(TAB === "games" && name !== "games" && setDirty() && !confirm("فيه تغييرات بالإعدادات ما انحفظت — تطلع بدون حفظ؟")) return;
     TAB = name;
     Array.prototype.forEach.call($("tabs").querySelectorAll("[data-tab]"), function(b){ b.classList.toggle("on", b.getAttribute("data-tab") === name); });
-    ["overview", "users", "sales", "content", "games", "stats", "reports"].forEach(function(k){ var e = $("tab-" + k); e.hidden = k !== name; if(k === name){ e.classList.remove("adm-tab-in"); void e.offsetWidth; e.classList.add("adm-tab-in"); } });
+    ["overview", "users", "sales", "content", "games", "stats", "reports", "audit"].forEach(function(k){ var e = $("tab-" + k); e.hidden = k !== name; if(k === name){ e.classList.remove("adm-tab-in"); void e.offsetWidth; e.classList.add("adm-tab-in"); } });
     history.replaceState(null, "", "#" + name);
     var tt = $("tabs").querySelector('[data-tab="' + name + '"]'); if($("admTitle") && tt){ $("admTitle").textContent = (document.documentElement.lang === "en" ? tt.querySelector(".lb").getAttribute("data-en") : tt.getAttribute("data-lb")); }
     if(window.Adm) Adm.moveInd();
@@ -653,7 +670,59 @@ document.addEventListener("DOMContentLoaded", function(){
     if(name === "games") loadGames();
     if(name === "stats") loadStats();
     if(name === "reports") loadReports();
+    if(name === "audit") loadAudit(true);
   }
+  /* ================= 🧾 سجل العمليات (M2b) ================= */
+  var AU = { f:"all", rows:[], done:false, busy:false };
+  var AU_F = [["all", "الكل", null], ["user", "👥 الحسابات", "user.%"], ["order", "🧾 الطلبات", "order.%"], ["setting", "⚙️ الإعدادات", "setting.%"], ["site", "🛠️ الصيانة", "site.%"]];
+  var AU_ST = { approved:"مقبول", blocked:"محظور", pending:"بانتظار القبول" };
+  function auLabel(r){
+    var d = r.details || {}, a = r.action;
+    if(a === "user.status") return (d.to === "blocked" ? "⛔ حظر حساب" : d.to === "approved" ? "✅ رفع حظر/قبول حساب" : "تغيير حالة حساب") + " (" + (AU_ST[d.from] || d.from) + " ← " + (AU_ST[d.to] || d.to) + ")";
+    if(a === "user.credits") return (d.delta > 0 ? "➕ إضافة " : "➖ خصم ") + Math.abs(d.delta | 0) + " جولة (الرصيد صار " + (d.balance | 0) + ")";
+    if(a === "user.reset_trials") return "↺ إرجاع التجربة المجانية";
+    if(a === "order.confirm") return "✅ تفعيل طلب #" + esc(String(d.code || "")) + " (" + roundsTxt(d.rounds) + " · " + sar((d.amount | 0) / 100) + ")";
+    if(a === "order.cancel") return "✖ رفض طلب #" + esc(String(d.code || ""));
+    if(a === "site.maintenance") return d.on ? "🛠️ تفعيل وضع الصيانة" : "✅ إيقاف وضع الصيانة";
+    if(a.indexOf("setting.") === 0){
+      var k = a.slice(8), N = { hidden_games:"ظهور الألعاب", buzz_timer:"مؤقت أسرع إصبع", round_sizes:"حجم الجولة", play:"إعدادات اللعب", payments_enabled:"الدفع أونلاين", contact:"رقم الواتساب", seller:"بيانات البائع", transfer:"طرق التحويل" };
+      var extra = "";
+      if(k === "hidden_games" && Array.isArray(d.to)) extra = " (مخفي: " + (d.to.length ? d.to.join("، ") : "لا شي") + ")";
+      else if(k === "payments_enabled") extra = d.to ? " ← تشغيل" : " ← إيقاف";
+      else if(k === "buzz_timer") extra = " (" + d.from + " ← " + d.to + " ثانية)";
+      return "⚙️ تعديل: " + (N[k] || esc(k)) + extra;
+    }
+    return esc(a);
+  }
+  function auWho(r){
+    if(r.target_type !== "user") return "";
+    var u = (typeof U !== "undefined" && U.rows || []).find(function(x){ return x.id === r.target_id; });
+    return u ? esc(u.full_name || maskEmail(u.email)) : "حساب …" + esc(String(r.target_id).slice(-6));
+  }
+  function auRender(){
+    $("auList").innerHTML = AU.rows.length ? AU.rows.map(function(r){
+      var who = auWho(r);
+      return '<div class="au-row"><div class="au-top"><span class="au-act">' + auLabel(r) + '</span><span class="au-when">' + esc(new Date(r.at).toLocaleString("ar-EG-u-nu-latn", { timeZone:"Asia/Riyadh", dateStyle:"medium", timeStyle:"short" })) + '</span></div>'
+        + '<div class="au-meta">' + (who ? '<span>الحساب: <b>' + who + '</b></span>' : '') + '<span>بواسطة: <b dir="ltr">' + esc(maskEmail(r.admin_email || "—")) + '</b></span></div>'
+        + (r.reason ? '<div class="au-why">السبب: ' + esc(r.reason) + '</div>' : '') + '</div>';
+    }).join("") : '<div class="empty">ما فيه عمليات بعد</div>';
+    $("auMore").hidden = AU.done || !AU.rows.length;
+  }
+  function loadAudit(reset){
+    if(AU.busy) return; AU.busy = true;
+    if(reset){ AU.rows = []; AU.done = false; }
+    $("auFilters").innerHTML = AU_F.map(function(f){ return '<button class="chip' + (AU.f === f[0] ? " on" : "") + '" type="button" data-auf="' + f[0] + '">' + f[1] + '</button>'; }).join("");
+    var q = SB.from("admin_audit_log").select("id,at,admin_email,action,target_type,target_id,reason,details").order("id", { ascending:false }).limit(40);
+    var cur = AU_F.find(function(f){ return f[0] === AU.f; }); if(cur && cur[2]) q = q.like("action", cur[2]);
+    if(AU.rows.length) q = q.lt("id", AU.rows[AU.rows.length - 1].id);
+    return q.then(function(r){
+      must(r); $("auErr").innerHTML = "";
+      var rows = r.data || []; AU.rows = AU.rows.concat(rows); AU.done = rows.length < 40; auRender();
+    }).catch(function(e){ $("auErr").innerHTML = '<div class="err">⚠️ ' + esc(/does not exist|schema cache|404/i.test(String(e && e.message)) ? "سجل العمليات غير مفعّل بعد — شغّل ملف SQL رقم 14 أول." : errText(e)) + '</div>'; })
+      .then(function(){ AU.busy = false; });
+  }
+  $("auFilters").addEventListener("click", function(e){ var b = e.target.closest("[data-auf]"); if(!b) return; AU.f = b.getAttribute("data-auf"); loadAudit(true); });
+  $("auMore").addEventListener("click", function(){ loadAudit(false); });
 
   /* ================= (v11) 🚩 بلاغات الأسئلة ================= */
   var RP = { st:"open", rows:[] };
@@ -859,13 +928,13 @@ document.addEventListener("DOMContentLoaded", function(){
         + '</div><div class="acts">' + acts + '</div></div>';
     }).join("");
   }
-  function setStatus(ids, status){
-    return SB.from("profiles").update({ status:status }).in("id", ids).select("id").then(function(r){
+  function setStatus(ids, status, reason){
+    return SB.rpc("admin_set_status", { p_users:ids, p_status:status, p_reason:reason }).then(function(r){
       must(r);
       U.rows.forEach(function(x){ if(ids.indexOf(x.id) !== -1) x.status = status; });
       renderUsers();
       toast(status === "approved" ? "✅ انرفع الحظر" : "⛔ انحظر الحساب");
-    }).catch(function(e){ toast("⚠️ " + errText(e)); });
+    });
   }
   $("uFilters").addEventListener("click", function(e){ var b = e.target.closest("[data-f]"); if(!b) return; U.filter = b.getAttribute("data-f"); renderUsers(); });
   $("usersList").addEventListener("click", function(e){
@@ -875,10 +944,11 @@ document.addEventListener("DOMContentLoaded", function(){
     if(act === "grant"){
       openModal("➕ جولات لـ " + who, [
         { k:"n", label:"كم جولة؟ (اكتب رقم بالسالب للخصم، مثل -1)", def:"3", req:true, max:5 },
-        { k:"note", label:"ملاحظة (اختياري)", ph:"مثلاً: دفع تحويل بنكي", max:120 }
+        { k:"note", label:"السبب (إلزامي — يتسجّل بسجل العمليات)", ph:"مثلاً: دفع تحويل بنكي #3558", req:true, max:120 }
       ], {}, function(v){
         var n = parseInt(String(v.n).replace(/[٠-٩]/g, function(d){ return "٠١٢٣٤٥٦٧٨٩".indexOf(d); }), 10);
         if(!n || Math.abs(n) > 1000) throw new Error("اكتب رقم صحيح (غير الصفر)");
+        if(String(v.note).length < 3) throw new Error("reason_required");
         return SB.rpc("admin_grant", { p_user:id, p_delta:n, p_note:v.note || "" }).then(function(r){
           must(r);
           if(x) x.credits = r.data | 0;
@@ -895,8 +965,12 @@ document.addEventListener("DOMContentLoaded", function(){
         .catch(function(err){ toast("⚠️ " + errText(err)); b.disabled = false; });
       return;
     }
-    if(act === "blocked" && !confirm("متأكد تبي تحظر " + who + "؟ ما يقدر يدخل الموقع بعدها.")) return;
-    b.disabled = true; setStatus([id], act);
+    openModal(act === "blocked" ? "⛔ حظر " + who : "✅ رفع الحظر عن " + who, [
+      { k:"reason", label:"السبب (إلزامي — يتسجّل بسجل العمليات)", ph:act === "blocked" ? "مثلاً: تحويل مزوّر" : "مثلاً: تم التأكد وانحلّت المشكلة", req:true, max:200 }
+    ], {}, function(v){
+      if(String(v.reason).length < 3) throw new Error("reason_required");
+      return setStatus([id], act, v.reason);
+    }, act === "blocked" ? "حظر" : "رفع الحظر");
   });
   $("uSearch").addEventListener("input", function(){ U.q = this.value.trim(); renderUsers(); });
   $("uRefresh").addEventListener("click", loadUsers);
@@ -1080,7 +1154,7 @@ document.addEventListener("DOMContentLoaded", function(){
       .catch(function(e){ toast("⚠️ " + errText(e)); }).then(function(){ btn.disabled = false; });
   });
   function saveSetting(key, value){
-    return SB.from("app_settings").upsert({ key:key, value:value, updated_at:new Date().toISOString() }, { onConflict:"key" }).then(must);
+    return SB.rpc("admin_setting_set", { p_key:key, p_value:value }).then(must);
   }
   $("slPay").addEventListener("change", function(){
     var on = this.checked, cb = this;
@@ -1892,10 +1966,10 @@ document.addEventListener("DOMContentLoaded", function(){
   }
   function loadGames(){
     $("gamesList").classList.add("loading");
-    return SB.from("app_settings").select("key,value").in("key", ["hidden_games", "buzz_timer", "round_sizes", "play"]).then(function(r){
+    return SB.from("app_settings").select("key,value").in("key", ["hidden_games", "buzz_timer", "round_sizes", "play", "maintenance"]).then(function(r){
       must(r);
       var rows = r.data || [], get = function(k){ var x = rows.find(function(y){ return y.key === k; }); return x ? x.value : null; };
-      var h = get("hidden_games"), t = get("buzz_timer");
+      var h = get("hidden_games"), t = get("buzz_timer"); MAINT = get("maintenance") || { on:false, msg:"" }; renderMaint();
       HIDDEN = Array.isArray(h) ? h.slice() : [];
       BUZZ_T = t != null ? Math.max(0, Math.min(120, Math.round(+t || 0))) : 0;
       SET.sizes = normSizes(get("round_sizes")); SET.play = normPlay(get("play"));
@@ -1909,11 +1983,24 @@ document.addEventListener("DOMContentLoaded", function(){
     Array.prototype.forEach.call($("gBuzzPresets").querySelectorAll("[data-bt]"), function(b){ b.classList.toggle("on", +b.getAttribute("data-bt") === BUZZ_T); });
     $("gBuzzNow").textContent = BUZZ_T ? "الحين: اللي يضغط أول عنده " + secsAr(BUZZ_T) + " يجاوب." : "الحين: بدون مؤقت — الزر يبقى مقفل لين تفتحه أنت.";
   }
+  var MAINT = { on:false, msg:"" };
+  function renderMaint(){
+    var on = !!(MAINT && MAINT.on);
+    $("mtState").innerHTML = on ? '<b style="color:var(--red-text)">🔴 مفعّل</b>' + (MAINT.msg ? ' — «' + esc(MAINT.msg) + '»' : '') : '<b style="color:var(--ok)">🟢 مطفي — الموقع يشتغل عادي</b>';
+    $("mtBtn").textContent = on ? "إيقاف الصيانة" : "تفعيل الصيانة";
+  }
+  $("mtBtn").addEventListener("click", function(){
+    var turnOn = !(MAINT && MAINT.on);
+    openModal(turnOn ? "🛠️ تفعيل وضع الصيانة" : "✅ إيقاف وضع الصيانة", (turnOn ? [{ k:"msg", label:"رسالة للعملاء (اختياري)", ph:"مثلاً: نرجع بعد نص ساعة", max:200 }] : []).concat([{ k:"reason", label:"السبب (إلزامي — يتسجّل بسجل العمليات)", ph:turnOn ? "مثلاً: تحديث قاعدة البيانات" : "مثلاً: خلصنا التحديث", req:true, max:200 }]), {}, function(v){
+      if(String(v.reason).length < 3) throw new Error("reason_required");
+      return SB.rpc("admin_set_maintenance", { p_on:turnOn, p_msg:v.msg || "", p_reason:v.reason }).then(function(r){ must(r); MAINT = { on:turnOn, msg:v.msg || "" }; renderMaint(); toast(turnOn ? "🛠️ فُعّل وضع الصيانة" : "✅ انتهى وضع الصيانة"); });
+    }, turnOn ? "فعّل" : "أوقف");
+  });
   function saveBuzzTimer(n){
     n = Math.round(+n);
     if(!isFinite(n) || n < 0 || n > 120){ toast("اكتب رقم من 0 إلى 120"); renderBuzzTimer(); return; }
     $("gBuzzTimerSave").disabled = true;
-    SB.from("app_settings").upsert({ key:"buzz_timer", value:n, updated_at:new Date().toISOString() }, { onConflict:"key" }).then(function(r){
+    SB.rpc("admin_setting_set", { p_key:"buzz_timer", p_value:n }).then(function(r){
       must(r); BUZZ_T = n; renderBuzzTimer();
       toast(n ? "⏱️ انحفظ: " + secsAr(n) + " للجواب" : "⏱️ انطفى المؤقت");
     }).catch(function(err){ toast("⚠️ " + errText(err)); }).then(function(){ $("gBuzzTimerSave").disabled = false; });
@@ -1935,7 +2022,7 @@ document.addEventListener("DOMContentLoaded", function(){
     if(!cb.checked) next.push(id);
     if(next.length >= GAMES.length){ cb.checked = true; toast("لازم تبقى لعبة وحدة على الأقل ظاهرة"); return; }
     cb.disabled = true;
-    SB.from("app_settings").upsert({ key:"hidden_games", value:next, updated_at:new Date().toISOString() }, { onConflict:"key" }).then(function(r){
+    SB.rpc("admin_setting_set", { p_key:"hidden_games", p_value:next }).then(function(r){
       must(r); HIDDEN = next; renderGames(); if(U.loaded) renderUsers();
       toast(cb.checked ? "✅ صارت ظاهرة للكل" : "🙈 انخفت عن الكل");
     }).catch(function(err){ toast("⚠️ " + errText(err)); cb.checked = !cb.checked; cb.disabled = false; });
@@ -2075,7 +2162,7 @@ document.addEventListener("DOMContentLoaded", function(){
     if(bad){ toast("⚠️ " + bad); return; }
     var btn = this; btn.disabled = true;
     var now = new Date().toISOString();
-    SB.from("app_settings").upsert([{ key:"round_sizes", value:s, updated_at:now }, { key:"play", value:p, updated_at:now }], { onConflict:"key" }).then(function(r){
+    SB.rpc("admin_setting_set", { p_key:"round_sizes", p_value:s }).then(function(r){ must(r); return SB.rpc("admin_setting_set", { p_key:"play", p_value:p }); }).then(function(r){
       must(r); SET.sizes = s; SET.play = p; SET.saved = JSON.stringify({ s:s, p:p }); updDirty();
       toast("💾 انحفظت الإعدادات — توصل للكل أول ما يحدّثون الصفحة");
     }).catch(function(e){ toast("⚠️ " + errText(e)); }).then(function(){ btn.disabled = false; });

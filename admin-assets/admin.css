@@ -424,3 +424,18 @@ html.adm[dir="ltr"] .ov-row .m small[dir="ltr"]{ text-align:start; }
 @media (max-width:760px){ .ov-qa{ grid-template-columns:repeat(2, minmax(0,1fr)); } .ov-kpi{ padding:14px; min-height:0; } .ov-kpi .ico{ width:42px; height:42px; } .ov-kpi .val{ font-size:1.5rem; } .ov-kpi .lb{ font-size:.8rem; }
   .ov-donut svg{ width:130px; height:130px; } .adm-sep, #admFull{ display:none; } .adm-top{ gap:8px; } .adm-ic{ width:40px; height:40px; } .adm-pop{ min-width:230px; } }
 .ov-donut .lg{ border:0; background:none; padding:0; box-shadow:none; }
+
+/* ===== M2b: سجل العمليات + وضع الصيانة ===== */
+.au-list{ display:grid; gap:10px; }
+.au-row{ padding:13px 16px; border-radius:16px; background:rgba(255,255,255,.04); border:1px solid var(--line); }
+.au-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.au-act{ font-weight:700; font-size:.95rem; }
+.au-when{ color:var(--tx-3); font-size:.78rem; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.au-meta{ display:flex; gap:16px; flex-wrap:wrap; margin-top:6px; color:var(--tx-2); font-size:.82rem; }
+.au-meta b{ color:var(--tx); font-weight:600; }
+.au-why{ margin-top:8px; padding:8px 12px; border-radius:11px; background:rgba(255,53,77,.08); border:1px solid var(--v-line); font-size:.86rem; }
+.mt-row{ display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; }
+.mt-st{ font-size:.95rem; }
+.ov-op .tg.ok{ color:#a7f3d0; background:rgba(52,211,153,.1); border-color:rgba(52,211,153,.3); }
+.ov-op .tg.bad{ color:#ffd0d5; background:rgba(255,53,77,.14); border-color:rgba(255,53,77,.4); }
+.ov-op .tg.info{ color:#e4e4e7; background:rgba(255,255,255,.08); border-color:var(--line-2); }
