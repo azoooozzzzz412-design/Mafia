@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <script src="i18n.js?v=24"></script>
+<script src="sec.js?v=26"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#050507">
 <meta name="robots" content="noindex">
@@ -209,6 +210,10 @@ document.addEventListener("DOMContentLoaded", function(){
   var teamId = (qs.get("t") || "").trim().slice(0, 40);
   var connected = /^[a-z0-9]{4,16}$/.test(room) && !!teamId;
   var localMode = !connected && qs.get("local") === "1";
+  /* (v26) الغرفة المحمية: باركود الفريق فيه سر الفريق (k) — نتحقق من رسائل الشاشة، ونتائجنا موقّعة (ما أحد يقدر يزيد نقاط فريق بالكذب) */
+  var KEY = (qs.get("k") || "").trim().toLowerCase();
+  var PROT = connected && /^[0-9a-f]{16,64}$/.test(KEY);
+  var ID = null, myKey = null, VQ = Promise.resolve(), SQ = Promise.resolve(), HOST = { sess: "", n: 0, t: 0 };
   var secParam = parseInt(qs.get("sec"), 10);
 
   var LS = "sahra-heads-v2";
@@ -559,14 +564,14 @@ document.addEventListener("DOMContentLoaded", function(){
       }
     } else {
       keepAwake();
-      if(connected && rt.client && !rt.on) rtRejoin(); else if(connected) send("hello", { team:teamId, pid:pid, role:"heads" });
+      if(connected && rt.client && !rt.on) rtRejoin(); else if(connected) sayHello();
     }
   });
   $("resumeBtn").addEventListener("click", function(){ G.resume = true; startFlow(); });
   $("quitBtn").addEventListener("click", function(){ G.resume = false; finishRound(false); });
 
   /* ===== الاتصال بشاشة الطاولة (Supabase Realtime) ===== */
-  var rt = { client:null, ch:null, on:false, err:false, teams:null, pending:null, tries:0, endT:null, acked:null, failed:false };
+  var rt = { client:null, ch:null, on:false, err:false, stale:false, teams:null, pending:null, tries:0, endT:null, acked:null, failed:false };
   var SB = null;
   if(typeof window.supabase !== "undefined" && window.supabase.createClient && window.SAHRA_SUPABASE_URL
      && window.SAHRA_SUPABASE_ANON_KEY && window.SAHRA_SUPABASE_URL.indexOf("xxxx") === -1){
@@ -575,35 +580,105 @@ document.addEventListener("DOMContentLoaded", function(){
       auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:false }
     });
   }
+  /* ===== (v26) هوية الجهاز بالغرفة المحمية (نفس صفحة الأزرار، بدور heads) ===== */
+  var ID_KEY = "sahra-bz:" + room + ":" + teamId + ":heads";
+  function bzSaved(){ try{ var s = JSON.parse(localStorage.getItem(ID_KEY) || "null"); if(s && s.k === KEY && s.dev && s.token && s.cert && s.jwk && s.host_pk) return s; }catch(e){} return null; }
+  function bzJoin(){
+    var saved = bzSaved();
+    if(saved) return SahraSec.importPriv(saved.jwk).then(function(k){ ID = saved; myKey = k; pid = saved.dev; });
+    return SahraSec.genKeys().then(function(kp){
+      return Promise.all([SahraSec.exportPriv(kp.privateKey), SahraSec.exportPub(kp.publicKey)]);
+    }).then(function(r){
+      return SB.rpc("buzz_join", { p_room: room, p_team: teamId, p_key: KEY, p_pk: r[1], p_role: "heads" }).then(function(res){
+        var d = res && res.data;
+        if(!d || res.error || !d.ok){ var e = new Error((d && d.err) || "net"); e.code = (d && d.err) || "net"; throw e; }
+        ID = { k: KEY, dev: d.dev, token: d.token, cert: d.cert, jwk: r[0], host_pk: d.host_pk };
+        try{ localStorage.setItem(ID_KEY, JSON.stringify(ID)); }catch(e){}
+        return SahraSec.importPriv(r[0]).then(function(k){ myKey = k; pid = ID.dev; });
+      });
+    });
+  }
+  function fromHost(env, fn){
+    if(rt.stale) return;
+    if(!PROT){
+      /* (v26) باركود بدون سر الفريق والشاشة محمية (رسائلها موقّعة): الرابط قديم */
+      if(env && typeof env.j === "string" && typeof env.s === "string"){ rtStale(); return; }
+      fn(env); return;
+    }
+    if(!env || typeof env.j !== "string" || typeof env.s !== "string" || !ID) return;
+    VQ = VQ.then(function(){ return SahraSec.verify(ID.host_pk, env.j, env.s); }).then(function(ok){
+      if(!ok) return;
+      var p = null; try{ p = JSON.parse(env.j); }catch(e){ return; }
+      if(!p || p._r !== room) return;
+      if(p._s === HOST.sess){ if(!(p._n > HOST.n)) return; }
+      else if(HOST.sess && !(p._t >= HOST.t)) return;
+      HOST.sess = p._s; HOST.n = p._n; HOST.t = p._t;
+      fn(p);
+    }, function(){});
+  }
+  function sendSigned(event, obj){
+    if(!PROT) return send(event, obj);
+    if(!rt.ch || !rt.on || !ID || !myKey) return false;
+    obj._r = room; obj._t = Date.now();
+    var j = JSON.stringify(obj);
+    SQ = SQ.then(function(){ return SahraSec.sign(myKey, j); }).then(function(s){ send(event, { j: j, s: s, c: ID.cert }); }, function(){});
+    return true;
+  }
+  function sayHello(){ sendSigned("hello", { team:teamId, pid:pid, role:"heads" }); }
+
   function rtStart(){
     if(!connected) return;
     if(!SB){ rt.err = true; renderTeamBadge(); return; }
     rt.client = SB;
+    if(PROT){
+      if(!window.SahraSec || !SahraSec.ok){ rt.err = true; renderTeamBadge(); return; }
+      var tries = 0;
+      var go = function(){
+        bzJoin().then(rtJoin, function(e){
+          var c = e && e.code;
+          if(c === "bad_key" || c === "no_room" || c === "bad_team"){ try{ localStorage.removeItem(ID_KEY); }catch(x){} rtStale(); return; }
+          tries++; setTimeout(go, Math.min(8000, 1500 * tries));
+        });
+      };
+      go();
+      return;
+    }
     rtJoin();
   }
+  /* (v26) الباركود قديم: نوقف الاتصال (اللعب نفسه يكمل بالجوال، والنقاط تنحسب يدوي) */
+  function rtStale(){
+    rt.stale = true; rt.err = true;
+    var o = rt.ch; rt.ch = null; rt.on = false;
+    if(o){ try{ rt.client.removeChannel(o); }catch(e){} }
+    renderTeamBadge();
+  }
   function rtJoin(){
+    if(rt.stale || (PROT && !myKey)) return;   /* (v26) بالغرفة المحمية: ما نتصل قبل ما ناخذ هوية الجهاز */
+    if(rt.ch){ var o = rt.ch; rt.ch = null; rt.on = false; try{ rt.client.removeChannel(o); }catch(e){} }   /* قناة وحدة بس، دايمًا */
     var c = rt.client.channel("sahra-buzz-" + room, { config: { broadcast: { self:false } } });
     c.on("broadcast", { event:"state" }, function(m){
       if(rt.ch !== c) return;
-      var p = m && m.payload;
-      if(p && Array.isArray(p.teams)){ rt.teams = p.teams; renderTeamBadge(); }
+      fromHost(m && m.payload, function(p){
+        if(p && Array.isArray(p.teams)){ rt.teams = p.teams; renderTeamBadge(); }
+      });
     });
     c.on("broadcast", { event:"headsTurn" }, function(m){
       if(rt.ch !== c) return;
-      takeTurn(m && m.payload);
+      fromHost(m && m.payload, takeTurn);
     });
     c.on("broadcast", { event:"headsAck" }, function(m){
       if(rt.ch !== c) return;
-      var p = m && m.payload;
-      if(!p || !rt.pending || p.rid !== rt.pending.rid) return;
-      rt.acked = p; rt.pending = null; clearTimeout(rt.endT);
-      renderAck();
+      fromHost(m && m.payload, function(p){
+        if(!p || !rt.pending || p.rid !== rt.pending.rid) return;
+        rt.acked = p; rt.pending = null; clearTimeout(rt.endT);
+        renderAck();
+      });
     });
     c.subscribe(function(s){
       if(rt.ch !== c) return;
       if(s === "SUBSCRIBED"){
         rt.on = true;
-        send("hello", { team:teamId, pid:pid, role:"heads" });
+        sayHello();
         if(rt.pending){ rt.tries = 0; sendEnd(); }
       } else if(s === "CHANNEL_ERROR" || s === "TIMED_OUT" || s === "CLOSED"){ rt.on = false; }
       renderTeamBadge();
@@ -624,7 +699,7 @@ document.addEventListener("DOMContentLoaded", function(){
     if(!connected) return false;
     payload.team = teamId; payload.pid = pid;
     if(!payload.rid) payload.rid = G.rid;
-    return send("heads", payload);
+    return sendSigned("heads", payload);   /* (v26) بالغرفة المحمية: موقّع، والشاشة تاخذ الفريق من شهادة الجهاز */
   }
   function sendEnd(){
     if(!rt.pending) return;
@@ -651,7 +726,8 @@ document.addEventListener("DOMContentLoaded", function(){
     }
     if(!connected){ b.hidden = true; b2.hidden = true; $("teamStrip").hidden = true; return; }
     var t = teamInfo();
-    var status = rt.err ? "⚠️ إعدادات الاتصال ناقصة — النقاط تنحسب يدوي"
+    var status = rt.stale ? "⚠️ هذا الفريق مو موجود بالشاشة — امسح الباركود من جديد"
+      : rt.err ? "⚠️ إعدادات الاتصال ناقصة — النقاط تنحسب يدوي"
       : !rt.on ? "⏳ نتصل بشاشة الطاولة…"
       : !rt.teams ? "⏳ ننتظر شاشة الطاولة… تأكد إنها مفتوحة على «حطها على راسك»"
       : t ? "📺 متصل بالشاشة — النقاط تنضاف لفريقك لحالها"

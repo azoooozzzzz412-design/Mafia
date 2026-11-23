@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <script src="i18n.js?v=24"></script>
+<script src="sec.js?v=26"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#050507">
@@ -248,6 +249,12 @@ document.addEventListener("DOMContentLoaded", function(){
   var qs = new URLSearchParams(location.search);
   var room = (qs.get("r") || "").trim().toLowerCase();
   var teamId = (qs.get("t") || "").trim();
+  /* (v26) الغرفة المحمية: باركود الفريق فيه سر الفريق (k). بدونه = شاشة قديمة، فنشتغل بالطريقة القديمة.
+     ومعه: لازم نتحقق من كل رسالة من الشاشة، والضغطة تروح لقاعدة البيانات بس (ما فيه طريقة قديمة كاحتياط) */
+  var KEY = (qs.get("k") || "").trim().toLowerCase();
+  var PROT = /^[0-9a-f]{16,64}$/.test(KEY);
+  var ID = null, myKey = null, VQ = Promise.resolve(), SQ = Promise.resolve(), HOST = { sess: "", n: 0, t: 0 };
+  var DEAD = false;   /* (v26) رسالة نهائية (باركود قديم / متصفح قديم): نوقف الاتصال والعرض عشان ما ينكتب فوقها */
   var $ = function(id){ return document.getElementById(id); };
   var els = { team:$("team"), teamName:$("teamName"), conn:$("conn"), connText:$("connText"),
               btn:$("btn"), msg:$("msg"), sub:$("sub"), reload:$("reload"), big:$("bigEmoji"), foot:$("foot"),
@@ -279,7 +286,11 @@ document.addEventListener("DOMContentLoaded", function(){
   els.reload.addEventListener("click", function(){ location.reload(); });
 
   function fatal(emoji, msg, sub){
+    DEAD = true;
+    if(ch){ var o = ch; ch = null; try{ client.removeChannel(o); }catch(e){} }
     els.btn.hidden = true;
+    [els.nameForm, els.qcard, els.clock, els.pen, els.mq].forEach(function(e){ if(e) e.hidden = true; });   /* (v26) لو كان فيه شي ظاهر قبل (اسم، سؤال…) نخفيه */
+    els.msg.hidden = false; els.sub.hidden = false;
     els.big.hidden = false; els.big.textContent = emoji;
     els.msg.textContent = msg; els.sub.textContent = sub || "";
     els.conn.hidden = true; els.team.hidden = true;
@@ -303,14 +314,67 @@ document.addEventListener("DOMContentLoaded", function(){
     auth: { persistSession:false, autoRefreshToken:false, detectSessionInUrl:false }
   });
 
+  /* ===== (v26) هوية الجهاز بالغرفة المحمية ===== */
+  var ID_KEY = "sahra-bz:" + room + ":" + teamId;
+  function bzSaved(){ try{ var s = JSON.parse(localStorage.getItem(ID_KEY) || "null"); if(s && s.k === KEY && s.dev && s.token && s.cert && s.jwk && s.host_pk) return s; }catch(e){} return null; }
+  /* ندخل الغرفة بسر الفريق: قاعدة البيانات تعطينا رمز جهاز (تحفظ بصمته بس) وشهادة تربطنا بفريقنا ومفتاح الشاشة العام */
+  function bzJoin(fresh){
+    var saved = fresh ? null : bzSaved();
+    if(saved) return SahraSec.importPriv(saved.jwk).then(function(k){ ID = saved; myKey = k; pid = saved.dev; });
+    return SahraSec.genKeys().then(function(kp){
+      return Promise.all([SahraSec.exportPriv(kp.privateKey), SahraSec.exportPub(kp.publicKey)]);
+    }).then(function(r){
+      return client.rpc("buzz_join", { p_room: room, p_team: teamId, p_key: KEY, p_pk: r[1], p_role: "buzz" }).then(function(res){
+        var d = res && res.data;
+        if(!d || res.error || !d.ok){ var e = new Error((d && d.err) || "net"); e.code = (d && d.err) || "net"; throw e; }
+        ID = { k: KEY, dev: d.dev, token: d.token, cert: d.cert, jwk: r[0], host_pk: d.host_pk };
+        try{ localStorage.setItem(ID_KEY, JSON.stringify(ID)); }catch(e){}
+        return SahraSec.importPriv(r[0]).then(function(k){ myKey = k; pid = ID.dev; });
+      });
+    });
+  }
+  /* رسالة من الشاشة: نتحقق من توقيعها بمفتاح الشاشة (من قاعدة البيانات)، ومن ترتيبها (ما نقبل رسالة قديمة تنعاد) */
+  function fromHost(env, fn){
+    if(DEAD) return;
+    if(!PROT){
+      /* باركود بدون سر الفريق والشاشة محمية (رسائلها موقّعة): الرابط قديم — نطلب مسح الباركود الجديد */
+      if(env && typeof env.j === "string" && typeof env.s === "string"){
+        fatal("📷", "الباركود هذا قديم", "المقدّم سوّى باركود جديد — امسح باركود فريقك من الشاشة من جديد.");
+        return;
+      }
+      fn(env); return;
+    }
+    if(!env || typeof env.j !== "string" || typeof env.s !== "string" || !ID) return;
+    VQ = VQ.then(function(){ return SahraSec.verify(ID.host_pk, env.j, env.s); }).then(function(ok){
+      if(!ok) return;
+      var p = null; try{ p = JSON.parse(env.j); }catch(e){ return; }
+      if(!p || p._r !== room) return;
+      if(p._s === HOST.sess){ if(!(p._n > HOST.n)) return; }
+      else if(HOST.sess && !(p._t >= HOST.t)) return;
+      HOST.sess = p._s; HOST.n = p._n; HOST.t = p._t;
+      fn(p);
+    }, function(){});
+  }
+  /* رسالة منا للشاشة: موقّعة بمفتاحنا ومعها شهادتنا */
+  function sendSigned(event, obj){
+    if(!PROT) return send(event, obj);
+    if(!ch || S.conn !== "on" || !ID || !myKey) return false;
+    obj._r = room; obj._t = Date.now();
+    var j = JSON.stringify(obj);
+    SQ = SQ.then(function(){ return SahraSec.sign(myKey, j); }).then(function(s){ send(event, { j: j, s: s, c: ID.cert }); }, function(){});
+    return true;
+  }
+
   function setConn(c){ if(S.conn !== c){ S.conn = c; S.connSince = Date.now(); } }
   function connect(){
+    if(DEAD || (PROT && !myKey)) return;   /* (v26) بالغرفة المحمية: ما نتصل قبل ما ناخذ هوية الجهاز */
+    if(ch){ var old = ch; ch = null; try{ client.removeChannel(old); }catch(e){} }   /* قناة وحدة بس، دايمًا */
     setConn("connecting");
     var c = client.channel("sahra-buzz-" + room, {
       config: { broadcast: { self:false }, presence: { key:pid } }
     });
-    c.on("broadcast", { event:"state" }, function(m){ if(ch === c) onState(m && m.payload); });
-    c.on("broadcast", { event:"bye" }, function(){ if(ch === c){ S.lastSeen = 0; render(); } });   /* (v25) المقدّم طفّى الأزرار — «ننتظر الشاشة» على طول */
+    c.on("broadcast", { event:"state" }, function(m){ if(ch === c) fromHost(m && m.payload, onState); });
+    c.on("broadcast", { event:"bye" }, function(m){ if(ch === c) fromHost(m && m.payload, function(){ S.lastSeen = 0; render(); }); });   /* (v25) المقدّم طفّى الأزرار — «ننتظر الشاشة» على طول */
     c.subscribe(function(status){
       if(ch !== c) return;
       if(status === "SUBSCRIBED"){
@@ -325,6 +389,7 @@ document.addEventListener("DOMContentLoaded", function(){
     ch = c;
   }
   function reconnect(){
+    if(DEAD || (PROT && !myKey)) return;
     var old = ch; ch = null;
     if(old){ try{ client.removeChannel(old); }catch(e){} }
     connect();
@@ -337,14 +402,24 @@ document.addEventListener("DOMContentLoaded", function(){
       return true;
     }catch(e){ return false; }
   }
-  function hello(){ send("hello", { team:teamId, pid:pid }); }
+  function hello(){ if(PROT) sendSigned("hello", {}); else send("hello", { team:teamId, pid:pid }); }
   /* (v25) v: الشاشة تعرف إن هالجوال بالصفحة الجديدة (تخفف النبضة) · وما نعيد الإرسال إلا لو تغيّر شي فعلًا
      (force: بعد كل اشتراك جديد بالقناة — السيرفر نسي اللي قبله) */
   function track(force){
     if(!ch || S.conn !== "on") return;
-    var meta = { team:teamId, pid:pid, name:myName, mic: R && R.ok ? 1 : 0, v:25 }, k = JSON.stringify(meta);
+    var meta = { team:teamId, pid:pid, name:myName, mic: R && R.ok ? 1 : 0, v:26 }, k = JSON.stringify(meta);
     if(!force && ch.__tk === k) return;
     ch.__tk = k;
+    var c = ch;
+    if(PROT){   /* (v26) حضورنا موقّع: الشاشة ما تعرض اسم لاعب إلا من جهاز مربوط بفريقه */
+      if(!ID || !myKey) return;
+      var j = JSON.stringify({ name: myName, mic: meta.mic, v: 26, _r: room, _t: Date.now() });
+      SQ = SQ.then(function(){ return SahraSec.sign(myKey, j); }).then(function(s){
+        if(ch !== c) return;
+        try{ var p = c.track({ j: j, s: s, c: ID.cert }); if(p && p.catch) p.catch(function(){}); }catch(e){}
+      }, function(){});
+      return;
+    }
     try{ var p = ch.track(meta); if(p && p.catch) p.catch(function(){}); }catch(e){}
   }
 
@@ -600,7 +675,7 @@ document.addEventListener("DOMContentLoaded", function(){
       (function(c, part){
         setTimeout(function(){
           var m = {}; for(var key in head) m[key] = head[key];
-          m.i = c; m.d = part; send("rp", m);
+          m.i = c; m.d = part; sendSigned("rp", m);   /* (v26) بالغرفة المحمية: موقّع، والشاشة تقبله من جهاز الفائز بس */
         }, c * 40);
       })(c, b64(u.subarray(c * RP_CH, Math.min(n, (c + 1) * RP_CH))));
     }
@@ -815,6 +890,7 @@ document.addEventListener("DOMContentLoaded", function(){
 
   var LAST = "", LASTV = "";
   function render(){
+    if(DEAD) return;
     var v = view(), me = myTeam();
     var color = me && me.color ? me.color : "#958bb0";
     document.body.style.setProperty("--c", color);
@@ -984,10 +1060,10 @@ document.addEventListener("DOMContentLoaded", function(){
     unlockAudio(); keepAwake();
     if(!mqCanAct(m)) return;
     if(m.phase === "pick"){
-      if(!send("mpick", { team:teamId, pid:pid, name:myName, qid:m.qid, c:c })) return;
+      if(!sendSigned("mpick", { team:teamId, pid:pid, name:myName, qid:m.qid, c:c })) return;
       S.mqSent = { qid:m.qid, c:c };
     } else if(m.phase === "vote"){
-      if(!send("mvote", { team:teamId, pid:pid, qid:m.qid, c:c })) return;
+      if(!sendSigned("mvote", { team:teamId, pid:pid, qid:m.qid, c:c })) return;
       S.mqVote = { qid:m.qid, c:c };
     }
     vibrate(30); clickSound();
@@ -1001,10 +1077,33 @@ document.addEventListener("DOMContentLoaded", function(){
     if(e && e.cancelable) e.preventDefault();
     unlockAudio(); keepAwake();
     if(view() !== "armed") return;
-    if(!send("buzz", { team:teamId, qid:S.host.qid, pid:pid, name:myName })) return;
+    if(!(PROT ? pressDb() : send("buzz", { team:teamId, qid:S.host.qid, pid:pid, name:myName }))) return;
     S.pressedQid = S.host.qid; S.pressedAt = Date.now();
     vibrate(40); clickSound();
     render();
+  }
+  /* (v26) الضغطة لقاعدة البيانات مع تذكرة الجولة من الشاشة. هي الحَكَم: أول ضغطة سليمة توصلها تفوز،
+     وتعلن الفوز للشاشة بنفسها. لو ما قدرت تعلن، الجوال الفائز يرسل الإيصال (والشاشة تتحقق منه) */
+  function pressDb(retried){
+    var tok = S.host && S.host.tok;
+    if(!tok || !ID || !client) return false;
+    client.rpc("buzz_press", { p_room: room, p_token: ID.token, p_tok: tok }).then(function(r){
+      var d = r && r.data;
+      if(!d) return;
+      if(d.ok === false && d.err === "bad_device" && !retried){   /* الجهاز انحذف (غرفة مليانة أو تجددت): ندخل من جديد ونعيد مرة */
+        try{ localStorage.removeItem(ID_KEY); }catch(e){}
+        bzJoin(true).then(function(){ if(S.host && S.host.tok && S.host.tok.slot === tok.slot){ track(true); pressDb(true); } }, function(){});
+        return;
+      }
+      if(d.won){
+        var rcpt = { slot: d.slot, team: d.team, dev: d.dev, at: d.at, mac: d.mac };
+        if(d.sent === false) send("win", rcpt);   /* قاعدة البيانات ما قدرت تعلن الفوز: نرسل الإيصال بنفسنا (الشاشة تتحقق منه) */
+        else setTimeout(function(){   /* أعلنت، بس لو الشاشة للحين ما قفلت الجولة بعد ثانية ونص (الرسالة ضاعت): نرسله بنفسنا */
+          if(S.host && S.host.tok && S.host.tok.slot === d.slot && S.host.state === "armed") send("win", rcpt);
+        }, 1500);
+      }
+    }, function(){});
+    return true;
   }
   document.addEventListener("pointerdown", press, { passive:false });
   document.addEventListener("keydown", function(e){ if(e.key === " " || e.key === "Enter"){ press(e); } });
@@ -1074,8 +1173,29 @@ document.addEventListener("DOMContentLoaded", function(){
     render();
   }, 1000);
 
-  connect();
-  render();
+  /* (v26) الغرفة المحمية: ندخل بقاعدة البيانات أول (هوية الجهاز)، وبعدها نتصل */
+  if(PROT){
+    if(!window.SahraSec || !SahraSec.ok){
+      fatal("⚠️", "متصفح جوالك قديم", "حدّث المتصفح أو افتح الباركود بمتصفح ثاني (Chrome أو Safari).");
+    } else {
+      var tries = 0;
+      var start = function(){
+        bzJoin(false).then(function(){ connect(); render(); }, function(e){
+          var c = e && e.code;
+          if(c === "bad_key" || c === "no_room" || c === "bad_team"){
+            try{ localStorage.removeItem(ID_KEY); }catch(x){}
+            fatal("📷", "الباركود هذا قديم", "المقدّم سوّى باركود جديد — امسح باركود فريقك من الشاشة من جديد.");
+            return;
+          }
+          tries++; setTimeout(start, Math.min(8000, 1500 * tries));   /* انقطاع: نعيد المحاولة */
+        });
+      };
+      start(); render();
+    }
+  } else {
+    connect();
+    render();
+  }
 });
 </script>
 </body>

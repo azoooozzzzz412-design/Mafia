@@ -491,6 +491,13 @@
           auto: saved.buzz.auto !== false,
           rec: saved.buzz.rec === true
         };
+        /* (v26) الغرفة المحمية: سرها ومفتاح الشاشة وأسرار الفرق — بدونها كل تحديث للصفحة يسوي غرفة وباركود جديد */
+        var sb = saved.buzz;
+        if(sb.pv === 2 && /^[0-9a-f]{64}$/.test(sb.sec || "") && isObj(sb.hk) && typeof sb.hpk === "string" && isObj(sb.tk)){
+          var tk = {};
+          Object.keys(sb.tk).forEach(function(k){ if(/^[0-9a-f]{16}$/.test(sb.tk[k] || "")) tk[k] = sb.tk[k]; });
+          store.buzz.pv = 2; store.buzz.sec = sb.sec; store.buzz.hk = sb.hk; store.buzz.hpk = sb.hpk; store.buzz.tk = tk;
+        }
       }
       if(isObj(saved.ans)){
         store.ans = { auto: saved.ans.auto !== false };
@@ -2325,7 +2332,11 @@
                only:null, onlyEnd:0, onlyT:null,                           /* فرصة الفريق الخصم بعد ما يخلص الوقت */
                decide:false, twhy:null, ok:null,
                span:0, lastTick:-1, pmic:{}, micPids:{},                   /* (v12) مدة العدّاد كاملة · آخر تيك بآخر 3 ثواني */                         /* (v10) خلص الوقت والمقدّم يقرر صح/غلط · ليش رجع الزر للخصم · آخر «✅ صح» */
-               sendQ:0, sendQT:null, beatAt:0, oldPhones:false, chk:null, sig:"" };   /* (v25) جمع الإرسال · وقت آخر نبضة · فيه جوال بالصفحة القديمة؟ · فحص التغيير كل ثانية · بصمة آخر حالة انرسلت */
+               sendQ:0, sendQT:null, beatAt:0, oldPhones:false, chk:null, sig:"",   /* (v25) جمع الإرسال · وقت آخر نبضة · فيه جوال بالصفحة القديمة؟ · فحص التغيير كل ثانية · بصمة آخر حالة انرسلت */
+               /* (v26) الغرفة المحمية: محمية؟ · انحسم؟ · مفتاح الشاشة · جلسة الصفحة وتسلسل رسائلها · تذكرة جولة الضغط ·
+                  شهادات الأجهزة اللي تحققنا منها · أسماء الأجهزة · طوابير التوقيع والتحقق (عشان الترتيب) · جولة الفائز الحالي */
+               pv:false, pvDone:false, pvBusy:false, hostKey:null, sess:"", seq:0, tok:null, tokP:null, tokKey:"", lastSent:"",
+               certs:{}, names:{}, metaOk:{}, sigQ:Promise.resolve(), verQ:Promise.resolve(), winSlot:"" };
   var buzzEls = {
     openBtn: document.getElementById("buzzOpenBtn"),
     homeBtn: document.getElementById("buzzHomeBtn"),
@@ -2349,8 +2360,12 @@
   }
   function buzzTeamUrl(t){
     var base = location.origin + location.pathname.replace(/[^\/]*$/, "");
-    return base + "buzz.html?r=" + encodeURIComponent(store.buzz.room) + "&t=" + encodeURIComponent(t.id) + (window.SAHRA_LANG === "en" ? "&lang=en" : "");   /* (v24) الجوال بنفس لغة الشاشة */
+    return base + "buzz.html?r=" + encodeURIComponent(store.buzz.room) + "&t=" + encodeURIComponent(t.id) + bzKeyParam(t) + (window.SAHRA_LANG === "en" ? "&lang=en" : "");   /* (v24) الجوال بنفس لغة الشاشة */
   }
+  /* (v26) بالغرفة المحمية: باركود كل فريق فيه سر الفريق (k) — بدونه ما يقدر جوال يدخل باسم هالفريق */
+  /* (v26) لين ما نحسم الغرفة محمية ولا لا: لا باركود ولا رابط نسخ (عشان ما يطلع رابط بدون سر الفريق) */
+  function bzLinkWait(){ return !buzz.pvDone && buzz.status !== "error"; }
+  function bzKeyParam(t){ var k = buzz.pv && store.buzz.tk ? store.buzz.tk[t.id] : ""; return k ? "&k=" + k : ""; }
   function buzzActive(){ return buzz.status === "on" || buzz.status === "connecting"; }
   function buzzCleanName(n){ return String(n || "").replace(/\s+/g, " ").trim().slice(0, 20); }
   /* (v25) الإرسال: أي تغيير ينرسل فورًا مثل قبل، بس الطلبات اللي تصير بنفس اللحظة تطلع برسالة وحدة فيها آخر حالة */
@@ -2383,6 +2398,7 @@
     buzz.sendQ = 0; clearTimeout(buzz.sendQT); buzz.sendQT = null;
     if(!buzz.channel || buzz.status !== "on") return;
     buzz.beatAt = Date.now(); buzzHbArm();
+    if(buzz.pv){ bzFlushSigned(); return; }   /* (v26) الغرفة المحمية: الحالة موقّعة ومعها تذكرة جولة الضغط */
     try{
       var p = buzzPayload();
       buzz.sig = buzzSig(p);
@@ -2442,6 +2458,131 @@
       o.connect(g); g.connect(a.destination); o.start(t0); o.stop(t0 + 0.45);
     }catch(e){}
   }
+  /* ======================================================================
+     (v26) «أسرع إصبع» المحمي — قاعدة البيانات هي الحَكَم (sql/08_v26_buzz_secure.sql)
+     - الغرفة تنفتح بقاعدة البيانات باسم حساب المقدّم، ومعها سر الغرفة ومفتاح الشاشة العام.
+     - باركود كل فريق فيه سر الفريق (k)، والجوال ياخذ فيه هوية جهاز مربوطة بفريقه.
+     - الضغطة تروح لقاعدة البيانات مع «تذكرة الجولة» (HMAC بسر الغرفة)، وأول ضغطة سليمة تفوز.
+       والفوز يوصل الشاشة من قاعدة البيانات مباشرة («win» + إيصال HMAC).
+     - رسائل الشاشة موقّعة، ورسائل الجوالات موقّعة ومعها شهادة الجهاز. أي رسالة بدون توقيع سليم تنرمى.
+       والضغطة القديمة (بدون قاعدة البيانات) ما تنقبل أبد بالغرفة المحمية.
+     - لو ملف SQL ما انشغّل للحين: الأزرار تشتغل بالطريقة القديمة (مثل v25) لين ينشغّل.
+     ====================================================================== */
+  function bzMissingFn(err){ var m = String((err && (err.message || "")) || "") + " " + String((err && err.code) || ""); return /PGRST202|Could not find the function|does not exist|42883/.test(m); }
+  function buzzSecure(tries){
+    var B = store.buzz; tries = tries | 0;
+    if(!window.SahraSec || !SahraSec.ok || !sharedSb) return Promise.resolve(false);
+    var fresh = !(B.pv === 2 && B.sec && B.hk && B.hpk && B.room);
+    var keys = fresh
+      ? SahraSec.genKeys().then(function(kp){ return Promise.all([SahraSec.exportPriv(kp.privateKey), SahraSec.exportPub(kp.publicKey)]); }).then(function(r){ return { jwk: r[0], pub: r[1] }; })
+      : Promise.resolve({ jwk: B.hk, pub: B.hpk });
+    return keys.then(function(k){
+      var room = fresh ? buzzRoomGen() : B.room, sec = fresh ? SahraSec.randHex(32) : B.sec, tk = fresh ? {} : Object.assign({}, B.tk || {});
+      var ts = store.teams.filter(function(t){ return /^[a-z0-9_-]{1,40}$/.test(t.id); }).slice(0, 12);
+      ts.forEach(function(t){ if(!/^[0-9a-f]{16}$/.test(tk[t.id] || "")) tk[t.id] = SahraSec.randHex(8); });
+      return Promise.all(ts.map(function(t){ return SahraSec.sha256Hex(tk[t.id]).then(function(h){ return { id: t.id, kh: h }; }); }))
+        .then(function(teams){ return sharedSb.rpc("buzz_room_open", { p_room: room, p_secret: sec, p_host_pk: k.pub, p_teams: teams }); })
+        .then(function(r){
+          if(r && r.error){
+            if(bzMissingFn(r.error) || /not_signed_in/.test(r.error.message || "")) return false;   /* SQL v26 ما انشغّل للحين: الطريقة القديمة */
+            if(/room_taken/.test(r.error.message || "") && tries < 3){ B.pv = 0; buzz.reissued = true; return buzzSecure(tries + 1); }   /* الغرفة لحساب ثاني بنفس المتصفح (أو رقم مكرر): غرفة جديدة */
+            throw r.error;
+          }
+          B.room = room; B.sec = sec; B.hk = k.jwk; B.hpk = k.pub; B.tk = tk; B.pv = 2; persist();
+          return SahraSec.importPriv(k.jwk).then(function(key){ buzz.hostKey = key; return true; });
+        });
+    });
+  }
+  /* تذكرة جديدة لكل جولة ضغط: كل ما انفتحت الأزرار، أو تغيّر المستبعدين أو فرصة الخصم */
+  function bzNewTok(key){
+    var t = { slot: SahraSec.randHex(6), st: "armed", ex: buzz.excluded.slice(), on: buzz.only ? buzz.only.slice() : null };
+    buzz.tokKey = key; buzz.tok = null;
+    buzz.tokP = SahraSec.hmacHex(store.buzz.sec, SahraSec.tokStr(store.buzz.room, t)).then(function(m){ t.mac = m; buzz.tok = t; });
+  }
+  /* رسالة موقّعة من الشاشة: {j: النص, s: التوقيع}. الجوال يتحقق بمفتاح الشاشة اللي عطته إياه قاعدة البيانات */
+  function bzSendSignedNow(ch, event, obj, force){
+    if(!buzz.sess) buzz.sess = SahraSec.randHex(6);
+    obj._r = store.buzz.room; obj._s = buzz.sess; obj._n = ++buzz.seq; obj._t = Date.now();
+    var j = JSON.stringify(obj);
+    return SahraSec.sign(buzz.hostKey, j).then(function(s){
+      if(!force && (buzz.channel !== ch || buzz.status !== "on")) return;
+      var r = ch.send({ type:"broadcast", event:event, payload:{ j:j, s:s } }); if(r && r.catch) r.catch(function(){});
+    });
+  }
+  function bzSendSigned(event, obj){
+    var ch = buzz.channel; if(!ch) return;
+    buzz.sigQ = buzz.sigQ.then(function(){ if(buzz.channel === ch && buzz.status === "on") return bzSendSignedNow(ch, event, obj); }).catch(function(){});
+  }
+  function bzFlushSigned(){
+    var key = buzz.qid + "|" + buzz.excluded.join(",") + "|" + (buzz.only ? buzz.only.join(",") : "-");
+    if(buzz.state === "armed" && (buzz.lastSent !== "armed" || key !== buzz.tokKey)) bzNewTok(key);
+    buzz.lastSent = buzz.state;
+    var ch = buzz.channel;
+    buzz.sigQ = buzz.sigQ.then(function(){ return buzz.tokP; }).then(function(){
+      if(buzz.channel !== ch || buzz.status !== "on") return;
+      var p = buzzPayload();
+      buzz.sig = buzzSig(p);
+      p.tok = buzz.state === "armed" && buzz.tok ? buzz.tok : null;   /* الجوال يرسلها مع ضغطته لقاعدة البيانات */
+      return bzSendSignedNow(ch, "state", p);
+    }).catch(function(){});
+  }
+  /* شهادة الجهاز: قاعدة البيانات وقّعتها بسر الغرفة (الجهاز X تابع للفريق Y ومفتاحه Z) */
+  function bzCertOk(c){
+    if(!c || typeof c.dev !== "string" || typeof c.team !== "string" || typeof c.role !== "string" || typeof c.pk !== "string" || typeof c.mac !== "string") return Promise.resolve(false);
+    var k = c.dev + "|" + c.mac;
+    if(buzz.certs[k]) return Promise.resolve(true);
+    return SahraSec.hmacOk(store.buzz.sec, SahraSec.certStr(store.buzz.room, c), c.mac).then(function(ok){ if(ok) buzz.certs[k] = 1; return ok; });
+  }
+  /* رسالة جوال: {j, s, c}. الفريق والهوية من الشهادة دايمًا، مو من الرسالة */
+  function bzVerifyPhone(env){
+    if(!env || typeof env.j !== "string" || typeof env.s !== "string" || !env.c || env.j.length > 60000) return Promise.resolve(null);
+    var c = env.c;
+    return bzCertOk(c).then(function(okc){
+      if(!okc) return null;
+      return SahraSec.verify(c.pk, env.j, env.s).then(function(oks){
+        if(!oks) return null;
+        var p = null; try{ p = JSON.parse(env.j); }catch(e){ return null; }
+        if(!p || typeof p !== "object" || p._r !== store.buzz.room) return null;
+        p.team = c.team; p.pid = c.dev; p.role = c.role;
+        return p;
+      });
+    });
+  }
+  function bzFromPhone(m, fn){
+    var env = m && m.payload;
+    buzz.verQ = buzz.verQ.then(function(){ return bzVerifyPhone(env); }).then(function(p){ if(p) fn(p); }, function(){});
+  }
+  /* حضور الجوالات: نقبل بس الموقّع، والاسم والفريق منه */
+  function bzVerifyMeta(meta){
+    if(!meta || typeof meta.s !== "string") return Promise.resolve(null);
+    if(buzz.metaOk[meta.s]) return Promise.resolve(buzz.metaOk[meta.s]);
+    return bzVerifyPhone(meta).then(function(p){
+      if(!p) return null;
+      var v = { team: p.team, pid: p.pid, name: p.name, mic: p.mic ? 1 : 0, v: +p.v || 0 };
+      buzz.metaOk[meta.s] = v; buzz.names[p.pid] = buzzCleanName(p.name);
+      return v;
+    });
+  }
+  /* الفوز من قاعدة البيانات (أو من جوال الفائز لو الخدمة ما وصّلته): الإيصال لازم يكون بسر الغرفة */
+  function bzOnWin(w){
+    if(!w || typeof w !== "object" || typeof w.slot !== "string" || typeof w.team !== "string" || typeof w.dev !== "string" || !(+w.at > 0) || typeof w.mac !== "string") return;
+    buzz.verQ = buzz.verQ.then(function(){ return SahraSec.hmacOk(store.buzz.sec, SahraSec.winStr(store.buzz.room, w), w.mac); }).then(function(ok){
+      if(!ok || buzz.state !== "armed" || !buzz.tok || buzz.tok.slot !== w.slot) return;   /* جولة قديمة، أو الأزرار انقفلت */
+      var team = teamOf(w.team);
+      if(!team || buzz.excluded.indexOf(team.id) !== -1 || (buzz.only && buzz.only.indexOf(team.id) === -1)) return;
+      buzz.winSlot = w.slot;
+      buzzTakeWinner(team, buzz.names[w.dev] || "", w.dev);
+      setTimeout(function(){ bzLate(w.slot, w.dev); }, 1200);   /* خانة «مين ضغط»: اللي ضغطوا بعده، بترتيب قاعدة البيانات */
+      setTimeout(function(){ bzLate(w.slot, w.dev); }, 4000);
+    }, function(){});
+  }
+  function bzLate(slot, winDev){
+    if(buzz.winSlot !== slot || !sharedSb) return;
+    sharedSb.rpc("buzz_presses_list", { p_room: store.buzz.room, p_slot: slot }).then(function(r){
+      if(!r || r.error || buzz.winSlot !== slot || !Array.isArray(r.data)) return;
+      r.data.forEach(function(x){ if(!x || x.dev === winDev) return; var t = teamOf(x.team); if(t) buzzLogAdd(t, buzz.names[x.dev] || "", x.dev, "late", Math.max(0, +x.d || 0)); });
+    }, function(){});
+  }
   function buzzConnect(){               /* تشغيل «أسرع إصبع» (يطلع شريط الأزرار) */
     store.buzz.enabled = true; persist();
     rtConnect(); renderBuzzUI();
@@ -2458,6 +2599,25 @@
     if(typeof window.supabase === "undefined" || !window.supabase.createClient || !window.SAHRA_SUPABASE_URL){
       buzz.status = "error"; renderBuzzUI(); return;
     }
+    /* (v26) قبل ما نفتح القناة: نحسم الغرفة محمية ولا لا (مرة وحدة بالصفحة) */
+    buzz.wantRt = true;
+    if(!buzz.pvDone){
+      buzz.status = "connecting"; renderBuzzUI();
+      if(buzz.pvBusy) return;
+      buzz.pvBusy = true;
+      var hadOld = !!store.buzz.room && store.buzz.pv !== 2;
+      buzzSecure().then(function(ok){
+        buzz.pvBusy = false; buzz.pvDone = true; buzz.pv = !!ok;
+        if(ok && (hadOld || buzz.reissued) && store.buzz.enabled) toast("📱 باركود جديد للأزرار (صار محمي) — خلّوا الفرق يمسحونه من جديد");
+        if(!buzzEls.panel.hidden) renderBuzzPanel();   /* الباركود (مع سر الفريق) يطلع الحين */
+        if(headsVisible()) renderHeadsGrid();
+        if(buzz.wantRt) rtConnect();
+      }, function(){
+        buzz.pvBusy = false;   /* انقطاع: نعيد المحاولة */
+        setTimeout(function(){ if(buzz.wantRt && !buzz.channel && !buzz.pvDone) rtConnect(); }, 4000);
+      });
+      return;
+    }
     if(!store.buzz.room){ store.buzz.room = buzzRoomGen(); persist(); }
     if(!buzz.client){
       buzz.client = sharedSb || window.supabase.createClient(window.SAHRA_SUPABASE_URL, window.SAHRA_SUPABASE_ANON_KEY, {
@@ -2468,30 +2628,46 @@
     var ch = buzz.client.channel("sahra-buzz-" + store.buzz.room, {
       config: { broadcast: { self:false }, presence: { key:"host" } }
     });
-    ch.on("broadcast", { event:"buzz" }, function(m){ onBuzz((m && m.payload) || {}); });
+    var PV = buzz.pv;   /* (v26) غرفة محمية: كل رسالة جوال لازم تكون موقّعة، والضغطة القديمة ما تنقبل */
+    var pay = function(m){ return (m && m.payload) || {}; };
+    ch.on("broadcast", { event:"buzz" }, function(m){ if(!PV) onBuzz(pay(m)); });
+    ch.on("broadcast", { event:"win" }, function(m){ if(PV) bzOnWin(pay(m)); });
     ch.on("broadcast", { event:"hello" }, function(m){
+      if(PV){
+        var hp = pay(m);
+        if(typeof hp.j !== "string"){   /* hello بدون توقيع = جوال بباركود قديم (بدون سر الفريق): نرسل الحالة (الموقّعة) مرة كل 5 ثواني عشان يعرف إنه لازم يمسح الباركود الجديد */
+          var nowH = Date.now();
+          if(nowH - (buzz.oldHelloAt || 0) > 5000){ buzz.oldHelloAt = nowH; buzzSendSoon(); }
+          return;
+        }
+        bzFromPhone(m, function(p){ buzzSendSoon(); if(p.role === "heads") headsSendTurn(p.team); }); return;
+      }
       buzzSendSoon();
-      var p = (m && m.payload) || {};
+      var p = pay(m);
       if(p.role === "heads" && typeof p.team === "string") headsSendTurn(p.team);
     });
-    ch.on("broadcast", { event:"heads" }, function(m){ onHeads((m && m.payload) || {}); });
-    ch.on("broadcast", { event:"mpick" }, function(m){ onMillionPick((m && m.payload) || {}); });
-    ch.on("broadcast", { event:"mvote" }, function(m){ onMillionVote((m && m.payload) || {}); });
-    ch.on("broadcast", { event:"rp" }, function(m){ recPhoneChunk((m && m.payload) || {}); });   /* (v12) 🔁 مقطع الإعادة من جوال اللي ضغط */
-    ch.on("broadcast", { event:"rope" }, function(m){ if(RP.host) RP.host.netMsg((m && m.payload) || {}); });
-    ch.on("presence", { event:"sync" }, function(){
-      var st = ch.presenceState(), per = {}, mic = {}, micP = {}, old = false;
-      Object.keys(st).forEach(function(k){
-        (st[k] || []).forEach(function(meta){
-          if(!meta || !meta.team) return;
-          if(!(+meta.v >= 25)) old = true;                                   /* (v25) جوال فاتح الصفحة القديمة */
-          (per[meta.team] || (per[meta.team] = [])).push(buzzCleanName(meta.name) || "لاعب");
-          (mic[meta.team] || (mic[meta.team] = [])).push(!!meta.mic);           /* (v12) 🎙️ مايك الجوال جاهز للإعادة */
-          if(meta.mic && typeof meta.pid === "string") micP[meta.pid] = true;
-        });
+    ch.on("broadcast", { event:"heads" }, function(m){ if(PV) bzFromPhone(m, onHeads); else onHeads(pay(m)); });
+    ch.on("broadcast", { event:"mpick" }, function(m){ if(PV) bzFromPhone(m, onMillionPick); else onMillionPick(pay(m)); });
+    ch.on("broadcast", { event:"mvote" }, function(m){ if(PV) bzFromPhone(m, onMillionVote); else onMillionVote(pay(m)); });
+    ch.on("broadcast", { event:"rp" }, function(m){ if(PV) bzFromPhone(m, recPhoneChunk); else recPhoneChunk(pay(m)); });   /* (v12) 🔁 مقطع الإعادة من جوال اللي ضغط */
+    ch.on("broadcast", { event:"rope" }, function(m){ if(RP.host) RP.host.netMsg(pay(m)); });
+    var applyPres = function(metas){
+      var per = {}, mic = {}, micP = {}, old = false;
+      metas.forEach(function(meta){
+        if(!meta || !meta.team) return;
+        if(!(+meta.v >= 25)) old = true;                                   /* (v25) جوال فاتح الصفحة القديمة */
+        (per[meta.team] || (per[meta.team] = [])).push(buzzCleanName(meta.name) || "لاعب");
+        (mic[meta.team] || (mic[meta.team] = [])).push(!!meta.mic);           /* (v12) 🎙️ مايك الجوال جاهز للإعادة */
+        if(meta.mic && typeof meta.pid === "string") micP[meta.pid] = true;
       });
       buzz.presence = per; buzz.pmic = mic; buzz.micPids = micP; renderBuzzUI();
       if(old !== buzz.oldPhones){ buzz.oldPhones = old; buzzHbArm(); }   /* (v25) إيقاع النبضة يتغير على طول */
+    };
+    ch.on("presence", { event:"sync" }, function(){
+      var st = ch.presenceState(), metas = [];
+      Object.keys(st).forEach(function(k){ (st[k] || []).forEach(function(meta){ if(meta) metas.push(meta); }); });
+      if(!PV){ applyPres(metas); return; }
+      Promise.all(metas.map(bzVerifyMeta)).then(function(list){ if(buzz.channel === ch) applyPres(list.filter(Boolean)); }, function(){});
     });
     ch.subscribe(function(status){
       if(buzz.channel !== ch) return;
@@ -2504,15 +2680,22 @@
     clearInterval(buzz.chk); buzz.chk = setInterval(buzzCheck, 1000);
   }
   function buzzDisconnect(keepEnabled){
+    buzz.wantRt = false;
     if(buzz.sendQ) buzzFlush();               /* (v25) لو فيه إرسال بالانتظار يطلع قبل ما نقفل القناة (مثل قبل) */
     /* (v25) المقدّم طفّى الأزرار: الجوالات الجديدة تعرف على طول (النبضة صارت أبطأ، فما ننتظرها). القديمة تتجاهلها */
-    if(!keepEnabled && buzz.channel && buzz.status === "on"){ try{ buzz.channel.send({ type:"broadcast", event:"bye", payload:{ t:Date.now() } }); }catch(e){} }
+    var pvCh = buzz.pv && buzz.channel && buzz.status === "on" ? buzz.channel : null;
+    if(pvCh){
+      /* (v26) بالغرفة المحمية: الرسائل موقّعة، فنقفل القناة بعد ما يطلع اللي بالطابور و«bye» */
+      var qd = buzz.sigQ.then(function(){ if(!keepEnabled) return bzSendSignedNow(pvCh, "bye", {}, true); }).catch(function(){});
+      qd.then(function(){ try{ if(buzz.client) buzz.client.removeChannel(pvCh); }catch(e){} });
+    } else if(!keepEnabled && buzz.channel && buzz.status === "on"){ try{ buzz.channel.send({ type:"broadcast", event:"bye", payload:{ t:Date.now() } }); }catch(e){} }
     clearTimeout(buzz.hb); buzz.hb = null; clearInterval(buzz.chk); buzz.chk = null; buzz.sig = ""; buzzStopTimer(); buzzStopWindow(); buzz.q = null; buzz.tout = null; buzz.pens = {}; buzz.adds = {}; buzz.timeUp = false; tuHide();
     buzz.decide = false; buzz.twhy = null; buzz.ok = null; bdHide();
     recDiscard(); if(!keepEnabled) recRelease();
     buzz.only = null; buzz.onlyEnd = 0; buzzClearLog();
     var ch = buzz.channel; buzz.channel = null;
-    if(ch && buzz.client){ try{ buzz.client.removeChannel(ch); }catch(e){} }
+    if(ch && buzz.client && ch !== pvCh){ try{ buzz.client.removeChannel(ch); }catch(e){} }
+    buzz.tok = null; buzz.tokKey = ""; buzz.lastSent = ""; buzz.winSlot = "";
     buzz.status = "off"; buzz.state = "idle"; buzz.winner = null; buzz.winnerName = ""; buzz.winnerPid = null; buzz.excluded = []; buzz.presence = {}; buzz.pmic = {}; buzz.micPids = {}; buzz.oldPhones = false;
     if(!keepEnabled){ store.buzz.enabled = false; persist(); }
     renderBuzzUI();
@@ -2645,6 +2828,10 @@
     }
     if(buzz.state !== "armed") return;
     if(buzz.only && buzz.only.indexOf(team.id) === -1) return;   /* فرصة الخصم: الفريق اللي خلص وقته ينتظر */
+    buzzTakeWinner(team, name, pid);
+  }
+  /* الفائز (بالطريقة القديمة، أو (v26) من قاعدة البيانات بالغرفة المحمية) */
+  function buzzTakeWinner(team, name, pid){
     buzzStopWindow(); buzz.only = null; buzz.onlyEnd = 0;
     buzz.state = "locked"; buzz.winner = team.id; buzz.tout = null; buzz.timeUp = false;
     TTS.stop();
@@ -2657,14 +2844,14 @@
   }
   /* ===== خانة «مين ضغط»: كل ضغطة بالسؤال تنضاف بالترتيب، وتبقى لين ينحل السؤال ===== */
   function buzzClearLog(){ buzz.log = []; buzz.logPts = []; buzz.turn = 0; buzz.qStart = 0; buzz.logHidden = false; renderBuzzLog(); }
-  function buzzLogAdd(team, name, pid, st){
+  function buzzLogAdd(team, name, pid, st, dms){   /* dms: (v26) كم ملي ثانية بعد الفائز، من قاعدة البيانات */
     var now = Date.now(), i, r, first = null;
     for(i = buzz.log.length - 1; i >= 0; i--){ r = buzz.log[i]; if(r.turn === buzz.turn && r.st !== "late"){ first = r; break; } }
     if(st === "late"){
       for(i = 0; i < buzz.log.length; i++){ r = buzz.log[i]; if(r.turn === buzz.turn && (pid ? r.pid === pid : (r.team === team.id && r.name === name))) return; }
       if(buzz.log.length >= 40) return;
     }
-    buzz.log.push({ team: team.id, name: name, pid: pid, at: now, turn: buzz.turn, st: st, d: st === "late" && first ? now - first.at : 0, pen: 0 });
+    buzz.log.push({ team: team.id, name: name, pid: pid, at: now, turn: buzz.turn, st: st, d: st === "late" ? (dms != null ? dms : (first ? now - first.at : 0)) : 0, pen: 0 });
     buzz.logHidden = false;
     renderBuzzLog();
   }
@@ -3440,7 +3627,7 @@
     buzzEls.grid.querySelectorAll("[data-qr]").forEach(function(box){
       var t = teamOf(box.getAttribute("data-qr"));
       if(!t){ box.innerHTML = '<p class="bz-intro">تعذّر إنشاء الباركود</p>'; return; }
-      if(!needQR(renderBuzzPanel)){ box.innerHTML = qrWaitHtml(); return; }
+      if(!needQR(renderBuzzPanel) || bzLinkWait()){ box.innerHTML = qrWaitHtml(); return; }
       try{
         box.innerHTML = qrSvg(buzzTeamUrl(t), 4, 2);
       }catch(e){ box.innerHTML = '<p class="bz-intro">تعذّر إنشاء الباركود</p>'; }
@@ -3448,7 +3635,7 @@
     buzzEls.grid.querySelectorAll("[data-copy]").forEach(function(b){
       b.addEventListener("click", function(){
         var t = teamOf(b.getAttribute("data-copy"));
-        if(!t) return;
+        if(!t || bzLinkWait()) return;
         copyLink(buzzTeamUrl(t), "انسخ رابط " + t.name + " ✅");
       });
     });
@@ -3468,7 +3655,9 @@
   buzzEls.test.addEventListener("click", function(){ buzzUnlockAudio(); buzzArm("test:" + Date.now(), true); closeBuzzPanel(); toast("الأزرار مفتوحة — جرّبوا تضغطون 📱"); });
   buzzEls.newRoom.addEventListener("click", function(){
     buzzDisconnect(true);
-    store.buzz.room = buzzRoomGen(); persist();
+    store.buzz.room = buzzRoomGen();
+    if(buzz.pv){ store.buzz.pv = 0; buzz.pvDone = false; buzz.pv = false; buzz.certs = {}; buzz.metaOk = {}; buzz.names = {}; }   /* (v26) غرفة محمية جديدة بسر ومفاتيح جديدة */
+    persist();
     buzzConnect(); renderBuzzPanel();
     toast("باركود جديد — خلّوا الفرق يمسحونه من جديد");
   });
@@ -3476,6 +3665,8 @@
   function teamsChanged(){
     clearTimeout(buzz.sendT);
     buzz.sendT = setTimeout(function(){ buzzSend(); renderBuzzUI(); }, 300);
+    /* (v26) فريق جديد بالغرفة المحمية: نسجّل سر باركوده بقاعدة البيانات */
+    if(buzz.pv){ clearTimeout(buzz.regT); buzz.regT = setTimeout(function(){ buzzSecure().then(function(){ if(!buzzEls.panel.hidden) renderBuzzPanel(); if(headsVisible()) renderHeadsGrid(); }, function(){}); }, 800); }
     if(!document.getElementById("view-letters").hidden){ if(lettersActive()) lettersRender(); else lettersOpen(); }
     if(FL.cur && !flEls.award.hidden) renderFlagAward();
     if(headsVisible()){ renderHeadsGrid(); renderHeadsLive(); }
@@ -4351,7 +4542,7 @@
   function headsVisible(){ return !document.getElementById("view-heads").hidden; }
   function headsUrl(t){
     var base = location.origin + location.pathname.replace(/[^\/]*$/, "");
-    return base + "heads.html?r=" + encodeURIComponent(store.buzz.room) + "&t=" + encodeURIComponent(t.id) + (window.SAHRA_LANG === "en" ? "&lang=en" : "");   /* (v24) */
+    return base + "heads.html?r=" + encodeURIComponent(store.buzz.room) + "&t=" + encodeURIComponent(t.id) + bzKeyParam(t) + (window.SAHRA_LANG === "en" ? "&lang=en" : "");   /* (v24) · (v26) سر الفريق */
   }
   function hdInt(v, lo, hi){ v = Math.round(+v); if(!isFinite(v)) v = lo; return Math.max(lo, Math.min(hi, v)); }
   function hdPoints(n){
@@ -4361,6 +4552,8 @@
   }
   function rtSend(event, payload){
     if(!buzz.channel || buzz.status !== "on") return;
+    /* (v26) بالغرفة المحمية: رسائل «حطها على راسك» موقّعة. «مربوطين» (ropeS/ropeR) برا هالمرحلة، فتبقى مثل ما هي */
+    if(buzz.pv && event !== "ropeS" && event !== "ropeR"){ bzSendSigned(event, Object.assign({}, payload)); return; }
     try{ var p = buzz.channel.send({ type:"broadcast", event:event, payload:payload }); if(p && p.catch) p.catch(function(){}); }catch(e){}
   }
   function headsActive(){ var R = store.heads.round; return !!R && !R.done && isObj(store.heads.turns); }
@@ -4497,7 +4690,7 @@
       if(!t || !store.buzz.room){
         box.innerHTML = '<p class="bz-intro">' + (store.buzz.room ? "تعذّر إنشاء الباركود" : "جاري التجهيز…") + '</p>'; return;
       }
-      if(!needQR(renderHeadsGrid)){ box.innerHTML = qrWaitHtml(); return; }
+      if(!needQR(renderHeadsGrid) || bzLinkWait()){ box.innerHTML = qrWaitHtml(); return; }
       try{ box.innerHTML = qrSvg(headsUrl(t), 4, 2); }
       catch(e){ box.innerHTML = '<p class="bz-intro">تعذّر إنشاء الباركود</p>'; }
     });
@@ -4507,7 +4700,7 @@
     if(l){ headsPlayLocal(l.getAttribute("data-hdlocal")); return; }
     var b = e.target.closest("[data-hdcopy]"); if(!b) return;
     var t = teamOf(b.getAttribute("data-hdcopy"));
-    if(!t) return;
+    if(!t || bzLinkWait()) return;
     copyLink(headsUrl(t), "انسخ رابط " + t.name + " ✅");
   });
   hdEls.err.addEventListener("click", function(e){
