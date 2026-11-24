@@ -166,9 +166,9 @@
     var g = GAMES[game];
     shell("📦 استيراد المحتوى", '<div class="imp-row"><label class="field"><span>اللعبة</span><select class="input" id="impGame">' + ORDER.map(function(k){ return '<option value="' + k + '"' + (k === game ? " selected" : "") + '>' + esc(GAMES[k].ar) + '</option>'; }).join("") + '</select></label>'
       + '<label class="field"><span>لو فيه مكرر أو خطأ</span><select class="input" id="impMode"><option value="skip">أدخل الصالح وتجاهل المكرر والأخطاء</option><option value="stop">لا تدخل شي إلا لو الملف كله سليم</option></select></label></div>'
-      + '<p class="hint">الأعمدة: <b>' + g.head.map(esc).join(" · ") + '</b>. ' + esc(g.note) + ' الملف CSV أو JSON (حتى 5MB و20,000 صف)، أو الصق النص (من إكسل مثلًا).</p>'
+      + '<p class="hint">الأعمدة: <b>' + g.head.map(esc).join(" · ") + '</b>. ' + esc(g.note) + ' الملف CSV أو JSON (حتى 5MB و20,000 صف). <b>عندك ملف إكسل؟</b> احفظه من إكسل كـ «CSV UTF-8»، أو حدّد الخلايا وانسخها والصقها بالخانة تحت.</p>'
       + '<div class="imp-tpl"><button type="button" class="btn-ghost sm" id="impTplCsv">⬇️ قالب CSV</button><button type="button" class="btn-ghost sm" id="impTplJson">⬇️ قالب JSON</button><button type="button" class="btn-ghost sm" id="impHist">🧾 سجل الدفعات والتراجع</button></div>'
-      + '<label class="imp-drop" id="impDrop"><input type="file" id="impFile" accept=".csv,.json,.txt,text/csv,text/plain,application/json" hidden><b>اسحب الملف هنا أو اضغط للاختيار</b><small id="impFileName">ما انختار ملف</small></label>'
+      + '<label class="imp-drop" id="impDrop"><input type="file" id="impFile" hidden><b>اسحب الملف هنا أو اضغط للاختيار</b><small id="impFileName">ما انختار ملف</small></label>'
       + '<label class="field"><span>أو الصق النص هنا</span><textarea class="input" id="impPaste" rows="4" placeholder="' + esc(g.head.join(" | ")) + '"></textarea></label>'
       + '<div class="imp-prev" id="impPrev"></div><div class="err" id="impErr" hidden></div>'
       + '<div class="m-btns"><button class="btn-primary" id="impGo" type="button" disabled>تحليل</button><button class="btn-ghost" id="impClose" type="button">إغلاق</button></div>');
@@ -182,6 +182,8 @@
     function load(f){
       setErr("");
       if(!f) return;
+      if(/\.(xlsx|xlsm|xlsb|xls|ods|numbers)$/i.test(f.name)) return setErr("هذا ملف إكسل. افتحه بإكسل ← ملف ← حفظ باسم ← «CSV UTF-8 (محدد بفواصل)» وارفع الملف الجديد، أو حدّد الخلايا وانسخها والصقها بخانة النص تحت.");
+      if(/\.(zip|rar|7z|gz|pdf|docx?|exe|png|jpe?g|gif|webp)$/i.test(f.name)) return setErr("نوع الملف غير مدعوم — استخدم CSV أو JSON (أو الصق النص).");
       if(f.size > MAX_BYTES) return setErr("الملف أكبر من 5MB");
       if(f.type && !/^(text\/|application\/(json|vnd\.ms-excel|csv))/.test(f.type) && !/\.(csv|json|txt)$/i.test(f.name)) return setErr("نوع الملف غير مدعوم — استخدم CSV أو JSON");
       var rd = new FileReader(); rd.onerror = function(){ setErr("ما قدرت أقرا الملف"); };

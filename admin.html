@@ -308,8 +308,8 @@ if(window.top !== window.self){ var same = false; try{ same = window.top.locatio
 try{ var f = localStorage.getItem("sahra-admin-fx"); document.documentElement.setAttribute("data-fx", (f === "balanced" || f === "performance") ? f : "premium");
   var lg = localStorage.getItem("sahra-lang") === "en" ? "en" : "ar"; document.documentElement.lang = lg; document.documentElement.dir = lg === "en" ? "ltr" : "rtl";
   if(localStorage.getItem("sahra-admin-side") === "1") document.documentElement.classList.add("side-min"); }catch(e){}
-window.SAHRA_ADMIN_VER = "v31-m3a";</script>
-<link rel="stylesheet" href="admin-assets/admin.css?v=4">
+window.SAHRA_ADMIN_VER = "v32-m4a";</script>
+<link rel="stylesheet" href="admin-assets/admin.css?v=5">
 </head>
 <body class="adm-body">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
@@ -325,9 +325,9 @@ window.SAHRA_ADMIN_VER = "v31-m3a";</script>
       <button type="button" data-tab="overview" data-ic="home" data-lb="نظرة عامة"><svg viewBox="0 0 24 24"><use href="#ai-home"/></svg><span class="lb" data-ar="نظرة عامة" data-en="Overview">نظرة عامة</span></button>
       <button type="button" data-tab="users" data-ic="users" data-lb="الحسابات والعملاء"><svg viewBox="0 0 24 24"><use href="#ai-users"/></svg><span class="lb" data-ar="الحسابات والعملاء" data-en="Accounts &amp; customers">الحسابات والعملاء</span><span class="count" id="pendingCount" hidden></span></button>
       <button type="button" data-tab="sales" data-ic="cart" data-lb="الطلبات والمبيعات"><svg viewBox="0 0 24 24"><use href="#ai-cart"/></svg><span class="lb" data-ar="الطلبات والمبيعات" data-en="Orders &amp; sales">الطلبات والمبيعات</span><span class="count" id="trCount" hidden></span></button>
-      <button type="button" class="soon" disabled aria-disabled="true" data-ar-title="الباقات والأسعار — قريبًا" data-en-title="Packages &amp; prices — soon" title="الباقات والأسعار — قريبًا"><svg viewBox="0 0 24 24"><use href="#ai-layers"/></svg><span class="lb" data-ar="الباقات والأسعار" data-en="Packages &amp; prices">الباقات والأسعار</span><span class="soon-t" data-ar="قريبًا" data-en="Soon">قريبًا</span></button>
+            <button type="button" data-tab="packages" data-ic="layers" data-lb="الباقات والأسعار"><svg viewBox="0 0 24 24"><use href="#ai-layers"/></svg><span class="lb" data-ar="الباقات والأسعار" data-en="Packages &amp; prices">الباقات والأسعار</span></button>
       <button type="button" class="soon" disabled aria-disabled="true" data-ar-title="أكواد الخصم — قريبًا" data-en-title="Discount codes — soon" title="أكواد الخصم — قريبًا"><svg viewBox="0 0 24 24"><use href="#ai-tag"/></svg><span class="lb" data-ar="أكواد الخصم" data-en="Discount codes">أكواد الخصم</span><span class="soon-t" data-ar="قريبًا" data-en="Soon">قريبًا</span></button>
-      <button type="button" class="soon" disabled aria-disabled="true" data-ar-title="مخطط السهرة — قريبًا" data-en-title="Night planner — soon" title="مخطط السهرة — قريبًا"><svg viewBox="0 0 24 24"><use href="#ai-calendar"/></svg><span class="lb" data-ar="مخطط السهرة" data-en="Night planner">مخطط السهرة</span><span class="soon-t" data-ar="قريبًا" data-en="Soon">قريبًا</span></button>
+      <button type="button" data-tab="plans" data-ic="calendar" data-lb="مخطط السهرة"><svg viewBox="0 0 24 24"><use href="#ai-calendar"/></svg><span class="lb" data-ar="مخطط السهرة" data-en="Night planner">مخطط السهرة</span></button>
       <button type="button" data-tab="content" data-ic="library" data-lb="إدارة المحتوى"><svg viewBox="0 0 24 24"><use href="#ai-library"/></svg><span class="lb" data-ar="إدارة المحتوى" data-en="Content">إدارة المحتوى</span></button>
       <button type="button" data-tab="games" data-ic="gamepad" data-lb="إدارة الألعاب"><svg viewBox="0 0 24 24"><use href="#ai-gamepad"/></svg><span class="lb" data-ar="إدارة الألعاب" data-en="Games &amp; settings">إدارة الألعاب</span></button>
       <button type="button" data-tab="stats" data-ic="chart" data-lb="الإحصائيات والتقارير"><svg viewBox="0 0 24 24"><use href="#ai-chart"/></svg><span class="lb" data-ar="الإحصائيات والتقارير" data-en="Stats &amp; reports">الإحصائيات والتقارير</span></button>
@@ -392,14 +392,18 @@ window.SAHRA_ADMIN_VER = "v31-m3a";</script>
         <div class="row" style="margin:12px 0 0"><button class="btn-primary sm" id="trSave" type="button">💾 حفظ طرق التحويل</button></div>
         <div class="tr-warn" id="trWarn" hidden></div>
       </div>
+      <div class="card pk-moved" id="slPkNote"><b>📦 الباقات صارت بقسم مستقل</b><p class="hint">إضافة الباقات وتعديل الأسعار والعروض والأرشفة صارت من قسم «الباقات والأسعار» (مع فحص قاعدة التسعير).</p><button class="btn-primary sm" id="slOpenPk" type="button">فتح الباقات والأسعار</button></div>
+      <div id="slOldPacks" hidden>
       <h3 class="sub-h">الباقات</h3>
       <p class="hint">غيّر عدد الجولات والسعر (بالريال) واضغط حفظ. الباقة المطفية ما تطلع للناس.</p>
       <div class="packs-ed" id="slPacks"></div>
       <button class="btn-ghost sm" id="slAddPack" type="button" style="margin-top:10px">➕ باقة جديدة</button>
+      </div>
       <h3 class="sub-h">آخر الطلبات</h3>
       <div id="slOrders"></div>
     </section>
 
+    <section id="tab-packages" hidden><div id="pkBox"></div></section>
     <section id="tab-content" hidden>
       <h2 class="sec">📝 المحتوى</h2>
       <p class="hint">عدّل وأضف واحذف. وأي شي ما تبيه يطلع بالجولات <b>خبّه</b> بزر 👁️ بدل ما تحذفه — تقدر ترجّعه بأي وقت.</p>
@@ -512,8 +516,9 @@ window.SAHRA_ADMIN_VER = "v31-m3a";</script>
 </div>
 <div class="tip" id="tip" hidden></div>
 <script src="admin-assets/fx.js?v=3"></script>
-<script src="admin-assets/overview.js?v=3"></script>
-<script src="admin-assets/import.js?v=1"></script>
+<script src="admin-assets/overview.js?v=4"></script>
+<script src="admin-assets/import.js?v=2"></script>
+<script src="admin-assets/packages.js?v=1"></script>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script>
 /* v7: المكتبة تتحمّل بدون ما توقف رسم الصفحة — السكربت يشتغل أول ما تجهز */
@@ -642,7 +647,7 @@ document.addEventListener("DOMContentLoaded", function(){
     var t = ORDER_ID ? "sales" : (location.hash || "").replace("#", "");
     if(t === "settings") t = "games";
     document.documentElement.classList.add("adm-ready");
-    openTab(["overview", "users", "sales", "content", "games", "stats", "reports", "audit"].indexOf(t) !== -1 ? t : "overview");
+    openTab(["overview", "users", "sales", "packages", "plans", "content", "games", "stats", "reports", "audit"].indexOf(t) !== -1 ? t : "overview");
     repBadge();
     if(ORDER_ID) trFocus(ORDER_ID);   /* (v14) */
     if(TAB !== "sales") trLoadOrders();
@@ -655,6 +660,11 @@ document.addEventListener("DOMContentLoaded", function(){
     if(!window.AdmOverview) return;
     AdmOverview.load({ SB: SB, box: $("ovBox"), rpcData: rpcData, esc: esc, errText: errText, maskEmail: maskEmail, games: function(){ return GAMES; }, go: function(t){ var b = $("tabs").querySelector('[data-tab="' + t + '"]'); if(b) b.click(); }, isOpen: function(){ return TAB === "overview"; } });
   }
+  function pkLoad(kind){
+    if(!window.AdmPackages) return;
+    AdmPackages.load({ SB: SB, box: $("pkBox"), kind: kind, esc: esc, toast: toast, errText: errText, rpcData: rpcData, go: function(t){ var b = $("tabs").querySelector('[data-tab="' + t + '"]'); if(b) b.click(); }, isOpen: function(){ return TAB === "packages" || TAB === "plans"; } });
+  }
+  $("slOpenPk").addEventListener("click", function(){ var b = $("tabs").querySelector('[data-tab="packages"]'); if(b) b.click(); });
   /* بحث سريع Ctrl+K: لو ما لقى قسم، يفتح الحسابات ويبحث */
   window.AdmSearchHook = function(q){ var b = $("tabs").querySelector('[data-tab="users"]'); if(b) b.click(); setTimeout(function(){ var i = document.getElementById("uSearch") || document.querySelector("#tab-users input.input"); if(i){ i.value = q; i.dispatchEvent(new Event("input", { bubbles:true })); } }, 350); };
   /* ================= التبويبات ================= */
@@ -663,13 +673,15 @@ document.addEventListener("DOMContentLoaded", function(){
     if(TAB === "games" && name !== "games" && setDirty() && !confirm("فيه تغييرات بالإعدادات ما انحفظت — تطلع بدون حفظ؟")) return;
     TAB = name;
     Array.prototype.forEach.call($("tabs").querySelectorAll("[data-tab]"), function(b){ b.classList.toggle("on", b.getAttribute("data-tab") === name); });
-    ["overview", "users", "sales", "content", "games", "stats", "reports", "audit"].forEach(function(k){ var e = $("tab-" + k); e.hidden = k !== name; if(k === name){ e.classList.remove("adm-tab-in"); void e.offsetWidth; e.classList.add("adm-tab-in"); } });
+    var SEC = name === "plans" ? "packages" : name;
+    ["overview", "users", "sales", "packages", "content", "games", "stats", "reports", "audit"].forEach(function(k){ var e = $("tab-" + k); e.hidden = k !== SEC; if(k === SEC){ e.classList.remove("adm-tab-in"); void e.offsetWidth; e.classList.add("adm-tab-in"); } });
     history.replaceState(null, "", "#" + name);
     var tt = $("tabs").querySelector('[data-tab="' + name + '"]'); if($("admTitle") && tt){ $("admTitle").textContent = (document.documentElement.lang === "en" ? tt.querySelector(".lb").getAttribute("data-en") : tt.getAttribute("data-lb")); }
     if(window.Adm) Adm.moveInd();
     if(name === "overview") overviewLoad();
     if(name === "users") loadUsers();
     if(name === "sales") loadSales();
+    if(SEC === "packages") pkLoad(name === "plans" ? "plan" : "rounds");
     if(name === "content") openSub(SUB || "trivia");
     if(name === "games") loadGames();
     if(name === "stats") loadStats();

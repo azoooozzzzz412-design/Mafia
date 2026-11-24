@@ -97,7 +97,7 @@
       + '</div>';
 
     /* الصف 3: إجراءات سريعة */
-    var qa = [["userplus", l.qGrant, "users"], ["plus", l.qAdd, "content"], ["cloudup", l.qImport, "content"], ["layers", l.qPack, "sales"], ["percent", l.qPromo, ""], ["flag", l.qReports, "reports", repN], ["chart", l.qStats, "stats"], ["settings", l.qGames, "games"]];
+    var qa = [["userplus", l.qGrant, "users"], ["plus", l.qAdd, "content"], ["cloudup", l.qImport, "content"], ["layers", l.qPack, "packages"], ["percent", l.qPromo, ""], ["flag", l.qReports, "reports", repN], ["chart", l.qStats, "stats"], ["settings", l.qGames, "games"]];
     h += '<div class="ov-card ov-qa-card adm-glass adm-rv" style="--i:9"><h3><span class="tt">' + ic("zap") + l.quick + '</span></h3><div class="ov-qa">'
       + qa.map(function(x){ return x[2] ? '<button type="button" data-go="' + x[2] + '">' + ic(x[0]) + '<span>' + x[1] + '</span>' + (x[3] ? '<i class="bd">' + Adm.fmt(x[3]) + '</i>' : '') + '</button>' : '<button type="button" class="soon" disabled title="' + l.qSoon + '">' + ic(x[0]) + '<span>' + x[1] + '</span><i class="sn">' + l.qSoon + '</i></button>'; }).join("")
       + '</div></div>';
