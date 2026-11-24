@@ -308,8 +308,8 @@ if(window.top !== window.self){ var same = false; try{ same = window.top.locatio
 try{ var f = localStorage.getItem("sahra-admin-fx"); document.documentElement.setAttribute("data-fx", (f === "balanced" || f === "performance") ? f : "premium");
   var lg = localStorage.getItem("sahra-lang") === "en" ? "en" : "ar"; document.documentElement.lang = lg; document.documentElement.dir = lg === "en" ? "ltr" : "rtl";
   if(localStorage.getItem("sahra-admin-side") === "1") document.documentElement.classList.add("side-min"); }catch(e){}
-window.SAHRA_ADMIN_VER = "v30-m2b";</script>
-<link rel="stylesheet" href="admin-assets/admin.css?v=3">
+window.SAHRA_ADMIN_VER = "v31-m3a";</script>
+<link rel="stylesheet" href="admin-assets/admin.css?v=4">
 </head>
 <body class="adm-body">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
@@ -403,6 +403,7 @@ window.SAHRA_ADMIN_VER = "v30-m2b";</script>
     <section id="tab-content" hidden>
       <h2 class="sec">📝 المحتوى</h2>
       <p class="hint">عدّل وأضف واحذف. وأي شي ما تبيه يطلع بالجولات <b>خبّه</b> بزر 👁️ بدل ما تحذفه — تقدر ترجّعه بأي وقت.</p>
+      <div class="row" style="margin:0 0 12px"><button class="btn-primary sm" type="button" id="impOpen">📦 استيراد من ملف · قوالب · سجل الدفعات</button></div>
       <div class="subtabs" id="cTabs">
         <button class="chip" type="button" data-sub="trivia">🎯 سين جيم</button>
         <button class="chip" type="button" data-sub="letters">🔤 الحروف</button>
@@ -512,6 +513,7 @@ window.SAHRA_ADMIN_VER = "v30-m2b";</script>
 <div class="tip" id="tip" hidden></div>
 <script src="admin-assets/fx.js?v=3"></script>
 <script src="admin-assets/overview.js?v=3"></script>
+<script src="admin-assets/import.js?v=1"></script>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script>
 /* v7: المكتبة تتحمّل بدون ما توقف رسم الصفحة — السكربت يشتغل أول ما تجهز */
@@ -567,9 +569,11 @@ document.addEventListener("DOMContentLoaded", function(){
     return new Date(ts).toLocaleDateString("en-GB");
   }
   function isOn(r){ return r.active !== false; }
+  /* حماية حقن الصيغ: نص يبدأ بـ = + - @ أو Tab/CR ياخذ ' بأوله (الأرقام الصافية ما تتغير) */
+  function csvSafe(v){ v = String(v == null ? "" : v); if(/^-?\d+(\.\d+)?$/.test(v)) return v; return /^[\s]*[=+\-@\t\r]/.test(v) || /^[\t\r]/.test(v) ? "'" + v : v; }
   /* تنزيل ملف CSV (يفتح صح بالإكسل بالعربي) */
   function downloadCsv(name, rows){
-    var csv = "﻿" + rows.map(function(r){ return r.map(function(v){ v = String(v == null ? "" : v); return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(","); }).join("\r\n");
+    var csv = "﻿" + rows.map(function(r){ return r.map(function(v){ v = csvSafe(v); return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(","); }).join("\r\n");
     var a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([csv], { type:"text/csv;charset=utf-8" }));
     a.download = name; document.body.appendChild(a); a.click();
@@ -1217,6 +1221,10 @@ document.addEventListener("DOMContentLoaded", function(){
     $("cBody").innerHTML = '<div class="empty">جاري التحميل…</div>';
     LOADERS[name]();
   }
+  $("impOpen").addEventListener("click", function(){
+    var g = ({ trivia:"trivia", letters:"letters", million:"million", heads:"heads", charades:"charades" })[SUB] || "trivia";
+    AdmImport.open({ SB:SB, esc:esc, toast:toast, errText:errText, rpcData:rpcData, downloadCsv:downloadCsv, reload:function(){ if(SUB && LOADERS[SUB]) LOADERS[SUB](); } }, g);
+  });
   $("cTabs").addEventListener("click", function(e){ var b = e.target.closest("[data-sub]"); if(b) openSub(b.getAttribute("data-sub")); });
   function cFail(e){ showErr("cErr", e); $("cBody").innerHTML = ""; }
   function delRow(table, id, what, after, key){

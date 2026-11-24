@@ -439,3 +439,23 @@ html.adm[dir="ltr"] .ov-row .m small[dir="ltr"]{ text-align:start; }
 .ov-op .tg.ok{ color:#a7f3d0; background:rgba(52,211,153,.1); border-color:rgba(52,211,153,.3); }
 .ov-op .tg.bad{ color:#ffd0d5; background:rgba(255,53,77,.14); border-color:rgba(255,53,77,.4); }
 .ov-op .tg.info{ color:#e4e4e7; background:rgba(255,255,255,.08); border-color:var(--line-2); }
+
+/* ===== M3a: معالج الاستيراد ===== */
+#impOv .modal{ width:min(820px, 100%); }
+.imp-row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; } .imp-row .field{ margin:0 0 10px; }
+.imp-tpl{ display:flex; gap:8px; flex-wrap:wrap; margin:6px 0 12px; }
+.imp-drop{ display:flex; flex-direction:column; align-items:center; gap:4px; padding:22px 14px; margin-bottom:12px; border-radius:16px; border:1.5px dashed var(--v-line); background:rgba(255,53,77,.05); cursor:pointer; text-align:center; transition:background var(--dur-s), border-color var(--dur-s); }
+.imp-drop:hover, .imp-drop.on{ background:rgba(255,53,77,.12); border-color:var(--red-hot); } .imp-drop small{ color:var(--tx-3); }
+.imp-sum{ display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:10px; margin:8px 0; }
+.imp-sum > div{ padding:12px 14px; border-radius:14px; background:rgba(255,255,255,.05); border:1px solid var(--line); text-align:center; }
+.imp-sum b{ display:block; font-family:var(--f-display); font-size:1.5rem; font-variant-numeric:tabular-nums; } .imp-sum small{ color:var(--tx-2); font-size:.76rem; }
+.imp-sum .ok b{ color:#6ee7b7; } .imp-sum .dup b{ color:#fcd34d; } .imp-sum .bad b{ color:var(--red-text); }
+.imp-errs{ max-height:200px; overflow-y:auto; margin:8px 0; padding:10px 12px; border-radius:12px; background:rgba(255,255,255,.04); border:1px solid var(--line); font-size:.84rem; display:grid; gap:4px; }
+.imp-errs .bad{ color:#ffb3bd; } .imp-errs .dupl{ color:#fde68a; } .imp-errs button{ justify-self:start; margin-top:6px; }
+.imp-bar{ height:10px; border-radius:10px; background:rgba(255,255,255,.08); overflow:hidden; margin:10px 0 6px; } .imp-bar i{ display:block; height:100%; border-radius:10px; background:linear-gradient(90deg, var(--crimson-2), var(--red-hot)); transition:width var(--dur-s); }
+.imp-hist{ display:grid; gap:8px; max-height:55vh; overflow-y:auto; }
+.imp-h{ display:grid; grid-template-columns:1fr auto; gap:4px 12px; align-items:center; padding:10px 12px; border-radius:14px; background:rgba(255,255,255,.04); border:1px solid var(--line); font-size:.88rem; }
+.imp-h .t small{ display:block; color:var(--tx-3); font-size:.74rem; margin-top:2px; } .imp-h .n{ color:var(--tx-2); font-size:.8rem; grid-column:1; }
+.imp-h .st{ font-size:.68rem; padding:1px 8px; border-radius:999px; border:1px solid var(--line-2); margin-inline-start:6px; } .imp-h .st-done{ color:#a7f3d0; border-color:rgba(52,211,153,.4); } .imp-h .st-running{ color:#fde68a; border-color:rgba(251,191,36,.4); } .imp-h .st-rolled_back{ color:var(--tx-3); }
+.imp-why{ grid-column:1 / -1; display:flex; gap:8px; flex-wrap:wrap; align-items:center; } .imp-why input{ flex:1 1 220px; } .imp-why small{ color:var(--tx-3); flex-basis:100%; }
+@media (max-width:760px){ .imp-row{ grid-template-columns:1fr; } }
