@@ -1233,6 +1233,19 @@ document.addEventListener("DOMContentLoaded", function(){
     $("cBody").innerHTML = '<div class="empty">جاري التحميل…</div>';
     LOADERS[name]();
   }
+  var IMP_OK = null;   /* null = لم يُفحص · true = SQL 16 موجود · false = ناقص */
+  function impCtx(){ return { SB:SB, esc:esc, toast:toast, errText:errText, rpcData:rpcData, downloadCsv:downloadCsv, reload:function(){ if(SUB && LOADERS[SUB]) LOADERS[SUB](); } }; }
+  function impProbe(game){
+    if(IMP_OK !== null) return Promise.resolve(IMP_OK);
+    return Promise.resolve(SB.rpc("admin_import_batch", { p_game:game, p_mode:"check", p_rows:[{}], p_batch:null, p_file:null, p_final:false })).then(function(r){
+      var m = r && r.error ? String(r.error.message || r.error.details || r.error.code || "") : "";
+      IMP_OK = !/Could not find the function|schema cache|does not exist/i.test(m); return IMP_OK;
+    }, function(e){ IMP_OK = !/Could not find the function|schema cache|does not exist/i.test(String((e && (e.message || e.details)) || e || "")); return IMP_OK; });
+  }
+  /* زر الاستيراد القديم لكل لعبة: المعالج الجديد لو SQL 16 موجود، وإلا الحوار القديم */
+  function impOrOld(game, oldFn){
+    impProbe(game).then(function(ok){ if(ok && window.AdmImport) AdmImport.open(impCtx(), game); else oldFn(); }).catch(function(){ oldFn(); });
+  }
   $("impOpen").addEventListener("click", function(){
     var g = ({ trivia:"trivia", letters:"letters", million:"million", heads:"heads", charades:"charades" })[SUB] || "trivia";
     AdmImport.open({ SB:SB, esc:esc, toast:toast, errText:errText, rpcData:rpcData, downloadCsv:downloadCsv, reload:function(){ if(SUB && LOADERS[SUB]) LOADERS[SUB](); } }, g);
@@ -1330,7 +1343,7 @@ document.addEventListener("DOMContentLoaded", function(){
     $("tvTier").addEventListener("change", function(){ TV.tier = this.value; TV.shown = 120; renderTrivia(); });
     $("tvQ").addEventListener("input", function(){ TV.q = this.value.trim(); TV.shown = 120; var pos = this.selectionStart; renderTrivia(); var el = $("tvQ"); el.focus(); try{ el.setSelectionRange(pos, pos); }catch(e){} });
     $("tvAdd").addEventListener("click", function(){ triviaForm(null); });
-    $("tvImp").addEventListener("click", triviaImport);
+    $("tvImp").addEventListener("click", function(){ impOrOld("trivia", triviaImport); });
     $("tvExp").addEventListener("click", function(){
       downloadCsv("trivia.csv", [["الفئة", "النقاط", "السؤال", "الإجابة", "ظاهر"]].concat(TV.rows.map(function(r){ return [r.category, tp(r.tier), r.question, r.answer, isOn(r) ? "نعم" : "لا"]; })));
     });
@@ -1408,7 +1421,7 @@ document.addEventListener("DOMContentLoaded", function(){
         return '<div class="item' + (isOn(r) ? '' : ' off') + '"><div class="txt">' + (isOn(r) ? '' : '<span class="pill hid">مخفي</span>') + (lqHard(r) ? '<span class="pill hard">' + LQ_LV[lqTier(r)] + '</span>' : '') + esc(r.question) + ' — <span class="ans">' + esc(r.answer) + '</span></div>' + itemBtns(r.id, isOn(r)) + '</div>';
       }).join("") : '<div class="empty">ما فيه أسئلة لحرف «' + esc(LQ.letter) + '»</div>') + '</div>';
     $("lqAdd").addEventListener("click", function(){ lettersForm(null); });
-    $("lqImp").addEventListener("click", lettersImport);
+    $("lqImp").addEventListener("click", function(){ impOrOld("letters", lettersImport); });
     $("lqExp").addEventListener("click", function(){
       downloadCsv("letters.csv", [["الحرف", "السؤال", "الإجابة", "ظاهر", "الصعوبة"]].concat(LQ.rows.map(function(r){ return [r.letter, r.question, r.answer, isOn(r) ? "نعم" : "لا", lqLv(r) >= 5 ? "خارق" : lqLv(r) >= 4 ? "صعب جدا" : lqHard(r) ? "صعب" : "عادي"]; })));
     });
@@ -1586,7 +1599,7 @@ document.addEventListener("DOMContentLoaded", function(){
     $("mqLvl").addEventListener("change", function(){ MQ.lvl = this.value; MQ.shown = 120; renderMillion(); });
     $("mqQ").addEventListener("input", function(){ MQ.q = this.value.trim(); MQ.shown = 120; var pos = this.selectionStart; renderMillion(); var el = $("mqQ"); el.focus(); try{ el.setSelectionRange(pos, pos); }catch(e){} });
     $("mqAdd").addEventListener("click", function(){ millionForm(null); });
-    $("mqImp").addEventListener("click", millionImport);
+    $("mqImp").addEventListener("click", function(){ impOrOld("million", millionImport); });
     $("mqExp").addEventListener("click", function(){
       downloadCsv("million.csv", [["السؤال", "الجواب الصح", "غلط 1", "غلط 2", "غلط 3", "الصعوبة", "الفئة", "ظاهر"]].concat(MQ.rows.map(function(r){ var w = mqWrong(r); return [r.question, r.answer, w[0], w[1], w[2], r.level, r.category, isOn(r) ? "نعم" : "لا"]; })));
     });
