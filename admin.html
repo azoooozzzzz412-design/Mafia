@@ -137,7 +137,7 @@ if(window.top !== window.self){ var same = false; try{ same = window.top.locatio
   .tr-filter{ display:flex; gap:6px; }
   .tr-list{ display:grid; grid-template-columns:repeat(auto-fill, minmax(290px, 1fr)); gap:10px; }
   .tr-list .empty{ grid-column:1 / -1; border:1px dashed var(--line-2); border-radius:16px; }
-  .tr-ord{ display:grid; gap:6px; padding:14px 16px; border-radius:16px; background:rgba(255,255,255,.03); border:1px solid var(--line); }
+  .tr-ord{ display:flex; flex-direction:column; align-items:stretch; gap:6px; padding:14px 16px; border-radius:16px; background:rgba(255,255,255,.03); border:1px solid var(--line); }
   .tr-ord.wait{ border-color:var(--warn-line); background:linear-gradient(180deg, var(--warn-soft), rgba(255,255,255,.02)); }
   .tr-ord.paid{ opacity:.82; }
   .tr-ord.focus{ border-color:var(--v-line); box-shadow:0 0 0 1px var(--v-line), 0 18px 40px -22px var(--v-glow); }
@@ -147,7 +147,10 @@ if(window.top !== window.self){ var same = false; try{ same = window.top.locatio
   .to-code{ font-family:var(--f-mono); color:var(--tx-2); } .to-when{ margin-inline-start:auto; }
   .to-who b{ font-size:.98rem; } .to-who span{ color:var(--tx-2); font-size:.84rem; overflow-wrap:anywhere; }
   .to-what{ font-size:.9rem; color:var(--tx-2); } .to-what b{ color:var(--tx); font-variant-numeric:tabular-nums; }
-  .to-acts{ display:flex; gap:8px; flex-wrap:wrap; margin-top:4px; }
+  .to-acts{ display:flex; gap:8px; flex-wrap:wrap; margin-top:auto; padding-top:4px; align-items:flex-start; }
+  .to-acts button{ height:auto; align-self:flex-start; }
+  .to-disc .nw{ white-space:nowrap; } .to-disc{ display:flex; flex-wrap:wrap; gap:0 6px; } .to-disc .ln2{ flex-basis:100%; }
+  .to-warn svg, .to-ref svg, .tr-ord .btn-ghost svg{ width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; vertical-align:-3px; margin-inline-end:5px; flex-shrink:0; }
   .to-note{ font-size:.82rem; color:var(--tx-3); }
   .tr-focus{ margin:6px 0 18px; padding:14px; border-radius:20px; border:1px solid var(--v-line); background:var(--v-soft); scroll-margin-top:84px; }
   .tr-fhead{ font-weight:700; font-size:.92rem; color:#e4ddff; margin-bottom:10px; }
@@ -308,8 +311,8 @@ if(window.top !== window.self){ var same = false; try{ same = window.top.locatio
 try{ var f = localStorage.getItem("sahra-admin-fx"); document.documentElement.setAttribute("data-fx", (f === "balanced" || f === "performance") ? f : "premium");
   var lg = localStorage.getItem("sahra-lang") === "en" ? "en" : "ar"; document.documentElement.lang = lg; document.documentElement.dir = lg === "en" ? "ltr" : "rtl";
   if(localStorage.getItem("sahra-admin-side") === "1") document.documentElement.classList.add("side-min"); }catch(e){}
-window.SAHRA_ADMIN_VER = "v32-m4a";</script>
-<link rel="stylesheet" href="admin-assets/admin.css?v=5">
+window.SAHRA_ADMIN_VER = "v33-m5";</script>
+<link rel="stylesheet" href="admin-assets/admin.css?v=7">
 </head>
 <body class="adm-body">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
@@ -326,7 +329,7 @@ window.SAHRA_ADMIN_VER = "v32-m4a";</script>
       <button type="button" data-tab="users" data-ic="users" data-lb="الحسابات والعملاء"><svg viewBox="0 0 24 24"><use href="#ai-users"/></svg><span class="lb" data-ar="الحسابات والعملاء" data-en="Accounts &amp; customers">الحسابات والعملاء</span><span class="count" id="pendingCount" hidden></span></button>
       <button type="button" data-tab="sales" data-ic="cart" data-lb="الطلبات والمبيعات"><svg viewBox="0 0 24 24"><use href="#ai-cart"/></svg><span class="lb" data-ar="الطلبات والمبيعات" data-en="Orders &amp; sales">الطلبات والمبيعات</span><span class="count" id="trCount" hidden></span></button>
             <button type="button" data-tab="packages" data-ic="layers" data-lb="الباقات والأسعار"><svg viewBox="0 0 24 24"><use href="#ai-layers"/></svg><span class="lb" data-ar="الباقات والأسعار" data-en="Packages &amp; prices">الباقات والأسعار</span></button>
-      <button type="button" class="soon" disabled aria-disabled="true" data-ar-title="أكواد الخصم — قريبًا" data-en-title="Discount codes — soon" title="أكواد الخصم — قريبًا"><svg viewBox="0 0 24 24"><use href="#ai-tag"/></svg><span class="lb" data-ar="أكواد الخصم" data-en="Discount codes">أكواد الخصم</span><span class="soon-t" data-ar="قريبًا" data-en="Soon">قريبًا</span></button>
+      <button type="button" data-tab="promos" data-ic="tag" data-lb="أكواد الخصم"><svg viewBox="0 0 24 24"><use href="#ai-tag"/></svg><span class="lb" data-ar="أكواد الخصم" data-en="Discount codes">أكواد الخصم</span></button>
       <button type="button" data-tab="plans" data-ic="calendar" data-lb="مخطط السهرة"><svg viewBox="0 0 24 24"><use href="#ai-calendar"/></svg><span class="lb" data-ar="مخطط السهرة" data-en="Night planner">مخطط السهرة</span></button>
       <button type="button" data-tab="content" data-ic="library" data-lb="إدارة المحتوى"><svg viewBox="0 0 24 24"><use href="#ai-library"/></svg><span class="lb" data-ar="إدارة المحتوى" data-en="Content">إدارة المحتوى</span></button>
       <button type="button" data-tab="games" data-ic="gamepad" data-lb="إدارة الألعاب"><svg viewBox="0 0 24 24"><use href="#ai-gamepad"/></svg><span class="lb" data-ar="إدارة الألعاب" data-en="Games &amp; settings">إدارة الألعاب</span></button>
@@ -404,6 +407,7 @@ window.SAHRA_ADMIN_VER = "v32-m4a";</script>
     </section>
 
     <section id="tab-packages" hidden><div id="pkBox"></div></section>
+    <section id="tab-promos" hidden><div id="prBox"></div></section>
     <section id="tab-content" hidden>
       <h2 class="sec">📝 المحتوى</h2>
       <p class="hint">عدّل وأضف واحذف. وأي شي ما تبيه يطلع بالجولات <b>خبّه</b> بزر 👁️ بدل ما تحذفه — تقدر ترجّعه بأي وقت.</p>
@@ -516,9 +520,10 @@ window.SAHRA_ADMIN_VER = "v32-m4a";</script>
 </div>
 <div class="tip" id="tip" hidden></div>
 <script src="admin-assets/fx.js?v=3"></script>
-<script src="admin-assets/overview.js?v=4"></script>
+<script src="admin-assets/overview.js?v=5"></script>
 <script src="admin-assets/import.js?v=2"></script>
 <script src="admin-assets/packages.js?v=1"></script>
+<script src="admin-assets/promos.js?v=2"></script>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script>
 /* v7: المكتبة تتحمّل بدون ما توقف رسم الصفحة — السكربت يشتغل أول ما تجهز */
@@ -647,7 +652,7 @@ document.addEventListener("DOMContentLoaded", function(){
     var t = ORDER_ID ? "sales" : (location.hash || "").replace("#", "");
     if(t === "settings") t = "games";
     document.documentElement.classList.add("adm-ready");
-    openTab(["overview", "users", "sales", "packages", "plans", "content", "games", "stats", "reports", "audit"].indexOf(t) !== -1 ? t : "overview");
+    openTab(["overview", "users", "sales", "packages", "plans", "promos", "content", "games", "stats", "reports", "audit"].indexOf(t) !== -1 ? t : "overview");
     repBadge();
     if(ORDER_ID) trFocus(ORDER_ID);   /* (v14) */
     if(TAB !== "sales") trLoadOrders();
@@ -664,6 +669,8 @@ document.addEventListener("DOMContentLoaded", function(){
     if(!window.AdmPackages) return;
     AdmPackages.load({ SB: SB, box: $("pkBox"), kind: kind, esc: esc, toast: toast, errText: errText, rpcData: rpcData, go: function(t){ var b = $("tabs").querySelector('[data-tab="' + t + '"]'); if(b) b.click(); }, isOpen: function(){ return TAB === "packages" || TAB === "plans"; } });
   }
+  function prCtx(box){ return { SB: SB, box: box, esc: esc, toast: toast, errText: errText, rpcData: rpcData }; }
+  function prLoad(){ if(window.AdmPromos) AdmPromos.load(prCtx($("prBox"))); }
   $("slOpenPk").addEventListener("click", function(){ var b = $("tabs").querySelector('[data-tab="packages"]'); if(b) b.click(); });
   /* بحث سريع Ctrl+K: لو ما لقى قسم، يفتح الحسابات ويبحث */
   window.AdmSearchHook = function(q){ var b = $("tabs").querySelector('[data-tab="users"]'); if(b) b.click(); setTimeout(function(){ var i = document.getElementById("uSearch") || document.querySelector("#tab-users input.input"); if(i){ i.value = q; i.dispatchEvent(new Event("input", { bubbles:true })); } }, 350); };
@@ -674,7 +681,7 @@ document.addEventListener("DOMContentLoaded", function(){
     TAB = name;
     Array.prototype.forEach.call($("tabs").querySelectorAll("[data-tab]"), function(b){ b.classList.toggle("on", b.getAttribute("data-tab") === name); });
     var SEC = name === "plans" ? "packages" : name;
-    ["overview", "users", "sales", "packages", "content", "games", "stats", "reports", "audit"].forEach(function(k){ var e = $("tab-" + k); e.hidden = k !== SEC; if(k === SEC){ e.classList.remove("adm-tab-in"); void e.offsetWidth; e.classList.add("adm-tab-in"); } });
+    ["overview", "users", "sales", "packages", "promos", "content", "games", "stats", "reports", "audit"].forEach(function(k){ var e = $("tab-" + k); e.hidden = k !== SEC; if(k === SEC){ e.classList.remove("adm-tab-in"); void e.offsetWidth; e.classList.add("adm-tab-in"); } });
     history.replaceState(null, "", "#" + name);
     var tt = $("tabs").querySelector('[data-tab="' + name + '"]'); if($("admTitle") && tt){ $("admTitle").textContent = (document.documentElement.lang === "en" ? tt.querySelector(".lb").getAttribute("data-en") : tt.getAttribute("data-lb")); }
     if(window.Adm) Adm.moveInd();
@@ -682,6 +689,7 @@ document.addEventListener("DOMContentLoaded", function(){
     if(name === "users") loadUsers();
     if(name === "sales") loadSales();
     if(SEC === "packages") pkLoad(name === "plans" ? "plan" : "rounds");
+    if(name === "promos") prLoad();
     if(name === "content") openSub(SUB || "trivia");
     if(name === "games") loadGames();
     if(name === "stats") loadStats();
@@ -880,7 +888,7 @@ document.addEventListener("DOMContentLoaded", function(){
 
   /* ================= 👥 الحسابات ================= */
   var U = { rows:[], trials:{}, buys:{}, filter:"all", q:"", loaded:false };
-  function sar(n){ var v = Math.round((+n || 0) * 100) / 100; return (Math.round(v) === v ? String(v) : v.toFixed(2)) + " ر.س"; }
+  function sar(n){ var v = Math.round((+n || 0) * 100) / 100; return (Math.round(v) === v ? String(v) : v.toFixed(2)) + " ريال"; }
   function roundsTxt(n){ n = n | 0; return n === 1 ? "جولة وحدة" : n === 2 ? "جولتين" : n + (n % 100 >= 3 && n % 100 <= 10 ? " جولات" : " جولة"); }
   function loadUsers(){
     $("usersList").classList.add("loading");
@@ -1019,7 +1027,7 @@ document.addEventListener("DOMContentLoaded", function(){
     $("slPacks").innerHTML = SL.packs.length ? SL.packs.map(function(pk){
       return '<div class="pk-row" data-pk="' + esc(pk.id) + '">'
         + '<label>الجولات <input class="input" type="number" min="1" max="1000" step="1" data-f="rounds" value="' + (pk.rounds | 0) + '"></label>'
-        + '<label>السعر <input class="input" type="number" min="1" step="0.5" data-f="price" value="' + (+pk.price) + '"> ر.س</label>'
+        + '<label>السعر <input class="input" type="number" min="1" step="0.5" data-f="price" value="' + (+pk.price) + '"> ريال</label>'
         + '<span class="per">' + sar(pk.price / Math.max(1, pk.rounds)) + ' للجولة</span>'
         + '<label><input type="checkbox" data-f="active"' + (pk.active ? " checked" : "") + '> ظاهرة</label>'
         + '<span class="sp"></span>'
@@ -1060,15 +1068,27 @@ document.addEventListener("DOMContentLoaded", function(){
     return new Date(x).toLocaleString("en-GB", { timeZone:"Asia/Riyadh", day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" });
   }
   function trBadge(n){ var b = $("trCount"); b.textContent = n; b.hidden = !n; }
+  /* (M5) السعر قبل الخصم + الكود + المسترجع (مفاتيح إضافية — تغيب لو SQL 19 مو منزّل) */
+  var TR_LAPSED = "حجز الكود انتهى — تأكيد هذا الطلب قد يتجاوز حد استخدام الكود";
+  function trLapsed(o){ return o.status === "initiated" && (o.promo_code || o.promo_code_id) && o.promo_hold_live === false; }
+  function trMoney(o){
+    var h = "", disc = o.discount_amount | 0;
+    if(disc > 0) h += '<div class="to-disc"><span class="nw">السعر الأصلي <b>' + sar((o.list_amount | 0) / 100) + '</b> − خصم <b>' + sar(disc / 100) + '</b></span>' + (o.promo_code ? '<span class="nw">(كود <bdi dir="ltr" class="to-mono">' + esc(o.promo_code) + '</bdi>)</span>' : '') + '<span class="nw ln2">المدفوع <b>' + sar((o.amount | 0) / 100) + '</b></span></div>';
+    if(o.promo_over_limit) h += '<div class="to-warn">' + Adm.icon("alert") + 'استُخدم الكود فوق حدّه — الدفع وصل بعد انتهاء الحجز. الطلب مقبول بالسعر المعروض للعميل، والتجاوز ينحسب عليك (راجع حدّ الكود).</div>';
+    else if(trLapsed(o)) h += '<div class="to-warn">' + Adm.icon("alert") + TR_LAPSED + '</div>';
+    else if(o.promo_status === "released" && o.status !== "paid") h += '<div class="to-note">حجز الكود انتهى (الحجز بعد «حوّلت» 48 ساعة).</div>';
+    if((o.refunded | 0) > 0) h += '<div class="to-ref">' + Adm.icon("history") + 'مسترجع <b>' + sar((o.refunded | 0) / 100) + '</b> · الصافي <b>' + sar(((o.amount | 0) - (o.refunded | 0)) / 100) + '</b>' + (o.net_status === "refunded" ? ' · <span class="ov-pill sale">مسترجع بالكامل</span>' : o.net_status === "partially_refunded" ? ' · <span class="ov-pill wait">استرجاع جزئي</span>' : '') + '</div>';
+    return h;
+  }
   function trCard(o, focus){
     var st = o.status, wait = st === "initiated";
     var lab = wait ? (o.claimed_at ? "⏳ قال إنه حوّل" : "🕓 فتح الدفع وما أكّد") : st === "paid" ? "✅ مفعّل" : st === "canceled" ? "✖ مرفوض" : "⌛ انتهى";
     return '<div class="tr-ord ' + (wait ? (o.claimed_at ? "wait" : "open") : esc(st)) + (focus ? " focus" : "") + '" data-ord="' + esc(o.id) + '">'
       + '<div class="to-top"><span class="to-st">' + lab + '</span><span class="to-code">رمز ' + esc(String(o.code || "—")) + '</span><span class="to-when">' + esc(trWhen(o.claimed_at || o.created_at)) + '</span></div>'
       + '<div class="to-who"><b>' + esc(o.name || "—") + '</b> <span dir="ltr">' + esc(o.email || "") + '</span></div>'
-      + '<div class="to-what">' + roundsTxt(o.rounds) + ' · <b>' + sar((o.amount | 0) / 100) + '</b>' + (o.via ? ' · عن طريق ' + esc(o.via) : '') + '</div>'
+      + '<div class="to-what">' + roundsTxt(o.rounds) + ' · <b>' + sar((o.amount | 0) / 100) + '</b>' + (o.via ? ' · عن طريق ' + esc(o.via) : '') + '</div>' + trMoney(o)
       + (wait ? '<div class="to-acts"><button class="btn-ok" type="button" data-tro="ok">✅ وصل — فعّل</button><button class="btn-bad" type="button" data-tro="no">✖ رفض</button></div>'
-        : st === "paid" ? '<div class="to-note">تفعّل ' + esc(trWhen(o.paid_at)) + (o.credits != null ? ' · رصيده الحين ' + roundsTxt(o.credits) : '') + '</div>'
+        : st === "paid" ? '<div class="to-note">تفعّل ' + esc(trWhen(o.paid_at)) + (o.credits != null ? ' · رصيده الحين ' + roundsTxt(o.credits) : '') + '</div>' + (o.net_status && (o.amount | 0) - (o.refunded | 0) > 0 && o.net_status !== "refunded" ? '<div class="to-acts"><button class="btn-ghost sm" type="button" data-trrf="1">' + Adm.icon("history") + 'استرجاع</button></div>' : '')
         : '<div class="to-acts"><button class="btn-ghost sm" type="button" data-tro="ok">✅ وصل متأخر — فعّل</button></div>')
       + '</div>';
   }
@@ -1106,17 +1126,24 @@ document.addEventListener("DOMContentLoaded", function(){
       $("trList").innerHTML = '<div class="empty">جاري التحميل…</div>';
       trLoadOrders(); return;
     }
+    var rf = e.target.closest("[data-trrf]");
+    if(rf){
+      var rid = rf.closest("[data-ord]").getAttribute("data-ord"), ro = TRA.focus && TRA.focus.id === rid ? TRA.focus : TRA.rows.filter(function(x){ return x.id === rid; })[0];
+      if(ro && window.AdmPromos) AdmPromos.openRefund(ro, prCtx(null), function(){ trLoadOrders(); loadSales(); if(TRA.focus && TRA.focus.id === rid) trFocus(rid); });
+      return;
+    }
     var b = e.target.closest("[data-tro]"); if(!b) return;
     var id = b.closest("[data-ord]").getAttribute("data-ord");
     var o = TRA.focus && TRA.focus.id === id ? TRA.focus : TRA.rows.filter(function(x){ return x.id === id; })[0];
     if(!o) return;
     var who = o.name || o.email || "الحساب";
     if(b.getAttribute("data-tro") === "ok"){
-      if(!confirm("تأكدت إن " + sar((o.amount | 0) / 100) + " وصلتك" + (o.via ? " عن طريق " + o.via : "") + "؟\nبتنضاف " + roundsTxt(o.rounds) + " لـ " + who + ".")) return;
+      if(!confirm("تأكدت إن " + sar((o.amount | 0) / 100) + " وصلتك" + (o.via ? " عن طريق " + o.via : "") + "؟\nبتنضاف " + roundsTxt(o.rounds) + " لـ " + who + "." + (trLapsed(o) ? "\n\n" + TR_LAPSED + "." : ""))) return;
       b.disabled = true;
       SB.rpc("admin_order_confirm", { p_order:id }).then(function(r){
         must(r); var d = rpcData(r) || {};
-        toast(d.already ? "✅ هالطلب مفعّل من قبل" : "✅ انضافت " + roundsTxt(o.rounds) + " لـ " + who + " — رصيده الحين " + roundsTxt(d.credits | 0));
+        var okMsg = d.already ? "✅ هالطلب مفعّل من قبل" : "✅ انضافت " + roundsTxt(o.rounds) + " لـ " + who + " — رصيده الحين " + roundsTxt(d.credits | 0);
+        toast(d.over_limit === true ? "⚠️ استُخدم الكود فوق حدّه — " + okMsg : okMsg);
         if(TRA.focus && TRA.focus.id === id){ TRA.focus.status = "paid"; TRA.focus.paid_at = new Date().toISOString(); TRA.focus.credits = d.credits; trFocusRender(); }
         trLoadOrders(); loadSales();
       }).catch(function(err){ b.disabled = false; toast("⚠️ " + trErrText(err)); });

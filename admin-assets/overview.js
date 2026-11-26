@@ -14,7 +14,7 @@
       quick:"إجراءات سريعة", qGrant:"منح جولات", qAdd:"إضافة سؤال", qImport:"استيراد أسئلة", qPack:"إنشاء باقة", qPromo:"كود خصم جديد", qSoon:"قريبًا", qReports:"البلاغات", qStats:"التقارير", qGames:"إعدادات الألعاب",
       content:"ملخص المحتوى", total:"الإجمالي", rest:"باقي الألعاب",
       orders:"أحدث الطلبات", all:"عرض الكل", ops:"آخر العمليات الإدارية", opsAll:"عرض السجل", opTag:"تفعيل طلب", opTxt:function(c, a){ return "طلب #" + c + " · " + a; }, opsNote:"سجل العمليات غير مفعّل بعد (ملف SQL رقم 14) — نعرض تفعيلات الطلبات فقط.",
-      none:"ما فيه بيانات بعد", noOrders:"ما فيه طلبات", noOps:"ما فيه عمليات بعد", cur:"ر.س",
+      none:"ما فيه بيانات بعد", noOrders:"ما فيه طلبات", noOps:"ما فيه عمليات بعد", cur:"ريال",
       stWait:"بانتظار التحقق", stOpen:"بانتظار الدفع", stPaid:"مدفوع", stCancel:"ملغى", stFail:"مرفوض", err:"تعذّر تحميل بعض البيانات" },
     en:{ rng:function(n){ return "Last " + n + " days"; },
       accounts:"Total accounts", active:"Active customers", activeT:"played in range", fresh:"New accounts", freshT:"signed up in range", sales:"Total sales", salesT:function(t, o){ return "Today " + t + " · " + o + " paid orders in range"; },
@@ -97,7 +97,7 @@
       + '</div>';
 
     /* الصف 3: إجراءات سريعة */
-    var qa = [["userplus", l.qGrant, "users"], ["plus", l.qAdd, "content"], ["cloudup", l.qImport, "content"], ["layers", l.qPack, "packages"], ["percent", l.qPromo, ""], ["flag", l.qReports, "reports", repN], ["chart", l.qStats, "stats"], ["settings", l.qGames, "games"]];
+    var qa = [["userplus", l.qGrant, "users"], ["plus", l.qAdd, "content"], ["cloudup", l.qImport, "content"], ["layers", l.qPack, "packages"], ["percent", l.qPromo, "promos"], ["flag", l.qReports, "reports", repN], ["chart", l.qStats, "stats"], ["settings", l.qGames, "games"]];
     h += '<div class="ov-card ov-qa-card adm-glass adm-rv" style="--i:9"><h3><span class="tt">' + ic("zap") + l.quick + '</span></h3><div class="ov-qa">'
       + qa.map(function(x){ return x[2] ? '<button type="button" data-go="' + x[2] + '">' + ic(x[0]) + '<span>' + x[1] + '</span>' + (x[3] ? '<i class="bd">' + Adm.fmt(x[3]) + '</i>' : '') + '</button>' : '<button type="button" class="soon" disabled title="' + l.qSoon + '">' + ic(x[0]) + '<span>' + x[1] + '</span><i class="sn">' + l.qSoon + '</i></button>'; }).join("")
       + '</div></div>';
