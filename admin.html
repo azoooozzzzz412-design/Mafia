@@ -311,7 +311,7 @@ if(window.top !== window.self){ var same = false; try{ same = window.top.locatio
 try{ var f = localStorage.getItem("sahra-admin-fx"); document.documentElement.setAttribute("data-fx", (f === "balanced" || f === "performance") ? f : "premium");
   var lg = localStorage.getItem("sahra-lang") === "en" ? "en" : "ar"; document.documentElement.lang = lg; document.documentElement.dir = lg === "en" ? "ltr" : "rtl";
   if(localStorage.getItem("sahra-admin-side") === "1") document.documentElement.classList.add("side-min"); }catch(e){}
-window.SAHRA_ADMIN_VER = "v33-m5";</script>
+window.SAHRA_ADMIN_VER = "v35-letters-trivia";</script>
 <link rel="stylesheet" href="admin-assets/admin.css?v=7">
 </head>
 <body class="adm-body">
@@ -1975,8 +1975,9 @@ document.addEventListener("DOMContentLoaded", function(){
                    buzz_pen_timeout:1, buzz_pen_wrong:1, buzz_steal_secs:10,
                    million:{ step_pts:1, lv_pts:[1,2,3], speed_bonus:1, all_secs:20, vote_secs:15, friend_secs:30, life:{ fifty:true, aud:true, friend:true, swap:true } },
                    helps:{ x2:true, steal:true, swap:true }, mc:{ secs:20, bonus:1 },
-                   letters:{ level:"extreme", reveal:true, speed:"normal" } };   /* (v17) الحروف: الصعوبة + السؤال كلمة كلمة — (v19) الافتراضي خارق */
-  var LT_LEVELS = [["extreme", "🔥🔥🔥 خارق"], ["vhard", "🔥🔥 صعب جدًا"], ["hard", "🔥 صعب"], ["normal", "عادي"]];
+                   letters:{ level:"extreme", reveal:true, speed:"normal" },
+                   trivia:{ reveal:true, speed:"normal" } };   /* (v17) الحروف: الصعوبة + السؤال كلمة كلمة — (v19) الافتراضي خارق */
+  var LT_LEVELS = [["extreme", "🔥🔥🔥 خارق"], ["vhard", "🔥🔥 صعب جدًا"], ["hard", "🔥 صعب"], ["normal", "عادي"], ["mixed", "🎲 مخلوط"]];   /* (22) mixed يحتاج ملف SQL 22 */
   var LT_SPEEDS = [["slow", "بطيئة"], ["normal", "عادية"], ["fast", "سريعة"]];
   var ML_LIFE = [["fifty", "50:50 حذف إجابتين"], ["aud", "👥 اسأل الجمهور"], ["friend", "📞 اتصل بصديق"], ["swap", "🔄 تبديل السؤال"]];
   var TRIV_HELPS = [["x2", "×2 دبل"], ["steal", "🦹 سرقة"], ["swap", "🔄 تبديل السؤال"]];   /* (v11) وسائل سين جيم */
@@ -2022,6 +2023,9 @@ document.addEventListener("DOMContentLoaded", function(){
     var lt = p.letters && typeof p.letters === "object" && !Array.isArray(p.letters) ? p.letters : {};
     out.letters = { level:LT_LEVELS.some(function(x){ return x[0] === lt.level; }) ? lt.level : PLAY_DEF.letters.level, reveal:lt.reveal !== false,
                     speed:LT_SPEEDS.some(function(x){ return x[0] === lt.speed; }) ? lt.speed : PLAY_DEF.letters.speed };
+    /* (v35) 🎯 سين جيم: السؤال كلمة كلمة */
+    var tv = p.trivia && typeof p.trivia === "object" && !Array.isArray(p.trivia) ? p.trivia : {};
+    out.trivia = { reveal:tv.reveal !== false, speed:LT_SPEEDS.some(function(x){ return x[0] === tv.speed; }) ? tv.speed : PLAY_DEF.trivia.speed };
     return out;
   }
   function loadGames(){
@@ -2170,10 +2174,13 @@ document.addEventListener("DOMContentLoaded", function(){
       + '<span>⏱️ وقت السؤال (ثانية)</span>' + num("mc_secs", p.mc.secs, 5, 120)
       + '<span>⚡ بونص أسرع فريق جاوب صح (0 = بدون)</span>' + num("mc_bonus", p.mc.bonus, 0, 999)
       + '</div></div>'
-      + '<div class="card"><h3>🔤 الحروف</h3><p class="hint">كل جولة تبدأ بالأسئلة اللي ما انلعبت، وبينها الأصعب أول: 🔥🔥🔥 خارق ← 🔥🔥 صعب جدًا ← 🔥 صعب ← الباقي (عشان ما يتكرر سؤال). وتحدد صعوبة كل سؤال من «📝 المحتوى ← 🔤 الحروف».</p><div class="kv lt-kv">'
+      + '<div class="card"><h3>🔤 الحروف</h3><p class="hint">كل جولة تبدأ بالأسئلة اللي ما انلعبت، وبينها الأصعب أول: 🔥🔥🔥 خارق ← 🔥🔥 صعب جدًا ← 🔥 صعب ← الباقي (عشان ما يتكرر سؤال). و«🎲 مخلوط»: كل لوحة فيها سهل وصعب وخارق بالتساوي تقريبًا. وتحدد صعوبة كل سؤال من «📝 المحتوى ← 🔤 الحروف».</p><div class="kv lt-kv">'
       + '<span>مستوى الأسئلة</span><select class="input lt-sel" data-pl="lt_level">' + LT_LEVELS.map(function(x){ return '<option value="' + x[0] + '"' + (x[0] === p.letters.level ? " selected" : "") + '>' + x[1] + '</option>'; }).join("") + '</select>'
       + '<span>⏱️ سرعة ظهور الكلمات</span><select class="input lt-sel" data-pl="lt_speed">' + LT_SPEEDS.map(function(x){ return '<option value="' + x[0] + '"' + (x[0] === p.letters.speed ? " selected" : "") + '>' + x[1] + '</option>'; }).join("") + '</select>'
-      + '</div><div class="lf-grid"><label class="lf-t"><span class="switch"><input type="checkbox" data-pl="lt_reveal"' + (p.letters.reveal ? " checked" : "") + ' aria-label="السؤال يطلع كلمة كلمة"><span></span></span>السؤال يطلع كلمة كلمة (ويوقف لما أحد يضغط الزر)</label></div></div>';
+      + '</div><div class="lf-grid"><label class="lf-t"><span class="switch"><input type="checkbox" data-pl="lt_reveal"' + (p.letters.reveal ? " checked" : "") + ' aria-label="السؤال يطلع كلمة كلمة"><span></span></span>السؤال يطلع كلمة كلمة (ويوقف لما أحد يضغط الزر)</label></div></div>'
+      + '<div class="card"><h3>🎯 سين جيم</h3><p class="hint">السؤال يطلع كلمة كلمة على الشاشة (وعلى جوالات «أسرع إصبع» أول بأول)، ويوقف لما أحد يضغط الزر ويكمل لو رجع الدور. لما المقدّم يكشف الإجابة يكتمل السؤال فورًا.</p><div class="kv lt-kv">'
+      + '<span>⏱️ سرعة ظهور الكلمات</span><select class="input lt-sel" data-pl="tv_speed">' + LT_SPEEDS.map(function(x){ return '<option value="' + x[0] + '"' + (x[0] === p.trivia.speed ? " selected" : "") + '>' + x[1] + '</option>'; }).join("") + '</select>'
+      + '</div><div class="lf-grid"><label class="lf-t"><span class="switch"><input type="checkbox" data-pl="tv_reveal"' + (p.trivia.reveal ? " checked" : "") + ' aria-label="السؤال يطلع كلمة كلمة"><span></span></span>السؤال يطلع كلمة كلمة (ويوقف لما أحد يضغط الزر)</label></div></div>';
   }
   function readPlay(){
     var v = function(id){ var el = document.querySelector('[data-pl="' + id + '"]'); return el ? toInt(el.value) : null; };
@@ -2188,7 +2195,8 @@ document.addEventListener("DOMContentLoaded", function(){
                 life:{ fifty:ck("lf_fifty"), aud:ck("lf_aud"), friend:ck("lf_friend"), swap:ck("lf_swap") } },
       helps:{ x2:ck("th_x2"), steal:ck("th_steal"), swap:ck("th_swap") },
       mc:{ secs:v("mc_secs"), bonus:v("mc_bonus") },
-      letters:{ level:sv("lt_level"), reveal:ck("lt_reveal"), speed:sv("lt_speed") }
+      letters:{ level:sv("lt_level"), reveal:ck("lt_reveal"), speed:sv("lt_speed") },
+      trivia:{ reveal:ck("tv_reveal"), speed:sv("tv_speed") }
     };
   }
   function playErr(p){

@@ -241,7 +241,8 @@
                         buzz_pen_timeout:1, buzz_pen_wrong:1, buzz_steal_secs:10,
                         million:{ step_pts:1, lv_pts:[1,2,3], speed_bonus:1, all_secs:20, vote_secs:15, friend_secs:30, life:{ fifty:true, aud:true, friend:true, swap:true } },
                         helps:{ x2:true, steal:true, swap:true }, mc:{ secs:20, bonus:1 },
-                        letters:{ level:"extreme", reveal:true, speed:"normal" } };   /* «أسرع إصبع»: buzz_pen_timeout = الخصم المقترح لما يخلص الوقت (المقدّم يختار على مين) + زر «غلط وخصم» (0 = بدون) */
+                        letters:{ level:"extreme", reveal:true, speed:"normal" },
+                        trivia:{ reveal:true, speed:"normal" } };   /* «أسرع إصبع»: buzz_pen_timeout = الخصم المقترح لما يخلص الوقت (المقدّم يختار على مين) + زر «غلط وخصم» (0 = بدون) */
   function clampInt(v, lo, hi, def){ v = Math.round(+v); if(!isFinite(v)) v = def; return Math.max(lo, Math.min(hi, v)); }
   function cfgSize(g){
     var d = SIZE_DEFAULTS[g]; if(!d) return null;
@@ -284,8 +285,11 @@
     out.mc = { secs: clampInt(mc.secs, 5, 120, mcd.secs), bonus: clampInt(mc.bonus, 0, 999, mcd.bonus) };
     /* (v17) 🔤 الحروف: السؤال كلمة كلمة + سرعته (الصعوبة يقررها السيرفر وقت الجولة) */
     var lt = isObj(p.letters) ? p.letters : {};
-    out.letters = { level: ["extreme", "vhard", "hard", "normal"].indexOf(lt.level) !== -1 ? lt.level : PLAY_DEFAULTS.letters.level, reveal: lt.reveal !== false,
+    out.letters = { level: ["extreme", "vhard", "hard", "normal", "mixed"].indexOf(lt.level) !== -1 ? lt.level : PLAY_DEFAULTS.letters.level, reveal: lt.reveal !== false,
                     speed: ["slow", "normal", "fast"].indexOf(lt.speed) !== -1 ? lt.speed : PLAY_DEFAULTS.letters.speed };
+    /* (v35) 🎯 سين جيم: السؤال كلمة كلمة + سرعته (نفس الحروف) */
+    var tv = isObj(p.trivia) ? p.trivia : {};
+    out.trivia = { reveal: tv.reveal !== false, speed: ["slow", "normal", "fast"].indexOf(tv.speed) !== -1 ? tv.speed : PLAY_DEFAULTS.trivia.speed };
     return out;
   }
   /* الحجم اللي اختاره المقدّم (لو طلع برا حدود الأدمن يرجع للافتراضي) */
@@ -881,6 +885,7 @@
     award: document.getElementById("tmAward"),
     teamBtns: document.getElementById("tmTeamBtns"),
     skipBtn: document.getElementById("tmSkipBtn"),
+    wSkip: document.getElementById("tmWSkipBtn"),
     helps: document.getElementById("tmHelps"),
     helpsBar: document.getElementById("trivHelpsBar")
   };
@@ -955,7 +960,7 @@
   function trivShowCell(cell){
     trivEls.cat.textContent = cell.cat;
     trivEls.points.innerHTML = '<b>' + tpts(cell.points) + '</b><small>' + ptsWord(tpts(cell.points)) + '</small>';
-    trivEls.question.textContent = cell.q;
+    trivWordsStart(cell);
     trivEls.hint.hidden = true;
     trivEls.hint.textContent = firstLetterHint(cell.a);
     trivEls.hintBtn.hidden = false;
@@ -967,15 +972,67 @@
     renderTrivHelps();
   }
   function trivArm(cell){
-    buzzArm("triv:" + cell.id, false, { k:"trivia", cat: cell.cat, pts: tpts(cell.points), text: cell.q });
+    buzzArm("triv:" + cell.id, false, { k:"trivia", cat: cell.cat, pts: tpts(cell.points), text: cfgPlay().trivia.reveal && TVW.n < TVW.words.length ? "…" : cell.q });   /* (v35) الجوالات تاخذ الكلمات أول بأول */
+    TVW.armed = true; trivWordsShow();
     TTS.auto("triv:" + cell.id, trivSpeech());
   }
+  /* ============ (v35) سين جيم: السؤال يطلع كلمة كلمة (نفس الحروف) ============
+     يوقف لما أحد يضغط الزر ويكمل لو رجع الدور؛ ينتهي فورًا مع «اكشف الإجابة» / «محد جاوب» / الإغلاق. الكلمات محجوزة مكانها (textContent فقط) */
+  var TVW = { t:null, words:[], n:0, key:"", armed:false };
+  function trivWordsStop(){ clearTimeout(TVW.t); TVW.t = null; }
+  function trivWordsStart(cell){
+    trivWordsStop();
+    var cfg = cfgPlay().trivia;
+    TVW.words = String(cell.q).split(/\s+/).filter(Boolean); TVW.key = "triv:" + cell.id; TVW.armed = false;
+    TVW.n = cfg.reveal ? 0 : TVW.words.length;
+    if(!cfg.reveal){ trivEls.question.textContent = cell.q; trivEls.wSkip.hidden = true; return; }
+    trivEls.question.textContent = "";
+    TVW.words.forEach(function(w, i){
+      var sp = document.createElement("span"); sp.className = "lw"; sp.textContent = w;
+      if(i) trivEls.question.appendChild(document.createTextNode(" "));
+      trivEls.question.appendChild(sp);
+    });
+    trivEls.wSkip.hidden = !TVW.words.length; trivEls.wSkip.style.visibility = "visible";
+    if(!TVW.words.length){ TVW.n = 0; return; }
+    TVW.t = setTimeout(trivWordsTick, Math.round(500 * (LT_SPEED[cfg.speed] || 1)));
+  }
+  function trivWordsTick(){
+    TVW.t = null;
+    if(!activeCell || trivEls.modal.hidden || TVW.key !== "triv:" + activeCell.id) return;
+    var held = buzzActive() && buzz.state === "locked";   /* أحد ضغط: نوقف لين يرجع الدور */
+    if(!held && TVW.n < TVW.words.length){
+      var sp = trivEls.question.querySelectorAll(".lw")[TVW.n++];
+      if(sp) sp.classList.add("on");
+      trivWordsShow();
+    }
+    if(TVW.n < TVW.words.length){
+      var w = TVW.words[TVW.n] || "", f = LT_SPEED[cfgPlay().trivia.speed] || 1;
+      TVW.t = setTimeout(trivWordsTick, held ? 250 : Math.round(Math.min(900, 260 + 45 * w.length) * f));
+    }
+  }
+  function trivWordsAll(){
+    trivWordsStop();
+    if(!TVW.words.length || TVW.n >= TVW.words.length){ TVW.n = TVW.words.length; trivWordsShow(); return; }
+    TVW.n = TVW.words.length;
+    Array.prototype.forEach.call(trivEls.question.querySelectorAll(".lw"), function(sp){ sp.classList.add("on"); });
+    trivWordsShow();
+  }
+  function trivWordsShow(){
+    var more = TVW.n < TVW.words.length;
+    trivEls.wSkip.style.visibility = more ? "visible" : "hidden";   /* يختفي بدون ما يتحرك اللي تحته */
+    if(!TVW.armed || !buzz.q || buzz.q.k !== "trivia" || buzz.qid !== TVW.key) return;
+    var t = more ? TVW.words.slice(0, TVW.n).join(" ") + " …" : (activeCell ? activeCell.q : TVW.words.join(" "));
+    if(!more && !cfgPlay().trivia.reveal) return;
+    if(more && TVW.n === 0) t = "…";
+    if(buzz.q.text !== t){ buzz.q.text = t; buzzSend(); }
+  }
+  trivEls.wSkip.addEventListener("click", trivWordsAll);
   function trivSpeech(){ return activeCell ? [activeCell.q] : []; }
   trivEls.hintBtn.addEventListener("click", function(){
     trivEls.hint.hidden = false;
     trivEls.hintBtn.hidden = true;
   });
-  function closeTrivia(){ trivEls.modal.hidden = true; activeCell = null; buzzIdle(); TTS.stop(true); }
+  function closeTrivia(){ trivWordsStop(); trivEls.modal.hidden = true; activeCell = null; buzzIdle(); TTS.stop(true); }
   trivEls.modal.addEventListener("click", function(e){ if(e.target === trivEls.modal) closeTrivia(); });
   document.addEventListener("keydown", function(e){
     if(e.key === "Escape"){
@@ -992,6 +1049,7 @@
   });
 
   trivEls.revealBtn.addEventListener("click", function(){
+    trivWordsAll();   /* (v35) كشف الإجابة = السؤال يكتمل فورًا */
     trivEls.answer.hidden = false;
     trivEls.revealBtn.hidden = true;
     trivEls.award.hidden = false;
@@ -4838,7 +4896,7 @@
   resetEls.yes.addEventListener("click", function(){ closeResetModal(); resetEverything(); });
   function resetEverything(){
     /* نسكّر أي نافذة مفتوحة */
-    trivEls.modal.hidden = true; activeCell = null;
+    trivWordsStop(); trivEls.modal.hidden = true; activeCell = null;
     ltEls.modal.hidden = true; ltEls.win.hidden = true; LT.cur = null; TTS.stop(true);
     mCloseTicket(); closeBuzzPanel(); closeTeams();
     /* الفرق: فريقين بالأسماء الافتراضية — ونخلي رقم أول فريقين عشان جوالات «أسرع إصبع» تبقى شغالة */

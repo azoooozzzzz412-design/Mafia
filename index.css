@@ -740,6 +740,8 @@ section.gated .game-body, section.gated .game-only{ display:none !important; }
 @media (prefers-reduced-motion: reduce){ .tm-question .lw.on{ animation:none; } }
 .lt-skip{ position:absolute; top:14px; inset-inline-end:14px; z-index:2; }   /* بزاوية النافذة: لما يختفي ما تتحرك الأزرار */
 .lt-skip[hidden]{ display:none; }
+.tm-wskip{ display:block; margin:-8px auto 14px; }   /* (v35) سين جيم: زر «اعرض السؤال كامل» تحت السؤال (ما يزاحم التصنيف بالجوال) */
+.tm-wskip[hidden]{ display:none; }
 .lt-big{
   width:92px; height:106px; margin:0 auto 16px;
   clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
