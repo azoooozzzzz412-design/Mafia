@@ -25,7 +25,7 @@
 </head>
 <body>
 <div class="page-bg" aria-hidden="true"></div>
-<main>
+<main data-cms-list="legal.terms.sections">
   <div class="head">
     <div class="logo"><span class="logo-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.2 3.6a8.6 8.6 0 1 0 5.2 14.1A9.6 9.6 0 0 1 15.2 3.6z" fill="#fff"/><path d="m18.6 4 .55 1.45 1.45.55-1.45.55-.55 1.45-.55-1.45-1.45-.55 1.45-.55z" fill="#fff"/></svg></span></div>
     <h1>الشروط وسياسة الاسترجاع</h1>
@@ -47,7 +47,7 @@
     </ul>
   </section>
 
-  <section class="card">
+  <section class="card" data-cms-keep="pay">
     <h2>الدفع</h2>
     <p id="payText">الدفع <b>بالتحويل</b> من تطبيقك<span id="payApps"></span> على الرقم اللي يطلع لك وقت الشراء. بعد التحويل ترسل لصاحب الطاولة بالواتساب بضغطة (فيها إيميل حسابك ورمز الطلب)، ونضيف الجولات لحسابك أول ما نتأكد من وصول المبلغ. ما نطلب منك أي بيانات بطاقة أو كلمة مرور، وحنا نحفظ بس سجل الطلب (الباقة، المبلغ، طريقة التحويل، حالة الطلب).</p>
   </section>
@@ -72,14 +72,14 @@
     </ul>
   </section>
 
-  <section class="card" id="contact">
+  <section class="card" id="contact" data-cms-keep="contact">
     <h2>التواصل</h2>
     <p id="contactText">لأي سؤال أو طلب استرجاع، تواصل معنا:</p>
     <div class="contact" id="contactBox"><span class="dim">جاري تحميل طرق التواصل…</span></div>
     <p class="seller" id="sellerBox" hidden></p>
   </section>
 
-  <section class="card">
+  <section class="card" data-cms-fixed>
     <p class="dim" style="margin:0">إذا تغيّرت هذي الشروط ينكتب التعديل هنا مع تاريخ التحديث. ويسري عليها الأنظمة المعمول بها في المملكة العربية السعودية.</p>
     <p class="dim" style="margin:10px 0 0;font-size:.85em">صور «تحدي الصور» من <a href="https://commons.wikimedia.org" target="_blank" rel="noopener">ويكيميديا كومنز</a> وويكيبيديا بتراخيص حرة — أسماء أصحابها ورخصها في <a href="credits.html">صفحة حقوق الصور</a>.</p>
   </section>
@@ -89,6 +89,7 @@
     <div class="links"><a href="privacy.html">سياسة الخصوصية</a> · <a href="credits.html">حقوق الصور</a></div>
   </footer>
 </main>
+<script src="cfg.js?v=7"></script>
 <script>
 /* v7: المكتبة تتحمّل بدون ما توقف رسم الصفحة — السكربت يشتغل أول ما تجهز */
 document.addEventListener("DOMContentLoaded", function(){
@@ -145,6 +146,8 @@ document.addEventListener("DOMContentLoaded", function(){
         sellerBox.appendChild(document.createTextNode(seller.slice(last)));
         sellerBox.hidden = false;
       }
+      /* (C4) نصوص الشروط والتواصل من اللوحة (لو نُشر شي): نفس الكتالوج، بدون طلب زيادة لو ما فيه نشر */
+      try{ if(window.SahraCfg){ window.SahraCfg.again(); window.SahraCfg.onCatalog(d, function(){ return sb.rpc("site_config"); }); } }catch(e){}
     }, fallback);
   }catch(e){ fallback(); }
 });

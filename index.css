@@ -1823,3 +1823,20 @@ body.on-landing .topbar, body.on-landing main{ display:none; }
 /* (v24) زر اللغة (English / عربي) */
 .lang-btn{ display:inline-flex; align-items:center; justify-content:center; height:38px; min-width:42px; padding:0 10px; border-radius:999px; border:1px solid var(--line-2); background:rgba(255,255,255,.04); color:var(--tx-2); font:inherit; font-size:.85rem; font-weight:600; cursor:pointer; white-space:nowrap; flex:0 0 auto; }
 .lang-btn:hover{ color:var(--tx); background:rgba(255,255,255,.08); }
+
+/* (C4) شريط الإعلان — إضافي بالكامل: ما ينرسم إلا لو نُشر إعلان من اللوحة (cfg.js). ألوان الأنماط: info بنفسجي · warn كهرماني · promo بنفسجي-وردي */
+.cfg-notice{ --nt-bg:rgba(124,92,255,.14); --nt-line:var(--v-line); --nt-ac:var(--v-hi);
+  position:relative; z-index:4; display:flex; align-items:center; justify-content:center; gap:10px;
+  padding:9px 46px; background:var(--nt-bg); border-bottom:1px solid var(--nt-line); color:var(--tx); font-size:.9rem; line-height:1.6; text-align:center; }
+.cfg-notice[hidden]{ display:none; }
+.cfg-notice.is-warn{ --nt-bg:rgba(245,176,65,.13); --nt-line:rgba(245,176,65,.5); --nt-ac:#f7c46a; }
+.cfg-notice.is-promo{ --nt-bg:linear-gradient(90deg, rgba(124,92,255,.30), rgba(236,72,153,.22)); --nt-line:rgba(236,72,153,.45); --nt-ac:#ffc2e0; }
+.cfg-notice .nt-ic{ flex:0 0 auto; }
+.cfg-notice .nt-body{ min-width:0; overflow-wrap:anywhere; }
+.cfg-notice .nt-a{ margin-inline-start:10px; white-space:nowrap; color:var(--nt-ac); font-weight:700; text-decoration:underline; text-underline-offset:3px; }
+.cfg-notice .nt-a:hover{ color:#fff; }
+.cfg-notice .nt-x{ position:absolute; top:50%; inset-inline-end:8px; transform:translateY(-50%); width:30px; height:30px; display:grid; place-items:center; padding:0;
+  border:0; border-radius:50%; background:transparent; color:var(--tx-2); font:inherit; font-size:1.25rem; line-height:1; cursor:pointer; }
+.cfg-notice .nt-x:hover{ background:rgba(255,255,255,.1); color:#fff; }
+.cfg-notice .nt-x:focus-visible, .cfg-notice .nt-a:focus-visible{ outline:2px solid var(--nt-ac); outline-offset:2px; }
+@media (max-width:640px){ .cfg-notice{ padding:8px 40px; font-size:.84rem; } }

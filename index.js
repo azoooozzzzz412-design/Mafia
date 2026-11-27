@@ -6455,6 +6455,8 @@
       GAME_ORDER.forEach(function(g){ if(!(g in reg) && HIDDEN_GAMES.indexOf(g) === -1) HIDDEN_GAMES.push(g); });
       GAME_ORDER.sort(function(a, b){ return (reg[a] != null ? reg[a] : 1e6) - (reg[b] != null ? reg[b] : 1e6); });
     }
+    /* (C1) نصوص الموقع من اللوحة: تُطبَّق فوق النص الثابت (cfg.js)؛ بدون cfg_v ما يتغير شي */
+    try{ if(window.SahraCfg) window.SahraCfg.onCatalog(CATALOG, function(){ return sbReady.then(function(sb){ return sb.rpc("site_config"); }); }); }catch(e){}
   }
   function loadCatalog(){
     return sbReady.then(function(sb){ return sb.rpc("catalog"); }).then(function(r){
@@ -7119,6 +7121,7 @@
   }
   /* نفتح الطاولة (مرة وحدة)، وبعدها أي تحديث يحدّث الأجزاء اللي تغيّرت بس */
   function enterApp(){
+    if(window.SahraCfg && window.SahraCfg.pv){ showLanding(); return; }   /* (C1) معاينة لوحة الأدمن (iframe + cfg-preview=1): نعرض الرئيسية للزوار بنصوصها */
     document.body.classList.remove("on-landing");
     document.getElementById("landing").hidden = true;
     authEls.gate.hidden = true;

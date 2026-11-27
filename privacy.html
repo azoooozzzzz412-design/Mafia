@@ -14,20 +14,21 @@
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap"></noscript>
 <link rel="stylesheet" href="theme.css?v=7">
 <link rel="stylesheet" href="pages.css?v=1">
+<script defer src="config.js"></script>
 <style>
   footer > div{ color:var(--tx-3); font-size:.88rem; margin-top:14px; }
 </style>
 </head>
 <body>
 <div class="page-bg" aria-hidden="true"></div>
-<main>
+<main data-cms-list="legal.privacy.sections">
   <div class="head">
     <div class="logo"><span class="logo-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.2 3.6a8.6 8.6 0 1 0 5.2 14.1A9.6 9.6 0 0 1 15.2 3.6z" fill="#fff"/><path d="m18.6 4 .55 1.45 1.45.55-1.45.55-.55 1.45-.55-1.45-1.45-.55 1.45-.55z" fill="#fff"/></svg></span></div>
     <h1>سياسة الخصوصية</h1>
     <div class="meta">طاولة السهرة · آخر تحديث: 2 نوفمبر 2026</div>
   </div>
 
-  <section class="card">
+  <section class="card" data-cms-fixed>
     <p>«طاولة السهرة» موقع ألعاب جماعية للسهرات بين الأهل والأصحاب (سين جيم، الحروف، حزر العلم، حطها على راسك وغيرها). تقدر تجرب كل لعبة مجانًا، وبعدها تشتري جولات. هذي الصفحة توضح وش البيانات اللي ناخذها وليش.</p>
   </section>
 
@@ -87,7 +88,7 @@
     <p>إذا تغيّرت هذي السياسة، ينكتب التعديل هنا مع تاريخ التحديث.</p>
   </section>
 
-  <section class="card en" lang="en" dir="ltr">
+  <section class="card en" lang="en" dir="ltr" data-cms-fixed>
     <h2>Privacy Policy (English summary)</h2>
     <p>Sahra Table (طاولة السهرة) is an Arabic party-games website with a free trial of each game and paid game rounds. When you sign in with Google we receive only your name, email address and profile picture; we never see your password. We also store your sign-up date, last visit, account status, round balance, which free trials you used, the rounds you played (so questions do not repeat), your orders (package, amount, payment method, status and order code) and which games were opened, for simple statistics shown to the site owner. Payments are made by transfer from your own banking or wallet app (such as stc bank or Barq); we never see your account details beyond what the transfer itself shows (such as the sender's name). When you tap «✅ I've transferred», your WhatsApp opens with a ready message to the site owner containing your account email and order code, and you send it yourself. If card payments are ever enabled, they happen on the Moyasar payment page and we never receive your card details. Names typed on phone buzzers (and the look you pick for your character in the rope game) are sent live to the game screen and are not stored in our database. For faster controls in the rope game, your phone may connect directly to the game device (WebRTC) when both are on the same network; button presses go straight to the screen and are not stored. To find each other, the devices use a public STUN server (Cloudflare or Google), which sees only your IP address. Online Mafia: when you join a room we store your in-room name, the character you picked, your role and game results, and a sha256 fingerprint of your seat's secret token (the token itself stays on your device); rooms are deleted automatically after 12 hours of inactivity or when the host closes them. Voice goes directly between players' devices (WebRTC) and is never recorded or stored; if a network blocks direct connections, the encrypted audio is relayed through Cloudflare's TURN service without being stored. Chat messages are delivered live to the room (Supabase Realtime) and are not stored on our servers; the mafia and ghost chats are encrypted with keys only their members receive. An optional photo is resized on your device and sent only to the players in your room, and is not stored by us. Reading questions aloud uses your browser's built-in speech feature; some browsers (such as Edge and Chrome) send the question text — and nothing about you — to their own speech service to pronounce it. You can turn it off from the 🔊 button. If the host opens a round's answers on their phone by scanning the QR code, we store with that round a random id for the phone (so no other phone can open it) and a sha256 fingerprint of the QR key — not the key itself; the screen sends the current question to that phone live and it is not stored. The link works for 12 hours from the start of the round. If the host turns on the optional «🔁 replay» in the fastest-finger game, the phone of the team that pressed (after you allow the microphone) records only during your answer time and sends at most the last 6 seconds to the game screen through the room's live channel (Supabase Realtime); it is not stored anywhere and is deleted from the phone once sent. If the game device has a microphone, it also records the answer time as a backup, kept only in the browser's memory and never sent. The clip stays on the screen until the host decides right or wrong, then it is deleted. Players can decline or turn off the microphone on their phone.</p>
     <p>Data is kept in a protected Supabase database; game scores and your sign-in session stay in your browser's local storage. We do not sell or share your data or use it for advertising (if card payments are enabled, only the amount and order number are shared with Moyasar to process a payment). You can ask the site owner (see the contact options on the <a href="terms.html#contact">terms page</a>) to delete your account and data at any time; payment records may be kept as long as required by law.</p>
@@ -96,5 +97,6 @@
 
   <footer><a class="back" href="./">↩️ رجوع للطاولة</a><div style="margin-top:12px;font-size:.85rem"><a href="terms.html">الشروط وسياسة الاسترجاع</a></div></footer>
 </main>
+<script src="cfg.js?v=7" data-standalone></script>
 </body>
 </html>

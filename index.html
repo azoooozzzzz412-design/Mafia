@@ -35,7 +35,7 @@
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js" integrity="sha384-uteMfOloLDGt042uDz+xHGF3ym63/WQ6rFq7murQRG8Ih7QrXGEGNtWd8688sb4O" crossorigin="anonymous"></script>
 <script defer src="config.js"></script>
 <!-- صفحة اللعب 3 ملفات: هذي الصفحة + الشكل (index.css) + الكود (index.js آخر الصفحة). ارفعهم الثلاثة مع بعض -->
-<link rel="stylesheet" href="index.css?v=21">
+<link rel="stylesheet" href="index.css?v=24">
 </head>
 
 <body>
@@ -98,17 +98,17 @@
 
   <div class="ld-wrap">
     <section class="ld-hero" id="top">
-      <a class="ld-chip" href="#ldFeatures"><span class="new">جديد</span>مخطط السهرة يرتّب لكم الجولات<svg class="ic"><use href="#i-arrow"/></svg></a>
-      <h1 class="ld-h1">سهرتكم، <span class="grad">بمستوى ثاني.</span></h1>
+      <a class="ld-chip" href="#ldFeatures"><span class="new">جديد</span><span data-cms="hero.chip">مخطط السهرة يرتّب لكم الجولات</span><svg class="ic"><use href="#i-arrow"/></svg></a>
+      <h1 class="ld-h1"><span data-cms="hero.h1">سهرتكم،</span> <span class="grad" data-cms="hero.h1_grad">بمستوى ثاني.</span></h1>
       <p class="ld-sub" id="ldSub">ألعاب جماعية بالعربي على شاشة وحدة، والجوالات تصير أزرار. بدون تطبيقات، وبدون تجهيز — اختاروا وقتكم وفرقكم، والطاولة ترتّب الباقي.</p>
       <div class="ld-cta">
-        <button class="btn-primary btn-lg" id="ldTrialBtn" type="button">ابدأ مجانًا<svg class="ic"><use href="#i-arrow"/></svg></button>
-        <a class="btn-ghost btn-lg" href="#ldGamesSec">شوف الألعاب</a>
+        <button class="btn-primary btn-lg" id="ldTrialBtn" type="button"><span data-cms="hero.cta_primary">ابدأ مجانًا</span><svg class="ic"><use href="#i-arrow"/></svg></button>
+        <a class="btn-ghost btn-lg" href="#ldGamesSec" data-cms="hero.cta_secondary">شوف الألعاب</a>
       </div>
       <ul class="ld-trust">
-        <li><svg class="ic"><use href="#i-check"/></svg>تجربة مجانية لكل لعبة</li>
-        <li><svg class="ic"><use href="#i-check"/></svg>دخول بحساب Google</li>
-        <li><svg class="ic"><use href="#i-check"/></svg>تلفزيون أو لابتوب أو حتى جوال</li>
+        <li><svg class="ic"><use href="#i-check"/></svg><span data-cms="hero.trust1">تجربة مجانية لكل لعبة</span></li>
+        <li><svg class="ic"><use href="#i-check"/></svg><span data-cms="hero.trust2">دخول بحساب Google</span></li>
+        <li><svg class="ic"><use href="#i-check"/></svg><span data-cms="hero.trust3">تلفزيون أو لابتوب أو حتى جوال</span></li>
       </ul>
       <div class="ld-err" id="ldErr" hidden></div>
 
@@ -151,17 +151,17 @@
 
   <div class="ld-wrap">
     <div class="ld-stats reveal" id="ldStats">
-      <div class="ld-stat"><b>–</b><span>ألعاب جماعية</span></div>
-      <div class="ld-stat"><b>+1,000</b><span>سؤال ولغز</span></div>
-      <div class="ld-stat"><b>2–6</b><span>فرق بالسهرة</span></div>
-      <div class="ld-stat"><b>0</b><span>تطبيقات تحمّلونها</span></div>
+      <div class="ld-stat"><b>–</b><span data-cms="stats.1">ألعاب جماعية</span></div>
+      <div class="ld-stat"><b>+1,000</b><span data-cms="stats.2">سؤال ولغز</span></div>
+      <div class="ld-stat"><b>2–6</b><span data-cms="stats.3">فرق بالسهرة</span></div>
+      <div class="ld-stat"><b>0</b><span data-cms="stats.4">تطبيقات تحمّلونها</span></div>
     </div>
 
     <section class="ld-section" id="ldFeatures">
       <div class="ld-head reveal">
-        <span class="eyebrow"><span class="dot"></span>ليش طاولة السهرة</span>
-        <h2 class="ld-h2">كل اللي تحتاجه لسهرة ما تنسى</h2>
-        <p class="ld-lead">المقدّم يمسك الشاشة، والكل يلعب. النقاط والوقت والأدوار والأسئلة — كلها جاهزة ومحسوبة.</p>
+        <span class="eyebrow"><span class="dot"></span><span data-cms="features.eyebrow">ليش طاولة السهرة</span></span>
+        <h2 class="ld-h2" data-cms="features.h2">كل اللي تحتاجه لسهرة ما تنسى</h2>
+        <p class="ld-lead" data-cms="features.lead">المقدّم يمسك الشاشة، والكل يلعب. النقاط والوقت والأدوار والأسئلة — كلها جاهزة ومحسوبة.</p>
       </div>
       <div class="ld-bento">
         <article class="bn wide reveal">
@@ -214,40 +214,40 @@
 
     <section class="ld-section" id="ldGamesSec">
       <div class="ld-head reveal">
-        <span class="eyebrow"><span class="dot"></span>الألعاب</span>
+        <span class="eyebrow"><span class="dot"></span><span data-cms="games.eyebrow">الألعاب</span></span>
         <h2 class="ld-h2" id="ldGamesH2">ألعاب، سهرة وحدة</h2>
-        <p class="ld-lead">كل لعبة معها وش تشمل الجولة، ووش تجرّبون منها مجانًا.</p>
+        <p class="ld-lead" data-cms="games.lead">كل لعبة معها وش تشمل الجولة، ووش تجرّبون منها مجانًا.</p>
       </div>
       <div class="ld-games" id="ldGames"></div>
     </section>
 
     <section class="ld-section" id="ldHow">
       <div class="ld-head reveal">
-        <span class="eyebrow"><span class="dot"></span>كيف تشتغل</span>
-        <h2 class="ld-h2">من الدخول للسهرة بدقيقة</h2>
+        <span class="eyebrow"><span class="dot"></span><span data-cms="how.eyebrow">كيف تشتغل</span></span>
+        <h2 class="ld-h2" data-cms="how.h2">من الدخول للسهرة بدقيقة</h2>
       </div>
       <div class="ld-steps">
-        <div class="ld-step reveal"><span class="no">01</span><h3>سجّل بحساب Google</h3><p>ثواني، وبدون كلمة مرور جديدة. واللي يمسحون الباركود بجوالاتهم ما يحتاجون حساب.</p></div>
-        <div class="ld-step reveal"><span class="no">02</span><h3>جرّب كل لعبة مجانًا</h3><p>نسخة مختصرة من كل لعبة، مرة وحدة لكل حساب — عشان تعرفون وش يناسبكم.</p></div>
-        <div class="ld-step reveal"><span class="no">03</span><h3>خطّطوا سهرتكم</h3><p>اشتروا جولات ووزعوها على الألعاب، أو خلّوا مخطط السهرة يرتّبها لكم.</p></div>
+        <div class="ld-step reveal"><span class="no">01</span><h3 data-cms="how.step1.t">سجّل بحساب Google</h3><p data-cms="how.step1.p">ثواني، وبدون كلمة مرور جديدة. واللي يمسحون الباركود بجوالاتهم ما يحتاجون حساب.</p></div>
+        <div class="ld-step reveal"><span class="no">02</span><h3 data-cms="how.step2.t">جرّب كل لعبة مجانًا</h3><p data-cms="how.step2.p">نسخة مختصرة من كل لعبة، مرة وحدة لكل حساب — عشان تعرفون وش يناسبكم.</p></div>
+        <div class="ld-step reveal"><span class="no">03</span><h3 data-cms="how.step3.t">خطّطوا سهرتكم</h3><p data-cms="how.step3.p">اشتروا جولات ووزعوها على الألعاب، أو خلّوا مخطط السهرة يرتّبها لكم.</p></div>
       </div>
     </section>
 
     <section class="ld-section" id="ldPrices">
       <div class="ld-head reveal">
-        <span class="eyebrow"><span class="dot"></span>الأسعار</span>
-        <h2 class="ld-h2">ادفع على قد لعبك</h2>
-        <p class="ld-lead">كل جولة تختار لها أي لعبة — جولة سين جيم، وجولة حروف، وجولة أعلام… بدون اشتراك شهري.</p>
+        <span class="eyebrow"><span class="dot"></span><span data-cms="prices.eyebrow">الأسعار</span></span>
+        <h2 class="ld-h2" data-cms="prices.h2">ادفع على قد لعبك</h2>
+        <p class="ld-lead" data-cms="prices.lead">كل جولة تختار لها أي لعبة — جولة سين جيم، وجولة حروف، وجولة أعلام… بدون اشتراك شهري.</p>
       </div>
       <div class="ld-packs" id="ldPacks"><p class="ld-lead">جاري التحميل…</p></div>
     </section>
 
     <section class="ld-section" id="ldFaq">
       <div class="ld-head reveal">
-        <span class="eyebrow"><span class="dot"></span>الأسئلة</span>
-        <h2 class="ld-h2">أسئلة تتكرر</h2>
+        <span class="eyebrow"><span class="dot"></span><span data-cms="faq.eyebrow">الأسئلة</span></span>
+        <h2 class="ld-h2" data-cms="faq.h2">أسئلة تتكرر</h2>
       </div>
-      <div class="ld-faq">
+      <div class="ld-faq" data-cms-list="faq">
         <details><summary>وش هي «الجولة»؟</summary><p id="ldRoundFaq">الجولة تفتح لك لعبة وحدة: لوحة سين جيم كاملة، أو لوحة حروف كاملة، أو مجموعة ألغاز صور أو أعلام، أو كلمات لكل فريق في «حطها على راسك»، أو عناوين تمثيل، أو توزيع أدوار مافيا. وتقدرون تختارون حجم الجولة قبل ما تبدأ.</p></details>
         <details><summary>وش هو مخطط السهرة؟</summary><p>تختارون الفرق ووقت السهرة والألعاب اللي تحبونها، والمخطط يقترح ترتيب جولات يناسب وقتكم (وتقدرون تعدلونه). بعدها يمشي معكم جولة جولة، يعرض النتائج بين كل جولة، ويعلن الفائز بالنهاية.</p></details>
         <details><summary>كم جهاز نحتاج؟</summary><p>شاشة وحدة تكفي. الجوالات الثانية اختيارية: تصير أزرار «أسرع إصبع» أو جوال «حطها على راسك» بمسح باركود، وأصحابها ما يحتاجون حساب.</p></details>
@@ -258,9 +258,9 @@
     </section>
 
     <section class="ld-final reveal">
-      <h2>جاهزين للسهرة؟</h2>
-      <p>جرّبوا كل لعبة مجانًا الليلة — وإذا عجبتكم، اختاروا الباقة اللي تناسبكم.</p>
-      <button class="btn-primary btn-lg" id="ldFinalBtn" type="button">ابدأ مجانًا<svg class="ic"><use href="#i-arrow"/></svg></button>
+      <h2 data-cms="final.h2">جاهزين للسهرة؟</h2>
+      <p data-cms="final.p">جرّبوا كل لعبة مجانًا الليلة — وإذا عجبتكم، اختاروا الباقة اللي تناسبكم.</p>
+      <button class="btn-primary btn-lg" id="ldFinalBtn" type="button"><span data-cms="final.cta">ابدأ مجانًا</span><svg class="ic"><use href="#i-arrow"/></svg></button>
     </section>
 
     <footer class="ld-foot">
@@ -953,6 +953,7 @@
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="sec.js?v=26"></script>
-<script src="index.js?v=29"></script>
+<script src="cfg.js?v=7"></script>
+<script src="index.js?v=33"></script>
 </body>
 </html>
